@@ -5,7 +5,7 @@ from view.controls.custonprogressring import CustonProgressRing
 from controller.maincontroller import MainController
 from view.controls.controls_mainview.custonlistitensvenda import CustonList
 from view.controls.controls_mainview.custonlistclients import CustonList as CL
-from view.controls.formatcurr import formatar_moeda_brasileira
+from utils.formatcurr import formatar_moeda_brasileira
 from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
 from view.controls.custonmodalview import CustonModalView
 from view.controls.custoncardsimples import CustonCardSimples
@@ -18,23 +18,57 @@ class MainView(ft.View):
             page: ft.Page
         ):
         super().__init__(route="/main", bgcolor=AppColors.BACKGROUND_DARK,)
+        
+        self.page = page
+
+        self.controller = MainController(self.page, self)
 
         self.id_loja:str = ''
         self.token:str   = ''
         self.r_token:str = ''
 
         self.client:str = ''
+
+        self.status_caixa:str = 'F'
+
         self.id_client:int = 0
 
         self.id_prof:int=0
 
-        self.total:float=0
-
-        self.page = page              
+        self.total:float=0              
 
         self.bgcolor = AppColors.BACKGROUND_DARK
 
-        self.controller = MainController(self.page, self)
+        self.btn_fechar_caixa = ft.ElevatedButton(
+            visible=False,
+            text='Fechar caixa', 
+            color=AppColors.GRAY_LIGHT3,
+            bgcolor=AppColors.GRAY_DARK,
+            elevation=5,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=8),
+                side=ft.BorderSide(1, AppColors.GRAY_MED3),
+                color=AppColors.GRAY_LIGHT,
+            ),            
+            on_click=self.controller.fechar_caixa
+        )         
+
+        self.edt_troco_inicial = CustomTextField(
+            label="Troco inicial",
+            chars=r"^[0-9,]*$",
+            on_change=self.controller.calculo_troco
+        ) 
+
+        self.modal_caixa = CustonModalView(
+            self.page,
+            callback=lambda e:self.controller.abrir_caixa(),
+            callback2=lambda e:[self.page.close(self.modal_caixa), self.page.update()],
+            text_button_1="Abrir caixa",
+            height=150,
+            controls=[
+               self.edt_troco_inicial
+            ]
+        )
 
         self.list_profissionais = CustonListProfessional(self.page)
         
@@ -57,40 +91,89 @@ class MainView(ft.View):
         self.edt_dinheiro = CustomTextField(
             label="Dinheiro",
             chars=r"^[0-9,]*$",
-            on_change=self.calculo_troco
+            on_change=self.controller.calculo_troco
         )
+
+        self.area_dinheiro = ft.Row(
+            controls=[
+                self.edt_dinheiro,
+                ft.IconButton(
+                    icon=ft.Icons.MONETIZATION_ON,
+                    icon_color=AppColors.GRAY_LIGHT3,
+                    offset=ft.Offset(x=-1.2, y=0),
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_dinheiro, e)
+                )
+            ]
+        )       
 
         self.edt_pix = CustomTextField(
             label="Pix",
             chars=r"^[0-9,]*$",
-            on_change=self.calculo_troco
+            on_change=self.controller.calculo_troco
         )        
+
+        self.area_pix = ft.Row(
+            controls=[
+                self.edt_pix,
+                ft.IconButton(
+                    icon=ft.Icons.MONETIZATION_ON,
+                    icon_color=AppColors.GRAY_LIGHT3,
+                    offset=ft.Offset(x=-1.2, y=0),
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_pix, e)
+                )
+            ]
+        ) 
 
         self.edt_debito = CustomTextField(
             label="Debito",
             chars=r"^[0-9,]*$",
-            on_change=self.calculo_troco
+            on_change=self.controller.calculo_troco
         )    
+
+        self.area_debito = ft.Row(
+            controls=[
+                self.edt_debito,
+                ft.IconButton(
+                    icon=ft.Icons.MONETIZATION_ON,
+                    icon_color=AppColors.GRAY_LIGHT3,
+                    offset=ft.Offset(x=-1.2, y=0),
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_debito, e)
+                )
+            ]
+        ) 
 
         self.edt_credito = CustomTextField(
             label="Credito",
             chars=r"^[0-9,]*$",
-            on_change=self.calculo_troco
+            on_change=self.controller.calculo_troco
         )          
+
+        self.area_credito = ft.Row(
+            controls=[
+                self.edt_credito,
+                ft.IconButton(
+                    alignment=ft.alignment.center_right,
+                    icon=ft.Icons.MONETIZATION_ON,
+                    icon_color=AppColors.GRAY_LIGHT3,
+                    offset=ft.Offset(x=-1.2, y=0),
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_credito, e)
+                )
+            ]
+        ) 
 
         self.modal_recebimento = CustonModalView(
             height=400,
             page=self.page,
             text_button_1="Receber",
-            callback=None,
-            callback2=lambda e: self.cancelar_receber_venda(e),
+            callback=lambda e:self.page.run_task(self.controller.recebimento),
+            callback2=self.controller.cancelar_receber_venda,
             controls=[
                 self.text_total,
                 self.text_troco,
-                self.edt_dinheiro,
-                self.edt_pix,
-                self.edt_debito,
-                self.edt_credito
+                self.area_dinheiro,
+                self.area_pix,
+                self.area_debito,
+                self.area_credito
             ]    
         )
 
@@ -98,14 +181,14 @@ class MainView(ft.View):
             value=self.client,
             color=AppColors.ORANGE_DARK,
             visible=False,
-            size=self.page.width / 2,
+            #width=self.page.width / 2,
         )
 
         self.edtPesquisaClientes = ft.TextField(
             width=300,
             color=AppColors.GRAY_LIGHT2,
             label="Pesquisar clientes por nome...",
-            on_change=self.filter_clients, # Função que fará a mágica
+            on_change=self.controller.filter_clients, # Função que fará a mágica
             border_color=AppColors.ORANGE_DARK,
             border=ft.InputBorder.UNDERLINE,  
         ) 
@@ -113,8 +196,8 @@ class MainView(ft.View):
         self.modal_pesquisa_clientes = CustonModalView(
             height=650,
             page=self.page,
-            callback=self.fechar_modal_pequisa_clientes,
-            callback2=self.cancelar_modal_pesquisa_clientes,
+            callback=self.controller.fechar_modal_pequisa_clientes,
+            callback2=self.controller.cancelar_modal_pesquisa_clientes,
             controls=[
                 self.edtPesquisaClientes,
                 self.list_clients
@@ -126,13 +209,13 @@ class MainView(ft.View):
             visible=False,
             color=AppColors.GRAY_LIGHT2,
             label="Pesquisar produto ou serviço por nome...",
-            on_change=self.filter_itens, # Função que fará a mágica
+            on_change=self.controller.handle_filter_itens,
             border_color=AppColors.GRAY_MED3,
             border=ft.InputBorder.UNDERLINE,
             height=40,
             content_padding=10,    
-            on_click=lambda e: self.on_enter_edt_pesquisa(e),
-            on_blur=lambda e: self.on_exit_edt_pesquisa(e)
+            on_click=lambda e: self.controller.on_enter_edt_pesquisa(e),
+            on_blur=lambda e: self.controlleron_exit_edt_pesquisa(e)
         )        
 
         self.btn_pesquisa_produtos = ft.ElevatedButton(
@@ -140,13 +223,14 @@ class MainView(ft.View):
             icon=ft.Icons.SEARCH,
             icon_color=AppColors.GRAY_LIGHT2,
             text='Produtos',
+            bgcolor=AppColors.GRAY_DARK,
             elevation=5,            
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=8),
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),             
-            on_click=lambda e: self.exibir_edt_pesquisa_produtos(e)
+            on_click=lambda e: self.controller.exibir_edt_pesquisa_produtos(e)
         )
 
         self.btn_pesquisa_clientes = ft.ElevatedButton(
@@ -155,12 +239,13 @@ class MainView(ft.View):
             icon_color=AppColors.GRAY_LIGHT2,
             text='Clientes',
             elevation=5,
+            bgcolor=AppColors.GRAY_DARK,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=8),
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),     
-            on_click=lambda e: self.exibir_lista_clientes(e)        
+            on_click=lambda e: self.controller.exibir_lista_clientes(e)        
         )
 
         self.btn_fechar_pesquisa = ft.IconButton(
@@ -168,7 +253,7 @@ class MainView(ft.View):
             icon=ft.Icons.CLOSE,
             icon_color=AppColors.ORANGE_DARK,
             visible=False,     
-            on_click=lambda e: self.fechar_pesquisa(e)                   
+            on_click=lambda e: self.controller.handle_fechar_pesquisa(e)                   
         )
 
         self.container_pesquisa = ft.Container(
@@ -211,7 +296,7 @@ class MainView(ft.View):
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),            
-            on_click=lambda e:self.receber_venda(e)
+            on_click=self.page.run_task(self.controller.recebimento)
         ) 
 
         self.drawer = ft.NavigationDrawer(
@@ -290,7 +375,26 @@ class MainView(ft.View):
                                 width=250,
                                 height=45,
                                 on_click=lambda e: self.page.go("/clients"),
-                            ),                           
+                            ),      
+                            ft.ElevatedButton(
+                                text="Sair",
+                                bgcolor=AppColors.GRAY_DARK,
+                                color=AppColors.WHITE,
+                                elevation=5,
+                                style=ft.ButtonStyle(
+                                    shape=ft.RoundedRectangleBorder(radius=8),
+                                    side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
+                                    color=AppColors.GRAY_LIGHT,
+                                ),
+                                width=250,
+                                height=45,
+                                on_click=lambda e: [
+                                    self.page.client_storage.set("token", ''), 
+                                    self.page.client_storage.set("r_token", ''), 
+                                    self.page.client_storage.set("status_caixa", ''),
+                                    self.page.go("/")
+                                ],
+                            ),                                                   
                         ],
                     ),
                     padding=ft.padding.all(20),
@@ -302,7 +406,7 @@ class MainView(ft.View):
             icon=ft.Icons.CLOSE,
             icon_color=AppColors.GRAY_LIGHT3,
             visible=False,
-            on_click=lambda e: self.list_itens.cancelar()
+            on_click=lambda e: self.controller.limpar_venda()
         )
 
         self.bottom_appbar = ft.BottomAppBar(
@@ -319,182 +423,44 @@ class MainView(ft.View):
                     self.text_client,
                     self.btn_total,
                     self.btn_cancelar,
+                    self.btn_fechar_caixa,
                 ],
             ),
-        )    
-
-    
-    def calculo_troco(self, e):
-        dinheiro:float = 0.00
-        pix:float = 0.00
-        debito:float = 0.00
-        credito:float = 0.00
-
-        if self.edt_dinheiro.value != '':
-            dinheiro = float(self.edt_dinheiro.value.replace(',','.'))
-        else:
-            dinheiro = 0.00  
-
-        if self.edt_pix.value != '':
-            pix = float(self.edt_pix.value.replace(',','.'))
-        else:    
-            pix = 0.00
-
-        if self.edt_debito.value != '':
-            debito = float(self.edt_debito.value.replace(',','.'))
-        else:
-            debito = 0.00
-
-        if self.edt_credito.value != '':
-            credito = float(self.edt_credito.value.replace(',','.'))
-        else: 
-            credito = 0.00
-
-        recebido = dinheiro + pix + debito + credito
-        troco = recebido - self.total
-
-        self.text_troco.value = f'Troco: R$ {formatar_moeda_brasileira(troco)}'
-        self.page.update()
-        
-            
-
-
-
-    def cancelar_receber_venda(self, e):
-        self.edt_dinheiro.value = ''
-        self.edt_pix.value = ''
-        self.edt_debito.value = ''
-        self.edt_credito.value = ''
-
-        self.page.close(self.modal_recebimento)
-        self.page.update()        
-
-    
-    def receber_venda(self, e):        
-        if self.total > 0:
-            if self.id_prof == 0:
-                self.dialog = CustonDialog(
-                    self.page,
-                    title="Atenção",
-                    content="Por favor selecione o profissional!",
-                    actions=[
-                        ft.TextButton(
-                            text="Voltar",
-                            on_click=lambda e:[
-                                self.page.close(self.dialog),
-                                self.page.update()
-                            ]
-                        )
-                    ]
-                )
-                self.page.open(self.dialog)
-                self.page.update()
-                return
-
-            self.text_total.value = f'Total: R$ {formatar_moeda_brasileira(self.total)}'
-            self.text_troco.value = 'Troco: R$ 0,00'
-            self.page.open(self.modal_recebimento)
-            self.page.update()
-
-
-    async def fechar_modal_pequisa_clientes(self, e):
-        self.page.close(self.modal_pesquisa_clientes)
-        self.page.update()
-
-
-    def cancelar_modal_pesquisa_clientes(self, e):
-        self.id_client = 0
-        self.text_client.visible = False
-        self.page.close(self.modal_pesquisa_clientes)
-        self.page.update()            
+        )         
 
 
     def did_mount(self):
-        self.page.run_task(self.get_Data)
 
+        if self.total == 0:            
+            self.btn_total.visible = False
+            self.btn_fechar_caixa.visible = True  
 
-    def exibir_lista_clientes(self, e):
-        self.page.open(self.modal_pesquisa_clientes)
-        self.page.update()
+        if self.status_caixa == 'A':
+            self.page.close(self.modal_caixa)
 
-
-    def exibir_edt_pesquisa_produtos(self, e):
-        self.edtPesquisa.visible = True
-        self.btn_pesquisa_produtos.visible = False
-        self.btn_pesquisa_clientes.visible = False
-        self.btn_fechar_pesquisa.visible = True
-        self.page.update() 
-
-
-    def fechar_pesquisa(self, e):
-        self.edtPesquisa.visible = False
-        self.edtPesquisa.value = ''
-        self.filter_itens(e)
-        
-        self.btn_pesquisa_produtos.visible = True
-        self.btn_pesquisa_clientes.visible = True
-        self.btn_fechar_pesquisa.visible = False
-        
-        self.page.update()             
-
-
-    async def get_Data(self):
-        self.id_loja: str = await self.page.client_storage.get_async("id"     )
-        self.token:   str = await self.page.client_storage.get_async("token"  )
-        self.r_token: str = await self.page.client_storage.get_async("r_token")   
-
-        self.progressRing.visible = True
-        self.page.update()
-
-        await self.controller.listPorfissionais()
-        await self.controller.listItens()
-        await self.controller.listClientes()
-
-        self.progressRing.visible = False
-        self.page.update()        
-
-
-    def on_enter_edt_pesquisa(self, e):
-        self.edtPesquisa.border_color=AppColors.ORANGE_DARK
-        self.page.update()
-
-
-    def on_exit_edt_pesquisa(self, e):
-        self.edtPesquisa.border_color=AppColors.GRAY_MED3
-        self.page.update()   
-
-
-    def filter_itens(self, e):
-        """Filtra a lista de cards com base no texto digitado."""
-        search_term = self.edtPesquisa.value.lower()
-        
-        # Percorre todos os cards na lista
-        for card in self.list_itens.controls:
-            if isinstance(card, CustonCardItensVenda):
-                client_name = card.name.lower()
-                # Se o termo de busca estiver no nome do cliente, torna o card visível
-                if search_term in client_name:
-                    card.visible = True
-                # Caso contrário, oculta o card
-                else:
-                    card.visible = False
+        elif self.status_caixa == 'F':
+            self.page.open(self.modal_caixa)
         
         self.page.update()    
+        self.page.run_task(self.controller.get_Data)    
 
 
-    def filter_clients(self, e):
-        """Filtra a lista de cards com base no texto digitado."""
-        search_term = self.edtPesquisaClientes.value.lower()
-        
-        # Percorre todos os cards na lista
-        for card in self.list_clients.controls:
-            if isinstance(card, CustonCardSimples):
-                client_name = card.title.lower()
-                # Se o termo de busca estiver no nome do cliente, torna o card visível
-                if search_term in client_name:
-                    card.visible = True
-                # Caso contrário, oculta o card
-                else:
-                    card.visible = False
-        
-        self.page.update()           
+
+
+
+       
+
+
+       
+
+
+
+
+
+
+
+
+  
+
+
+         

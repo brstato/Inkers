@@ -2,7 +2,7 @@ import flet as ft
 from view.controls.custoncard import CustonCard
 from view.controls.custondialog import CustonDialog
 from model.loginmodel import LoginModel
-from view.controls.formatcurr import formatar_moeda_brasileira
+from utils.formatcurr import formatar_moeda_brasileira
 from model.productmodel import ProductModel
 import json
 import asyncio

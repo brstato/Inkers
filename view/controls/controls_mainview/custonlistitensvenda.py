@@ -1,6 +1,6 @@
 import flet as ft
 from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
-from view.controls.formatcurr import formatar_moeda_brasileira
+from utils.formatcurr import formatar_moeda_brasileira
 from view.controls.colors import AppColors
 
 class CustonList(ft.ListView):
@@ -17,24 +17,17 @@ class CustonList(ft.ListView):
 
 
     def on_card_selected(self, card_instance: CustonCardItensVenda):
-        # Percorre todos os cards na lista de controles
         self.instance.total = 0
 
         for card in self.controls:
-            if isinstance(card, CustonCardItensVenda): # Garante que estamos lidando com um CustonCard
+            if isinstance(card, CustonCardItensVenda):
                 if card is card_instance:
-                    # Se for o card que foi clicado, seleciona ele
                     card.select()
                     self.selected_card = card
                 else:
-                    # Se não for, garante que ele não está selecionado
                     if not card.quantidade > 0:
                         card.deselect()
 
-            #self.instance.total = self.instance.total + card.total 
-
-        #self.instance.btn_total.value = f'Receber: R$ {formatar_moeda_brasileira(self.instance.total)}'        
-        
         self.page.update()      
 
 
@@ -67,9 +60,10 @@ class CustonList(ft.ListView):
                 card.total = 0
                 card.valor = card.valor_original  
                 card.quantidade = 0
-                card.text_valor.value = f'R$ {card.valor_original}'
-                card.text_quant.value = 0
-                card.text_total.value = f'R$ 0,00'
-
+                card.text_valor.text = f'R$ {card.valor_original}'
+                card.text_quant.text = 0
+                card.text_total.text = 'R$ 0,00'
+        
+        self.page.update()
         self.recalculate_total()
         self.on_card_selected(CustonCardItensVenda)

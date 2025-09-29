@@ -24,5 +24,12 @@ class CustonListProfessional(ft.Row):
                 else:
                     # Se não for, garante que ele não está selecionado
                     card.deselect()
+
+
+    def cancelar(self):
+        for card in self.controls:
+            if isinstance(card, CustonCardProfessional):
+                card.deselect()
+        self.page.update()                        
         
         

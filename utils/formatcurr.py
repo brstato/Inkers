@@ -10,3 +10,14 @@ def formatar_moeda_brasileira(valor):
         return f"{valor:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
     except (ValueError, TypeError):
         return "0,00"
+    
+
+
+def _parse_currency(value_str: str) -> float:
+    """Converte uma string de moeda para float, tratando valores vazios."""
+    if not value_str:
+        return 0.00
+    try:
+        return float(value_str.replace(',', '.'))
+    except (ValueError, TypeError):
+        return 0.00    

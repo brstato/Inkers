@@ -3,7 +3,7 @@ from view.controls.custoncard import CustonCard
 from model.professionalmodel import ProfessionlModel
 from view.controls.custondialog import CustonDialog
 from model.loginmodel import LoginModel
-from view.controls.formatcurr import formatar_moeda_brasileira
+from utils.formatcurr import formatar_moeda_brasileira
 import json
 import asyncio
 

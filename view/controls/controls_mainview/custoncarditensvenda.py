@@ -1,6 +1,6 @@
 import flet as ft
 from view.controls.colors import AppColors
-from view.controls.formatcurr import formatar_moeda_brasileira
+from utils.formatcurr import formatar_moeda_brasileira
 from view.controls.custonmodalview import CustonModalView
 from view.controls.custondialog import CustonDialog
 from view.controls.custontextfield import CustomTextField
@@ -56,7 +56,7 @@ class CustonCardItensVenda(ft.Card):
 
         self.moda_view = CustonModalView(
             height=150,
-            callback=lambda e: self.page.run_task(self.Confirm_inf_valor,e),
+            callback=self.handler_inf_valor,
             callback2=lambda e: self.Cancel_inf_valor(e),
             page=self.page, 
             controls=[
@@ -188,6 +188,10 @@ class CustonCardItensVenda(ft.Card):
         )     
 
 
+    async def handler_inf_valor(self, e):
+        await self.Confirm_inf_valor(e)
+
+
     def on_tap_callback(self, e):
         if self.tap:
             self.tap(self)
@@ -196,7 +200,7 @@ class CustonCardItensVenda(ft.Card):
     def select(self):
         self.container.border = ft.border.all(1, AppColors.ORANGE_BURNT)
         self.selected = True
-        self.instance.id_prof = self.id
+        #self.instance.id_prof = self.id
         self.update()
 
 
@@ -216,6 +220,24 @@ class CustonCardItensVenda(ft.Card):
 
 
     def add_quant(self, e):
+        if self.instance.status_caixa == 'F':
+            self.dialog_alert = CustonDialog(
+                page=self.page,
+                title="Atenção",
+                content="O caixa esta fechado, por favor abra o caixa para continuar!",
+                actions=[
+                    ft.TextButton(
+                        text="OK",
+                        on_click=lambda e:[
+                            self.page.close(self.dialog_alert),
+                            self.page.update()
+                        ]
+                    )
+                ]
+            )
+            self.page.open(self.dialog_alert)
+            self.page.update()
+            return
 
         if self.inf_valor == 'True' and self.quantidade == 0:
             self.page.open(self.moda_view)
@@ -225,6 +247,10 @@ class CustonCardItensVenda(ft.Card):
         self.text_quant.text = self.quantidade
         self.total = self.valor * self.quantidade
         self.text_total.text = f'R$ {formatar_moeda_brasileira(self.total)}'
+
+        self.instance.btn_total.visible = True
+        self.instance.btn_cancelar.visible = True
+        self.instance.btn_fechar_caixa.visible = False
             
         self.on_change()    
 
@@ -240,8 +266,12 @@ class CustonCardItensVenda(ft.Card):
 
         if self.quantidade == 0:
             self.container.border = None  
+            self.text_quant.text = self.quantidade
             self.valor = self.valor_original        
             self.text_valor.text=f'R$ {formatar_moeda_brasileira(self.valor)}'
+            self.instance.btn_total.visible = False
+            self.instance.btn_cancelar.visible = False
+            self.instance.btn_fechar_caixa.visible = True
 
         self.on_change()          
 

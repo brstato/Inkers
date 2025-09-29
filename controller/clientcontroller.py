@@ -1,7 +1,7 @@
 import flet as ft
 from view.controls.custoncard import CustonCard
 from model.loginmodel import LoginModel
-from view.controls.formatcurr import formatar_moeda_brasileira
+from utils.formatcurr import formatar_moeda_brasileira
 from model.clientmodel import ClientModel
 import json
 
