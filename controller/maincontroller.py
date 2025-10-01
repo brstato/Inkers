@@ -65,6 +65,19 @@ class MainController:
         self.instance.token        = await self.page.client_storage.get_async("token"  )
         self.instance.r_token      = await self.page.client_storage.get_async("r_token")   
         self.instance.status_caixa = await self.page.client_storage.get_async("status_caixa")
+        self.instance.id_caixa     = await self.page.client_storage.get_async("id_caixa")
+
+        if self.instance.total == 0:            
+            self.instance.btn_total.visible = False
+            self.instance.btn_fechar_caixa.visible = True  
+
+        if self.instance.status_caixa == 'F':
+            self.instance.btn_abrir_caixa.visible = True
+            self.instance.btn_fechar_caixa.visible = False
+
+        elif self.instance.status_caixa == 'A':   
+            self.instance.btn_fechar_caixa.visible = True
+            self.instance.btn_abrir_caixa.visible = False        
 
         self.instance.progressRing.visible = True
         self.page.update()
@@ -154,7 +167,7 @@ class MainController:
     async def fechar_caixa(self, e):
         self.instance.status_caixa = 'F'
         await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
-        self.page.open(self.instance.modal_caixa)
+        self.page.open(self.instance.modal_fechamento_caixa)
         self.page.update()    
 
 
@@ -187,6 +200,60 @@ class MainController:
             self.page.update()   
 
 
+    async def confirmar_abertura_caixa(self, e):
+
+        self.instance.status_caixa = 'A'    
+
+        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa )    
+
+        data_abertura = datetime.datetime.now().timestamp()
+
+        if self.instance.edt_troco_inicial.value == '':
+            troco_abertura = 0.00    
+        else:
+            troco_abertura = float(self.instance.edt_troco_inicial.value.replace(',','.'))
+
+        pr_abriu = self.instance.id_prof
+
+        response = await ProtectedApiCall(
+            self.page, self.instance, self.model.AbrirCaixa, 
+            id_loja=self.instance.id_loja,
+            data_abertura=data_abertura,
+            troco_abertura=troco_abertura,
+            pr_abriu=pr_abriu,
+            token=self.instance.token
+        ).call_api_refresh_token()        
+
+        if response.status_code == 200:
+            self.instance.id_caixa = json.loads(response.content)["id_caixa"]
+            self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+
+            self.instance.btn_abrir_caixa.visible = False
+            self.instance.btn_fechar_caixa.visible = True
+            self.page.close(self.instance.modal_caixa)
+
+            self.page.update()
+        else:
+            self.instance.status_caixa = 'F'
+            await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
+            self.dialog_erro_abrir_caixa = CustonDialog(
+                page = self.page,
+                title="Atenção",
+                content="Erro ao abrir o caixa!",
+                actions=[
+                    ft.TextButton(
+                        text="OK",
+                        on_click=lambda e:[
+                            self.page.close(self.dialog_erro_abrir_caixa),
+                            self.page.update()                            
+                        ]
+
+                    )
+                ]
+            )       
+        
+
+    
     async def abrir_caixa(self):
         if self.instance.id_prof == 0:
             self.dialog_profissional_abrir_caixa = CustonDialog(
@@ -203,34 +270,14 @@ class MainController:
                     )
                 ]
             )
+            
             self.page.open(self.dialog_profissional_abrir_caixa)
             self.page.update()
             return
+
+        self.page.open(self.instance.modal_caixa)
+        self.page.update()  
         
-        self.instance.status_caixa = 'A'        
-
-        data_abertura = datetime.datetime.now().strftime("%d/%m/%y %H:%M:%S")
-
-        if self.instance.edt_troco_inicial.value == '':
-            troco_abertura = 0.00    
-        else:
-            troco_abertura = float(self.instance.edt_troco_inicial.value.replace(',','.'))
-
-        pr_abriu = self.instance.id_prof
-        id_loja = self.instance.id_loja
-
-        self.model.AbrirCaixa(
-            id_loja=id_loja,
-            data_abertura=data_abertura,
-            troco_abertura=troco_abertura,
-            pr_abriu=pr_abriu
-        )
-
-        self.page.close(self.instance.modal_caixa)
-        self.page.update()
-        await self.page.client_storage.set("status_caixa", "A")
-        self.listItens()
-
 
     async def listItens(self):         
         response = await ProtectedApiCall(

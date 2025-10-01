@@ -31,6 +31,8 @@ class MainView(ft.View):
 
         self.status_caixa:str = 'F'
 
+        self.id_caixa:int = 0
+
         self.id_client:int = 0
 
         self.id_prof:int=0
@@ -51,7 +53,21 @@ class MainView(ft.View):
                 color=AppColors.GRAY_LIGHT,
             ),            
             on_click=self.controller.fechar_caixa
-        )         
+        )      
+
+        self.btn_abrir_caixa = ft.ElevatedButton(
+            visible=False,
+            text='Abrir caixa', 
+            color=AppColors.GRAY_LIGHT3,
+            bgcolor=AppColors.GRAY_DARK,
+            elevation=5,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=8),
+                side=ft.BorderSide(1, AppColors.GRAY_MED3),
+                color=AppColors.GRAY_LIGHT,
+            ),            
+            on_click=lambda e:self.page.run_task(self.controller.abrir_caixa)
+        )              
 
         self.edt_troco_inicial = CustomTextField(
             label="Troco inicial",
@@ -59,9 +75,50 @@ class MainView(ft.View):
             on_change=self.controller.calculo_troco
         ) 
 
+        self.edt_troco_fechamento = CustomTextField(
+            label="Troco de fechamento",
+            chars=r"^[0-9,]*$",
+        ) 
+
+        self.edt_dinheiro_fechamento = CustomTextField(
+            label="Total de entrada em dineheiro",
+            chars=r"^[0-9,]*$",
+        ) 
+
+        self.edt_pix_fechamento = CustomTextField(
+            label="Total de entrada em pix",
+            chars=r"^[0-9,]*$",
+        )    
+
+        self.edt_debito_fechamento = CustomTextField(
+            label="Total de entrada em debito",
+            chars=r"^[0-9,]*$",
+        )              
+
+        self.edt_credito_fechamento = CustomTextField(
+            label="Total de entrada em credito",
+            chars=r"^[0-9,]*$",
+        ) 
+
+        self.modal_fechamento_caixa = CustonModalView(
+            height=380,
+            page=self.page,
+            callback=lambda e:self.page.run_task(self.controller.confirmar_abertura_caixa, e),
+            callback2=lambda e:[self.page.close(self.modal_caixa), self.page.update()],
+            text_button_1="Fechar caixa",
+            controls=[
+               self.edt_troco_fechamento,
+               self.edt_dinheiro_fechamento,
+               self.edt_pix_fechamento,
+               self.edt_debito_fechamento,
+               self.edt_credito_fechamento
+            ]            
+        )
+
+
         self.modal_caixa = CustonModalView(
             self.page,
-            callback=lambda e:self.controller.abrir_caixa(),
+            callback=lambda e:self.page.run_task(self.controller.confirmar_abertura_caixa, e),
             callback2=lambda e:[self.page.close(self.modal_caixa), self.page.update()],
             text_button_1="Abrir caixa",
             height=150,
@@ -424,25 +481,19 @@ class MainView(ft.View):
                     self.btn_total,
                     self.btn_cancelar,
                     self.btn_fechar_caixa,
+                    self.btn_abrir_caixa
                 ],
             ),
         )         
 
 
     def did_mount(self):
+        self.page.run_task(self.controller.get_Data) 
 
-        if self.total == 0:            
-            self.btn_total.visible = False
-            self.btn_fechar_caixa.visible = True  
 
-        if self.status_caixa == 'A':
-            self.page.close(self.modal_caixa)
-
-        elif self.status_caixa == 'F':
-            self.page.open(self.modal_caixa)
-        
-        self.page.update()    
-        self.page.run_task(self.controller.get_Data)    
+            
+  
+           
 
 
 
