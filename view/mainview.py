@@ -103,8 +103,8 @@ class MainView(ft.View):
         self.modal_fechamento_caixa = CustonModalView(
             height=380,
             page=self.page,
-            callback=lambda e:self.page.run_task(self.controller.confirmar_abertura_caixa, e),
-            callback2=lambda e:[self.page.close(self.modal_caixa), self.page.update()],
+            callback=lambda e:self.page.run_task(self.controller.confirmar_fechamento_caixa, e),
+            callback2=lambda e:[self.page.close(self.modal_fechamento_caixa), self.page.update()],
             text_button_1="Fechar caixa",
             controls=[
                self.edt_troco_fechamento,

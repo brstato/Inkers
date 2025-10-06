@@ -24,6 +24,20 @@ class MainController:
         self.model_clientes = ClientModel()
 
 
+    async def get_status_caixa(self):
+        response = await ProtectedApiCall(
+            self.page, self.instance, self.model.status_caixa, 
+            id_loja=self.instance.id_loja,
+            token=self.instance.token
+        ).call_api_refresh_token()   
+        if response.status_code == 200:
+            self.instance.status_caixa = json.loads(response.content)["status"]
+            self.instance.id_caixa = json.loads(response.content)["id_caixa"]
+            self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
+            self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+
+
+
     def _collect_payment_values(self):
         dinheiro = _parse_currency(self.instance.edt_dinheiro.value)
         pix      = _parse_currency(self.instance.edt_pix.value)
@@ -64,8 +78,8 @@ class MainController:
         self.instance.id_loja      = await self.page.client_storage.get_async("id"     )
         self.instance.token        = await self.page.client_storage.get_async("token"  )
         self.instance.r_token      = await self.page.client_storage.get_async("r_token")   
-        self.instance.status_caixa = await self.page.client_storage.get_async("status_caixa")
-        self.instance.id_caixa     = await self.page.client_storage.get_async("id_caixa")
+
+        await self.get_status_caixa()
 
         if self.instance.total == 0:            
             self.instance.btn_total.visible = False
@@ -164,11 +178,66 @@ class MainController:
         self.page.update()
 
 
+    async def confirmar_fechamento_caixa(self, e):
+
+        id_caixa = self.instance.id_caixa
+        id_prof  = self.instance.id_prof
+        
+        _troco    = _parse_currency(self.instance.edt_troco_fechamento.value)
+        _dinheiro = _parse_currency(self.instance.edt_dinheiro_fechamento.value)
+        _pix      = _parse_currency(self.instance.edt_pix_fechamento.value)
+        _debito   = _parse_currency(self.instance.edt_debito_fechamento.value)
+        _credito  = _parse_currency(self.instance.edt_credito_fechamento.value) 
+
+        #_troco    = self.instance.edt_troco_fechamento.value
+        #_dinheiro = self.instance.edt_dinheiro_fechamento.value
+        #_pix      = self.instance.edt_pix_fechamento.value
+        #_debito   = self.instance.edt_debito_fechamento.value
+        #_credito  = self.instance.edt_credito_fechamento.value         
+
+        await ProtectedApiCall(
+            self.page, self.instance, self.model.fechar_caixa,
+            id_caixa =id_caixa,
+            pr_fechou=id_prof,
+            troco    =_troco,
+            dinheiro =_dinheiro,
+            pix      =_pix,
+            debito   =_debito,
+            credito  =_credito,
+            token    =self.instance.token             
+        ).call_api_refresh_token()
+
+        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)   
+        await self.page.client_storage.set_async("id_caixa", "0")   
+
+        self.page.close(self.instance.modal_fechamento_caixa)
+        self.page.update()
+
+
+
     async def fechar_caixa(self, e):
-        self.instance.status_caixa = 'F'
-        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
+        if self.instance.id_prof == 0:
+            self.dialog_profissional_caixa = CustonDialog(
+                page = self.page,
+                title="Atenção",
+                content="Por favor selecione o profissional!",
+                actions=[
+                    ft.TextButton(
+                        text="Voltar",
+                        on_click=lambda e: [
+                            self.page.close(self.dialog_profissional_caixa),
+                            self.page.update()
+                        ]
+                    )
+                ]
+            )
+            
+            self.page.open(self.dialog_profissional_caixa)
+            self.page.update()
+            return        
         self.page.open(self.instance.modal_fechamento_caixa)
-        self.page.update()    
+        self.page.update()
+   
 
 
     def calculo_troco(self, e):
@@ -252,7 +321,6 @@ class MainController:
                 ]
             )       
         
-
     
     async def abrir_caixa(self):
         if self.instance.id_prof == 0:
