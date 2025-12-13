@@ -13,6 +13,7 @@ from view.agendaview import AgendaView
 from view.anamneseview import AnamneseView
 
 def main(page: ft.Page):
+    # mudanca no projeto para InkedApp
     # Configurações iniciais da página/janela
     page.title = "InkedApp"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
