@@ -14,7 +14,7 @@ from view.anamneseview import AnamneseView
 
 def main(page: ft.Page):
     # Configurações iniciais da página/janela
-    page.title = "CaixaCerto"
+    page.title = "InkedApp"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.update()
