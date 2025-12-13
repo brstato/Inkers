@@ -60,7 +60,7 @@ class CustonModalView(ft.AlertDialog):
                                     ft.OutlinedButton(
                                         expand=True,
                                         height=45,
-                                        text="Voltar",
+                                        text="Fechar",
                                         style=ft.ButtonStyle(
                                             shape=ft.RoundedRectangleBorder(radius=8),
                                             #side=ft.BorderSide(1, AppColors.GRAY_DARK),

@@ -62,7 +62,6 @@ class ServiceView(ft.View):
                 self.edtNome,
                 self.edtValcusto,
                 self.edtValVenda,
-                self.edtComissao,
                 self.Comissionado,
                 self.infvalor                
             ],            
@@ -70,14 +69,13 @@ class ServiceView(ft.View):
         
         self.modalview = CustonModalView(
             self.page,
-            height=500,
+            height=450,
             callback=self.controller.editService,
             callback2=self.close_modal_view,
             controls=[
                 self.edtNome,
                 self.edtValcusto,
                 self.edtValVenda,
-                self.edtComissao,
                 self.Comissionado,
                 self.infvalor    
             ],
@@ -138,7 +136,6 @@ class ServiceView(ft.View):
         self.edtNome.value = ''
         self.edtValcusto.value = ''
         self.edtValVenda.value = ''
-        self.edtComissao.value = ''
         self.Comissionado.value = False
         self.infvalor.value = False  
         self.page.open(self.modalviewCreateService)

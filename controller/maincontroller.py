@@ -1,6 +1,5 @@
 import flet as ft
 from view.controls.controls_mainview.custoncardprofessional import CustonCardProfessional
-from model.loginmodel import LoginModel
 from model.professionalmodel import ProfessionlModel
 from model.clientmodel import ClientModel
 from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
@@ -24,6 +23,32 @@ class MainController:
         self.model_clientes = ClientModel()
 
 
+    async def atribuir_nota_cliente(self, e):
+        nota = self.instance.radio_group_nota_cliente.value
+        id_cliente = self.instance.id_client
+
+        await ProtectedApiCall(self.page, self.instance, self.model.UpdateNotaCliente,
+            id_cliente=id_cliente,
+            nota=nota,
+            token=self.instance.token).call_api_refresh_token()
+        self.page.close(self.instance.modal_nota_cliente)
+        self.page.update()
+        await self.limpar_venda(e)
+
+
+    def open_modal_recebimento(self, e):
+        self.instance.edt_dinheiro.value = ''
+        self.instance.edt_pix.value      = ''
+        self.instance.edt_debito.value   = ''
+        self.instance.edt_credito.value  = ''
+
+        self.instance.text_troco.value   = 'Troco: R$ 0,00'
+        
+        self.instance.text_total.value = f'Total: R$ {formatar_moeda_brasileira(self.instance.total)}'
+        self.page.open(self.instance.modal_recebimento)                
+        self.page.update()
+    
+    
     async def get_status_caixa(self):
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.status_caixa, 
@@ -33,9 +58,8 @@ class MainController:
         if response.status_code == 200:
             self.instance.status_caixa = json.loads(response.content)["status"]
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
-            self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
-            self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
-
+            await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
+            await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
 
 
     def _collect_payment_values(self):
@@ -99,6 +123,7 @@ class MainController:
         await self.listPorfissionais()
         await self.listItens()
         await self.listClientes()
+        await self.listInsumos()
 
         self.instance.progressRing.visible = False
         self.page.update()         
@@ -124,27 +149,38 @@ class MainController:
         self.page.update()           
 
 
-    def fechar_modal_pequisa_clientes(self):
+    async def confirmar_pequisa_clientes(self, e):
         self.page.close(self.instance.modal_pesquisa_clientes)
         self.page.update()
 
 
-    def cancelar_receber_venda(self):
+    def cancelar_receber_venda(self, e):
+        self.instance.text_total.value   = ''
         self.instance.edt_dinheiro.value = ''
-        self.instance.edt_pix.value = ''
-        self.instance.edt_debito.value = ''
-        self.instance.edt_credito.value = ''
+        self.instance.edt_pix.value      = ''
+        self.instance.edt_debito.value   = ''
+        self.instance.edt_credito.value  = ''
 
-        self.page.close(self.modal_recebimento)
+        self.page.close(self.instance.modal_recebimento)
         self.page.update()   
 
 
-    def limpar_venda(self):
+    async def limpar_venda(self, e):
+        self.instance.btn_fechar_caixa.visible = True
+        self.instance.btn_total.visible = False
+        self.instance.total = 0
         self.instance.text_client.value = ''
         self.instance.id_client = 0
+        self.instance.comission = 0
         self.instance.id_prof = 0
+        self.instance.area_dinheiro.value = ''
+        self.instance.area_pix.value = ''
+        self.instance.area_debito.value = ''
+        self.instance.area_credito.value = ''
         self.instance.list_itens.cancelar()
-        self.instance.list_profissionais.cancelar()        
+        self.instance.list_profissionais.cancelar()   
+        self.page.update()
+        await self.listItens()     
 
 
     def handle_filter_itens(self, e):
@@ -187,13 +223,7 @@ class MainController:
         _dinheiro = _parse_currency(self.instance.edt_dinheiro_fechamento.value)
         _pix      = _parse_currency(self.instance.edt_pix_fechamento.value)
         _debito   = _parse_currency(self.instance.edt_debito_fechamento.value)
-        _credito  = _parse_currency(self.instance.edt_credito_fechamento.value) 
-
-        #_troco    = self.instance.edt_troco_fechamento.value
-        #_dinheiro = self.instance.edt_dinheiro_fechamento.value
-        #_pix      = self.instance.edt_pix_fechamento.value
-        #_debito   = self.instance.edt_debito_fechamento.value
-        #_credito  = self.instance.edt_credito_fechamento.value         
+        _credito  = _parse_currency(self.instance.edt_credito_fechamento.value)       
 
         await ProtectedApiCall(
             self.page, self.instance, self.model.fechar_caixa,
@@ -207,12 +237,15 @@ class MainController:
             token    =self.instance.token             
         ).call_api_refresh_token()
 
+        self.instance.status_caixa = "F"
+
         await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)   
         await self.page.client_storage.set_async("id_caixa", "0")   
 
+        self.instance.btn_fechar_caixa.visible = False                    
+        self.instance.btn_abrir_caixa.visible = True
         self.page.close(self.instance.modal_fechamento_caixa)
         self.page.update()
-
 
 
     async def fechar_caixa(self, e):
@@ -234,11 +267,17 @@ class MainController:
             
             self.page.open(self.dialog_profissional_caixa)
             self.page.update()
-            return        
+            return      
+        
+        self.instance.edt_troco_fechamento.value    = ''
+        self.instance.edt_dinheiro_fechamento.value = ''
+        self.instance.edt_pix_fechamento.value      = ''
+        self.instance.edt_debito_fechamento.value   = ''
+        self.instance.edt_credito_fechamento.value  = ''
+
         self.page.open(self.instance.modal_fechamento_caixa)
         self.page.update()
    
-
 
     def calculo_troco(self, e):
         dinheiro, pix, debito, credito = self._collect_payment_values()
@@ -261,7 +300,7 @@ class MainController:
 
             for field in all_fields:
                 if field == target:
-                    field.value = f'{formatar_moeda_brasileira(self.total)}'
+                    field.value = f'{formatar_moeda_brasileira(self.instance.total)}'
                 else:
                     field.value = ''
 
@@ -295,7 +334,7 @@ class MainController:
 
         if response.status_code == 200:
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
-            self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+            await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
 
             self.instance.btn_abrir_caixa.visible = False
             self.instance.btn_fechar_caixa.visible = True
@@ -347,6 +386,67 @@ class MainController:
         self.page.update()  
         
 
+    async def baixa_insumo(self, e):
+        itens_insumo = []
+        for card in self.instance.list_insumos.controls:
+            if isinstance(card, CustonCardItensVenda) and card.quantidade > 0:
+                
+                id_insumo   = card.id
+                quantidade  = card.quantidade                
+                
+                item_data = {
+                    "id":id_insumo,
+                    "quantidade":quantidade
+                }
+
+                itens_insumo.append(item_data)
+
+        await ProtectedApiCall(
+            self.page, self.instance, self.model.UpdateInsumoData, 
+            itens=itens_insumo,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        self.page.close(self.instance.modal_insumos)
+        self.page.open(self.instance.dialog_nota_cliente)
+        self.page.update()
+        #await self.limpar_venda(e)
+        #await self.abrir_dialogo_nota_clientes(e)
+        
+
+    async def listInsumos(self):         
+        response = await ProtectedApiCall(
+            self.page, self.instance, self.model.GetInsumosData, 
+            id_loja=self.instance.id_loja, token=self.instance.token).call_api_refresh_token()
+           
+        array = json.loads(response.content)
+
+        self.instance.list_insumos.controls.clear()
+
+        for item in array:
+            id_prod      = item["id"     ]
+            name         = item["nome"   ]
+            estoque      = item["estoque"]
+            valor        = item["valor"  ]
+
+            card = CustonCardItensVenda(
+                page=self.page,
+                width=300,
+                instance=self.instance,
+                icon=ft.Icons.CATEGORY,
+                name=name,
+                id=id_prod,
+                estoque=estoque,
+                valor=valor,
+                tap=self.instance.list_itens.on_card_selected,
+                on_change=self.instance.list_insumos.recalculate_total
+            )
+
+            self.instance.list_insumos.controls.append(card) 
+            
+        self.page.update()  
+
+
     async def listItens(self):         
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.GetItensData, 
@@ -364,7 +464,6 @@ class MainController:
             valor        = item["valor_venda"       ]
             inf_valor    = item["inf_valor"         ]
             comissionado = item["comissionado"      ]
-            comissao     = item["comissao"          ]
 
             if ident == 0:
                 icon = ft.Icons.CATEGORY
@@ -383,7 +482,6 @@ class MainController:
                 valor=valor,
                 inf_valor=inf_valor,
                 comissionado=comissionado,
-                comissao=comissao,
                 tap=self.instance.list_itens.on_card_selected,
                 on_change=self.instance.list_itens.recalculate_total
             )
@@ -404,13 +502,19 @@ class MainController:
         self.instance.list_profissionais.controls.clear()
 
         for item in array:
-            name      = item["name"]
-            id_prof   = item["id"  ]
+            name      = item["name"    ]
+            id_prof   = item["id"      ]
+            comission = item["comissao"]
+
+            if len(array) == 1:
+                self.instance.id_prof = id_prof
+                self.instance.comission = comission
 
             card = CustonCardProfessional(
                 instance=self.instance,
                 name=name,
                 id=id_prof,
+                comission=comission,
                 tap=self.instance.list_profissionais.on_card_selected
             )
 
@@ -446,7 +550,31 @@ class MainController:
         self.page.update()
 
 
-    async def recebimento(self):
+    async def itens_venda(self):
+        itens_venda = []
+        for card in self.instance.list_itens.controls:
+            if isinstance(card, CustonCardItensVenda) and card.quantidade > 0:
+                item_data = {
+                    "id_produto":       card.id,
+                    "quantidade":       card.quantidade,
+                    "valor_unitario":   card.valor,
+                    "valor_total":      card.total,
+                    "comissionado":     card.comissionado,       
+                    "ident_serv":       card.ident_serv           
+                }
+                itens_venda.append(item_data)
+
+                if card.ident_serv == 1:
+                    self.instance.ident_serv = 1
+
+        payload = {
+            "itens": itens_venda
+        }
+
+        return payload        
+
+
+    async def recebimento(self, e):
         if self.instance.id_prof == 0:
             self.dialog = CustonDialog(
                 self.page,
@@ -466,7 +594,7 @@ class MainController:
             self.page.update()
             return
         
-        self.instance.text_total.value = f'Total: R$ {formatar_moeda_brasileira(self.total)}'
+        self.instance.text_total.value = f'Total: R$ {formatar_moeda_brasileira(self.instance.total)}'
         self.instance.text_troco.value = 'Troco: R$ 0,00'        
 
         dinheiro, pix, debito, credito = self._collect_payment_values()
@@ -488,7 +616,70 @@ class MainController:
             self.page.open(snackbar)
             self.page.update()
             return
+        
+        itens = json.dumps(await self.itens_venda())
 
-        self.instance.limpar_venda()
+        await ProtectedApiCall(
+            self.page, self.instance, self.model.receber_venda,
+            token=self.instance.token,
+            id_loja=self.instance.id_loja,
+            id_prof=self.instance.id_prof,
+            comission=self.instance.comission,
+            id_client=self.instance.id_client,
+            id_caixa=self.instance.id_caixa,
+            total=self.instance.total,
+            din=dinheiro,
+            pix=pix,
+            deb=debito,
+            cred=credito,   
+            troco=troco,         
+            itens=itens
+        ).call_api_refresh_token()
+
         self.page.close(self.instance.modal_recebimento)
+
+        if self.instance.ident_serv == 1:
+            self.page.open(self.instance.dialog_insumo)
+        else:
+            await self.limpar_venda(e)
+
         self.page.update()
+
+
+    async def fechar_dialogo_nota_clientes(self, e):
+        self.page.close(self.instance.dialog_nota_cliente) 
+        self.page.update()
+        await self.limpar_venda(e)
+
+
+    async def abrir_dialogo_nota_clientes(self, e):
+        if not self.instance.id_client == 0:
+            self.page.open(self.instance.dialog_nota_cliente)
+            self.page.update()
+
+
+    async def fechar_modal_nota_clientes(self, e):
+        self.page.close(self.instance.modal_nota_cliente) 
+        self.page.update() 
+        await self.limpar_venda(e)
+
+
+    async def fechar_dialogo_insumos(self, e):
+        self.page.close(self.instance.dialog_insumo) 
+        self.page.update() 
+        await self.abrir_dialogo_nota_clientes(e)        
+
+
+    async def abrir_modal_insumos(self, e):
+        self.page.close(self.instance.dialog_insumo)
+        self.page.open(self.instance.modal_insumos)
+        self.page.update()
+
+
+    async def fechar_modal_insumos(self, e):
+        self.page.close(self.instance.modal_insumos) 
+        self.page.update() 
+        await self.abrir_dialogo_nota_clientes()   
+    
+
+

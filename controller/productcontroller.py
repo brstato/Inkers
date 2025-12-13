@@ -37,7 +37,6 @@ class ProductController:
             self.instance.Comissionado.value,
             self.instance.edtValcusto.value,
             self.instance.edtValVenda.value,
-            self.instance.edtComissao.value,
             self.instance.edtEstoque.value,
             self.instance.edtMEstoque.value,        
             self.instance.token
@@ -64,7 +63,6 @@ class ProductController:
                     self.instance.Comissionado.value,
                     self.instance.edtValcusto.value,
                     self.instance.edtValVenda.value,
-                    self.instance.edtComissao.value,
                     self.instance.edtEstoque.value,
                     self.instance.edtMEstoque.value,        
                     self.instance.token
@@ -90,7 +88,6 @@ class ProductController:
             self.instance.Comissionado.value,
             self.instance.edtValcusto.value,
             self.instance.edtValVenda.value,
-            self.instance.edtComissao.value,
             self.instance.edtEstoque.value,
             self.instance.edtMEstoque.value,        
             self.instance.token
@@ -117,7 +114,6 @@ class ProductController:
                     self.instance.Comissionado.value,
                     self.instance.edtValcusto.value,
                     self.instance.edtValVenda.value,
-                    self.instance.edtComissao.value,
                     self.instance.edtEstoque.value,
                     self.instance.edtMEstoque.value,        
                     self.instance.token
@@ -207,7 +203,7 @@ class ProductController:
                     icon=ft.Icons.CATEGORY,
                     title=name,
                     desc=f'Custo: {formatar_moeda_brasileira(v_custo)} | Venda: {formatar_moeda_brasileira(v_venda)}',
-                    sub_desc=f'Margem: {margem}%',
+                    sub_desc=f'Margem: {margem}%, Vendido: {formatar_moeda_brasileira(v_vendido)}',
                     detail=f'Estoque: {estoque} | Min.: {m_estoque}',
                     id=id_prod,
                     callback=lambda id_prod: self.deleteProduct(id_prod),
@@ -217,7 +213,7 @@ class ProductController:
 
                 self.instance.list.controls.append(card) 
             
-            self.page.update()
+            #self.page.update()
 
         self.instance.progressRing.visible = False
         self.page.update()    
@@ -251,7 +247,6 @@ class ProductController:
             self.instance.infvalor.value     = json.loads(response.content)["inf_valor"   ] 
             self.instance.insumo.value       = json.loads(response.content)["insumo"      ]            
             self.instance.Comissionado.value = json.loads(response.content)["comissionado"]
-            self.instance.edtComissao.value  = json.loads(response.content)["comissao"    ]
             self.instance.edtEstoque.value   = json.loads(response.content)["estoque"     ]
             self.instance.edtMEstoque.value  = json.loads(response.content)["min_estoque" ]
 

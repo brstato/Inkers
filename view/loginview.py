@@ -21,9 +21,8 @@ class LoginView(ft.View):
         self.progress_ring = CustonProgressRing(self.page.height)
 
         self.logo = ft.Image(
-            src=f"/images/logo.png", 
-            width=150,
-            height=150,
+            width=300,
+            src=f"logo.png", 
             fit=ft.ImageFit.CONTAIN,
         )
 
@@ -62,7 +61,6 @@ class LoginView(ft.View):
                     text="Criar Conta",
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
-                        #side=ft.BorderSide(1, AppColors.GRAY_DARK),
                         color=AppColors.GRAY_LIGHT,
                     ),
                     on_click=lambda e: self.page.go("/account")

@@ -71,6 +71,8 @@ class CustonCardSimples(ft.Card):
 
 
     def select(self):
+        self.instance.text_client.value = self.title
+        self.instance.id_client = self.id       
         self.container.border = ft.border.all(2, AppColors.ORANGE_BURNT)
         self.selected = True
         self.update()

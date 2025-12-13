@@ -29,7 +29,6 @@ class ProductView(ft.View):
         self.edtNome     = CustomTextField(label="Nome do produto:")    
         self.edtValcusto = CustomTextField(label="Valor de custo:", chars=r"^[0-9,]*$")
         self.edtValVenda = CustomTextField(label="Valor de venda:", chars=r"^[0-9,]*$")
-        self.edtComissao = CustomTextField(label="Comissão do produto em %:", chars=r"^[0-9]*$")
         self.edtEstoque  = CustomTextField(label="Estoque:", chars=r"^[0-9]*$")
         self.edtMEstoque = CustomTextField(label="Estoque mínimo:", chars=r"^[0-9]*$")
 
@@ -72,7 +71,6 @@ class ProductView(ft.View):
                 self.edtNome,
                 self.edtValcusto,
                 self.edtValVenda,
-                self.edtComissao,
                 self.edtEstoque,
                 self.edtMEstoque,
                 self.insumo,
@@ -83,14 +81,13 @@ class ProductView(ft.View):
         
         self.modalview = CustonModalView(
             self.page,
-            height=650,
+            height=550,
             callback=self.controller.editProduct,
             callback2=self.close_modal_view,
             controls=[
                 self.edtNome,
                 self.edtValcusto,
                 self.edtValVenda,
-                self.edtComissao,
                 self.edtEstoque,
                 self.edtMEstoque,
                 self.insumo,
@@ -156,7 +153,6 @@ class ProductView(ft.View):
         self.edtNome.value = ''
         self.edtValcusto.value = ''
         self.edtValVenda.value = ''
-        self.edtComissao.value = ''
         self.edtEstoque.value = ''
         self.edtMEstoque.value = ''
         self.insumo.value = False

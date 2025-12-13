@@ -19,21 +19,22 @@ class ProtectedApiCall:
 
         response = await self.function(**self.kwargs)
 
-        if response.status_code != 200:
-            response = await self.model.refresh_token(self.instance.r_token, self.instance.id_loja)
+        if response != None:
+            if response.status_code != 200:
+                response = await self.model.refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            if response.status_code == 200:
-                data = response.json()
-                self.instance.token = data["token"]
-                self.instance.r_token = data["r_token"]
+                if response.status_code == 200:
+                    data = response.json()
+                    self.instance.token = data["token"]
+                    self.instance.r_token = data["r_token"]
 
-                await self.page.client_storage.set_async("token", self.instance.token)
-                await self.page.client_storage.set_async("r_token", self.instance.r_token)
-            
-                response = await self.function(**self.kwargs)
+                    await self.page.client_storage.set_async("token", self.instance.token)
+                    await self.page.client_storage.set_async("r_token", self.instance.r_token)
+                
+                    response = await self.function(**self.kwargs)
 
-            else:
-                self.page.go("/")    
+                else:
+                    self.page.go("/")    
 
         return response            
 

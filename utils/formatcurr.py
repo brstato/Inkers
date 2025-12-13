@@ -18,6 +18,6 @@ def _parse_currency(value_str: str) -> float:
     if not value_str:
         return 0.00
     try:
-        return float(value_str.replace(',', '.'))
+        return float(value_str.replace('.', '').replace(',', '.'))
     except (ValueError, TypeError):
         return 0.00    

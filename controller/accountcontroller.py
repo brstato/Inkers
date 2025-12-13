@@ -12,15 +12,20 @@ class AccountController:
 
         self.dialog = None
 
+        self.r_token:str = ''
+
 
     async def getAccountData(self, view_instance):
         id: str = await self.page.client_storage.get_async("id")
         token: str = await self.page.client_storage.get_async("token")
         r_token: str = await self.page.client_storage.get_async("r_token")
 
+        if (id == '') or (r_token == ''):
+            return
+
         view_instance.progressRing.visible = True
         self.page.update()
-
+        
         response = await self.model.getAccountData(id, token)
 
         if response.status_code == 401:
@@ -56,7 +61,7 @@ class AccountController:
             self.page.close(self.dialog)
             self.dialog = None
             self.page.update() 
-        if id != None:
+        if self.r_token != '' or self.r_token is not None:
             self.page.go("/main")
             self.page.update()
         else:
@@ -73,9 +78,9 @@ class AccountController:
 
         self.id:str      = view_instance.id
         self.token:str   = view_instance.token
-        self.r_token:str = view_instance.r_token
+        self.r_token = view_instance.r_token
 
-        if not self.id:
+        if not self.r_token:
 
             if not all([self.username, self.telefone, self.email, self.password, self.conf_pass]):
                 self.dialog = CustonDialog(

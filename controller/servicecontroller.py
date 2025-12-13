@@ -35,8 +35,7 @@ class ServiceController:
             self.instance.id_loja,         
             self.instance.Comissionado.value,
             self.instance.edtValcusto.value,
-            self.instance.edtValVenda.value,
-            self.instance.edtComissao.value,       
+            self.instance.edtValVenda.value,      
             self.instance.token
         )
 
@@ -59,8 +58,7 @@ class ServiceController:
                     self.instance.id_loja,         
                     self.instance.Comissionado.value,
                     self.instance.edtValcusto.value,
-                    self.instance.edtValVenda.value,
-                    self.instance.edtComissao.value,      
+                    self.instance.edtValVenda.value,      
                     self.instance.token
                 )          
 
@@ -82,8 +80,7 @@ class ServiceController:
             self.instance.infvalor.value,             
             self.instance.Comissionado.value,
             self.instance.edtValcusto.value,
-            self.instance.edtValVenda.value,
-            self.instance.edtComissao.value,       
+            self.instance.edtValVenda.value,      
             self.instance.token
         )
 
@@ -106,8 +103,7 @@ class ServiceController:
                     self.instance.infvalor.value,            
                     self.instance.Comissionado.value,
                     self.instance.edtValcusto.value,
-                    self.instance.edtValVenda.value,
-                    self.instance.edtComissao.value,      
+                    self.instance.edtValVenda.value,      
                     self.instance.token
                 )
 
@@ -186,7 +182,6 @@ class ServiceController:
                 v_custo   = item["valor_custo"]
                 v_venda   = item["valor_venda"]
                 id_serv   = item["id"         ]
-                comissao  = item["comissao"   ]
 
                 card = CustonCard(
                     page=self.page,
@@ -195,7 +190,7 @@ class ServiceController:
                     title=name,
                     desc=f'Custo: {formatar_moeda_brasileira(v_custo)} | Venda: {formatar_moeda_brasileira(v_venda)}',
                     sub_desc=f'Margem: {margem}%',
-                    detail=f'Comissão: {comissao}%',
+                    detail=f'Vendido: {formatar_moeda_brasileira(v_vendido)}',
                     id=id_serv,
                     callback=lambda id_serv: self.deleteServicet(id_serv),
                     tap=self.instance.list.on_card_selected,
@@ -237,7 +232,6 @@ class ServiceController:
             self.instance.edtNome.value      = json.loads(response.content)["nome"        ]
             self.instance.infvalor.value     = json.loads(response.content)["inf_valor"   ] 
             self.instance.Comissionado.value = json.loads(response.content)["comissionado"]
-            self.instance.edtComissao.value  = json.loads(response.content)["comissao"    ]
 
             self.page.open(self.instance.modalview)
 

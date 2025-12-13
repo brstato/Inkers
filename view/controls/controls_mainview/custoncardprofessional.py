@@ -2,10 +2,11 @@ import flet as ft
 from view.controls.colors import AppColors
 
 class CustonCardProfessional(ft.Card):
-    def __init__(self, instance, name:str='', id:int=0, tap:callable=None):
+    def __init__(self, instance, name:str='', comission:int=0, id:int=0, tap:callable=None):
         super().__init__()
 
         self.name:str = name
+        self.comission = comission
         self.id:int = id
         self.selected:bool = False
         self.tap = tap
@@ -46,15 +47,16 @@ class CustonCardProfessional(ft.Card):
         )     
 
 
-    def on_tap_callback(self, e):
+    async def on_tap_callback(self, e):
         if self.tap:
-            self.tap(self)
+            await self.tap(self)
 
 
     def select(self):
         self.container.border = ft.border.all(1, AppColors.ORANGE_BURNT)
         self.selected = True
         self.instance.id_prof = self.id
+        self.instance.comission = self.comission
         self.update()
 
 

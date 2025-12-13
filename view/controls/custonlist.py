@@ -1,5 +1,6 @@
 import flet as ft
 from view.controls.custoncard import CustonCard
+from view.controls.custoncarditensagenda import CustonCardItensAgenda
 
 
 class CustonList(ft.ListView):
@@ -22,7 +23,7 @@ class CustonList(ft.ListView):
     def on_card_selected(self, card_instance: CustonCard):
         # Percorre todos os cards na lista de controles
         for card in self.controls:
-            if isinstance(card, CustonCard): # Garante que estamos lidando com um CustonCard
+            if isinstance(card, CustonCard) or isinstance(card, CustonCardItensAgenda): # Garante que estamos lidando com um CustonCard
                 if card is card_instance:
                     # Se for o card que foi clicado, seleciona ele
                     card.select()

@@ -9,7 +9,9 @@ class CustomTextField(ft.TextField):
             can_reveal_password:bool=False,
             chars: str = '',  
             visible:bool=True,       
-            on_change=None     
+            on_change=None,
+            readOnly:bool=False,    
+            **kwargs            
         ):
 
         super().__init__(
@@ -22,8 +24,10 @@ class CustomTextField(ft.TextField):
             color=AppColors.WHITE,
             label_style=ft.TextStyle(color=AppColors.WHITE),
             input_filter=ft.InputFilter(allow=True, regex_string=chars, replacement_string=""),  
-            visible=visible
-            )     
+            visible=visible,
+            read_only=readOnly,
+            on_change = on_change
+        )     
         
-        self.on_change = on_change
+        
 

@@ -29,6 +29,8 @@ class MainView(ft.View):
 
         self.client:str = ''
 
+        self.ident_serv:int = 0
+
         self.status_caixa:str = 'F'
 
         self.id_caixa:int = 0
@@ -37,9 +39,109 @@ class MainView(ft.View):
 
         self.id_prof:int=0
 
+        self.comission: int = 0
+
         self.total:float=0              
 
         self.bgcolor = AppColors.BACKGROUND_DARK
+
+        self.dialog_nota_cliente = CustonDialog(
+            self.page,
+            "Atenção",
+            "Deseja atribuir uma nota ao cliente?",
+            [
+                ft.TextButton(
+                    "Cancelar",
+                    on_click=self.controller.fechar_dialogo_nota_clientes,
+                ),
+                ft.TextButton(
+                    "OK",
+                    on_click=lambda e:[self.page.open(self.modal_nota_cliente), self.page.update()]
+                )
+            ]
+        )
+
+        self.radio_button_a = ft.Radio(
+            label="A",
+            value="A",
+            fill_color=AppColors.ORANGE_DARK,
+            label_style=ft.TextStyle(
+                color=AppColors.ORANGE_DARK
+            )
+        )
+
+        self.radio_button_b = ft.Radio(
+            label="B",
+            value="B",
+            fill_color=AppColors.ORANGE_DARK,
+            label_style=ft.TextStyle(
+                color=AppColors.ORANGE_DARK
+            )            
+        )        
+
+        self.radio_button_c = ft.Radio(
+            label="C",
+            value="C",
+            fill_color=AppColors.ORANGE_DARK,
+            label_style=ft.TextStyle(
+                color=AppColors.ORANGE_DARK
+            )              
+            
+        )        
+
+        self.radio_group_nota_cliente = ft.RadioGroup(
+            content=ft.Row(
+                controls=[
+                    self.radio_button_a,
+                    self.radio_button_b,
+                    self.radio_button_c
+                ]
+            ),
+        )
+
+        self.modal_nota_cliente = CustonModalView(
+            self.page,
+            self.controller.atribuir_nota_cliente,
+            self.controller.fechar_modal_nota_clientes,
+            controls=[
+                ft.Text(
+                    'Atribua uma nota ao cliente.',
+                    color=AppColors.GRAY_LIGHT2
+                ),
+                self.radio_group_nota_cliente
+            ],
+            height=250
+        )
+
+        self.list_insumos = CustonList(self.page, self)
+
+        self.modal_insumos = CustonModalView(
+            self.page,
+            self.controller.baixa_insumo,
+            self.controller.fechar_modal_insumos,
+            [
+                self.list_insumos
+            ],
+            500,
+            350,
+            'Dar baixa'
+        )
+
+        self.dialog_insumo = CustonDialog(
+            self.page,
+            'Atenção',
+            'Deseja dar baixa nos materiais de insumo usados no atendimento?',
+            [
+                ft.TextButton(
+                    'Cancelar',
+                    on_click=self.controller.fechar_dialogo_insumos
+                ),
+                ft.TextButton(
+                    'OK',
+                     on_click=self.controller.abrir_modal_insumos
+                )
+            ]
+        )
 
         self.btn_fechar_caixa = ft.ElevatedButton(
             visible=False,
@@ -81,7 +183,7 @@ class MainView(ft.View):
         ) 
 
         self.edt_dinheiro_fechamento = CustomTextField(
-            label="Total de entrada em dineheiro",
+            label="Total de entrada em dinheiro",
             chars=r"^[0-9,]*$",
         ) 
 
@@ -103,7 +205,7 @@ class MainView(ft.View):
         self.modal_fechamento_caixa = CustonModalView(
             height=380,
             page=self.page,
-            callback=lambda e:self.page.run_task(self.controller.confirmar_fechamento_caixa, e),
+            callback=self.controller.confirmar_fechamento_caixa,
             callback2=lambda e:[self.page.close(self.modal_fechamento_caixa), self.page.update()],
             text_button_1="Fechar caixa",
             controls=[
@@ -115,10 +217,9 @@ class MainView(ft.View):
             ]            
         )
 
-
         self.modal_caixa = CustonModalView(
             self.page,
-            callback=lambda e:self.page.run_task(self.controller.confirmar_abertura_caixa, e),
+            callback=self.controller.confirmar_abertura_caixa,
             callback2=lambda e:[self.page.close(self.modal_caixa), self.page.update()],
             text_button_1="Abrir caixa",
             height=150,
@@ -151,13 +252,13 @@ class MainView(ft.View):
             on_change=self.controller.calculo_troco
         )
 
-        self.area_dinheiro = ft.Row(
+        self.area_dinheiro = ft.Stack(
             controls=[
                 self.edt_dinheiro,
                 ft.IconButton(
                     icon=ft.Icons.MONETIZATION_ON,
                     icon_color=AppColors.GRAY_LIGHT3,
-                    offset=ft.Offset(x=-1.2, y=0),
+                    right=10,
                     on_click=lambda e: self.controller.preencher_valor_total(self.edt_dinheiro, e)
                 )
             ]
@@ -169,14 +270,14 @@ class MainView(ft.View):
             on_change=self.controller.calculo_troco
         )        
 
-        self.area_pix = ft.Row(
+        self.area_pix = ft.Stack(
             controls=[
                 self.edt_pix,
                 ft.IconButton(
                     icon=ft.Icons.MONETIZATION_ON,
                     icon_color=AppColors.GRAY_LIGHT3,
-                    offset=ft.Offset(x=-1.2, y=0),
-                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_pix, e)
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_pix, e),
+                    right=10,
                 )
             ]
         ) 
@@ -187,14 +288,14 @@ class MainView(ft.View):
             on_change=self.controller.calculo_troco
         )    
 
-        self.area_debito = ft.Row(
+        self.area_debito = ft.Stack(
             controls=[
                 self.edt_debito,
                 ft.IconButton(
                     icon=ft.Icons.MONETIZATION_ON,
                     icon_color=AppColors.GRAY_LIGHT3,
-                    offset=ft.Offset(x=-1.2, y=0),
-                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_debito, e)
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_debito, e),
+                    right=10,
                 )
             ]
         ) 
@@ -205,15 +306,15 @@ class MainView(ft.View):
             on_change=self.controller.calculo_troco
         )          
 
-        self.area_credito = ft.Row(
+        self.area_credito = ft.Stack(
             controls=[
                 self.edt_credito,
                 ft.IconButton(
                     alignment=ft.alignment.center_right,
                     icon=ft.Icons.MONETIZATION_ON,
                     icon_color=AppColors.GRAY_LIGHT3,
-                    offset=ft.Offset(x=-1.2, y=0),
-                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_credito, e)
+                    on_click=lambda e: self.controller.preencher_valor_total(self.edt_credito, e),
+                    right=10,
                 )
             ]
         ) 
@@ -222,11 +323,15 @@ class MainView(ft.View):
             height=400,
             page=self.page,
             text_button_1="Receber",
-            callback=lambda e:self.page.run_task(self.controller.recebimento),
+            callback=self.controller.recebimento,
             callback2=self.controller.cancelar_receber_venda,
             controls=[
                 self.text_total,
                 self.text_troco,
+                #self.edt_dinheiro,
+                #self.edt_pix,
+                #self.edt_debito,
+                #self.edt_credito,
                 self.area_dinheiro,
                 self.area_pix,
                 self.area_debito,
@@ -253,7 +358,7 @@ class MainView(ft.View):
         self.modal_pesquisa_clientes = CustonModalView(
             height=650,
             page=self.page,
-            callback=self.controller.fechar_modal_pequisa_clientes,
+            callback=self.controller.confirmar_pequisa_clientes,
             callback2=self.controller.cancelar_modal_pesquisa_clientes,
             controls=[
                 self.edtPesquisaClientes,
@@ -272,7 +377,7 @@ class MainView(ft.View):
             height=40,
             content_padding=10,    
             on_click=lambda e: self.controller.on_enter_edt_pesquisa(e),
-            on_blur=lambda e: self.controlleron_exit_edt_pesquisa(e)
+            on_blur=lambda e: self.controller.on_exit_edt_pesquisa(e)
         )        
 
         self.btn_pesquisa_produtos = ft.ElevatedButton(
@@ -353,7 +458,7 @@ class MainView(ft.View):
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),            
-            on_click=self.page.run_task(self.controller.recebimento)
+            on_click=self.controller.open_modal_recebimento
         ) 
 
         self.drawer = ft.NavigationDrawer(
@@ -463,10 +568,22 @@ class MainView(ft.View):
             icon=ft.Icons.CLOSE,
             icon_color=AppColors.GRAY_LIGHT3,
             visible=False,
-            on_click=lambda e: self.controller.limpar_venda()
+            on_click=self.controller.limpar_venda
         )
 
+        self.btn_agenda = ft.FloatingActionButton(
+            icon=ft.Icons.EVENT,
+            bgcolor=AppColors.ORANGE_BURNT,
+            shape=ft.CircleBorder(),
+            tooltip="Agenda",
+            on_click=lambda e: self.page.go("/agenda")
+        )
+
+        self.floating_action_button = self.btn_agenda
+        self.floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED
+
         self.bottom_appbar = ft.BottomAppBar(
+            shape=ft.NotchShape.CIRCULAR,
             height=60,
             bgcolor=AppColors.GRAY_DARK,
             content=ft.Row(

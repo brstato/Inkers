@@ -36,35 +36,26 @@ class ClientView(ft.View):
 
         self.controller  = ClientController(self.page, self)
 
+        self.calendario = ft.DatePicker(on_change=self.controller.selected_date_calendar)       
+
         self.edtNome         = CustomTextField(label="Nome do cliente:")    
         self.edtNoneSocial   = CustomTextField(label="Nome social:")
-        self.edtDtNascimento = CustomTextField(label="Aniversário:")
+        
+        self.edtDtNascimento = CustomTextField(label="Aniversário:", readOnly=True)
         self.edtTelefone     = CustomTextField(label="Telefone", chars=r"^[0-9]*$")      
 
 
-        self.navigation = ft.Container(
-            height=40,
-            expand=True,
-            content=ft.Row(
-                controls=[
-                    ft.IconButton(
-                        icon=ft.Icons.ARROW_CIRCLE_LEFT_SHARP,
-                        icon_color=AppColors.GRAY_LIGHT,
-                        on_click=lambda e: self.page.run_task(
-                            self.prior_navigation, e
-                        ) 
-                    ),
-                    ft.Container(expand=True),
-                    ft.IconButton(
-                        icon=ft.Icons.ARROW_CIRCLE_RIGHT_SHARP,
-                        icon_color=AppColors.GRAY_LIGHT,   
-                        on_click=lambda e: self.page.run_task(
-                            self.next_navigation, e
-                        )                                                                     
-                    )
-                ],
-            ),
-        )
+        self.area_data = ft.Stack(
+            controls=[
+                self.edtDtNascimento, 
+                ft.IconButton(
+                    icon=ft.Icons.DATE_RANGE,
+                    on_click=lambda e: [self.page.open(self.calendario), self.page.update()],
+                    icon_color=AppColors.GRAY_LIGHT2,
+                    right=10,
+                )
+            ]
+        ) 
 
         self.edtPesquisa = ft.TextField(
             visible=False,
@@ -100,7 +91,7 @@ class ClientView(ft.View):
             callback2=self.close_modal_view_create_client,
             controls=[
                 self.edtNome,
-                self.edtDtNascimento,
+                self.area_data,
                 self.edtTelefone            
             ],            
         )        
@@ -112,7 +103,7 @@ class ClientView(ft.View):
             callback2=self.close_modal_view,
             controls=[
                 self.edtNome,
-                self.edtDtNascimento,
+                self.area_data,
                 self.edtTelefone    
             ],
         )
@@ -267,8 +258,6 @@ class ClientView(ft.View):
         self.id_loja: str = await self.page.client_storage.get_async("id"     )
         self.token:   str = await self.page.client_storage.get_async("token"  )
         self.r_token: str = await self.page.client_storage.get_async("r_token")      
-
-        #self.controller = ClientController(self.page, self)
 
         await self.controller.listClientData()         
 

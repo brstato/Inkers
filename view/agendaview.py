@@ -1,0 +1,234 @@
+import flet as ft
+from view.controls.colors import AppColors
+from view.controls.custontextfield import CustomTextField
+from controller.agendacontroller import AgendaController
+from view.controls.custonprogressring import CustonProgressRing
+from view.controls.custoncardcalendar import CustonRowCalendar
+from view.controls.custoncardcalendar import CustonRowDays
+from view.controls.controls_mainview.custonlistprofessionais import CustonListProfessional
+from view.controls.custonmodalview import CustonModalView
+from view.controls.custonlist import CustonList
+
+
+class AgendaView(ft.View):
+    def __init__(self, page:ft.Page):
+        super().__init__(
+            route="/agenda", 
+            scroll="auto",
+            bgcolor=AppColors.BACKGROUND_DARK
+        )
+
+        self.id_agenda:int = 0
+        self.id_prof:int = 0
+
+        self.page = page
+
+        self.id_loja:str = ''
+        self.token:str   = ''
+        self.r_token:str = ''
+
+        self.client_name:str = ''
+
+        self.client_telefone:int = 0
+
+        self.client_id:int = 0
+
+        self.progressRing = CustonProgressRing(self.page.height) 
+
+        self.controller = AgendaController(self.page, self)
+
+        self.month_row = CustonRowCalendar(self.page, self)
+
+        self.month_container = ft.Container(
+            gradient=ft.LinearGradient(
+                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
+                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BACKGROUND_DARK,   # Cor final
+                ],                
+            ),             
+            height=50,
+            content=self.month_row,
+            padding=ft.padding.all(10),
+            margin=ft.margin.all(2),
+            bgcolor=AppColors.GRAY_DARK,
+            border_radius=ft.border_radius.all(10),            
+        )
+
+        self.edt_client_name = ft.Dropdown(
+            label='Nome do cliente',
+            label_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            elevation=5,
+            editable=True,
+            enable_filter=True,
+            expand=True,
+            enable_search=True,
+            menu_height=500,
+            text_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            border=ft.InputBorder.UNDERLINE,
+            border_color=AppColors.ORANGE_DARK,
+            focused_border_color=AppColors.ORANGE_DARK,           
+            on_change=self.controller.on_client_selected
+        )
+
+        self.edt_client_telefone = CustomTextField(
+            label='Telefone',
+            readOnly=True
+        )
+
+        self.client_area = ft.Stack(
+            controls=[
+                self.edt_client_name,
+                ft.IconButton(
+                    icon=ft.Icons.SEARCH,
+                    icon_color=AppColors.GRAY_LIGHT2,
+                    right=5
+                )
+            ]
+        )
+
+        self.calendario_agenda = ft.DatePicker(on_change=self.controller.selected_date_calendar)
+
+        self.edt_hora_ini = CustomTextField(
+            label='Inicio'
+        )
+
+
+        self.edt_hora_fim = CustomTextField(
+            label='Fim'
+        )
+
+        self.hora_fim = ft.TimePicker(on_change=self.controller.selected_time_fim)
+
+        self.area_fim = ft.Stack(
+            controls=[
+                self.edt_hora_fim,
+                ft.IconButton(
+                    right=5,
+                    icon=ft.Icons.SCHEDULE,                    
+                    on_click=lambda e:[self.page.open(self.hora_fim), self.page.update()],
+                    icon_color=AppColors.GRAY_LIGHT2,                    
+                )
+            ]
+        )
+
+
+        self.hora_ini = ft.TimePicker(on_change=self.controller.selected_time_ini)
+
+        self.area_ini = ft.Stack(
+            controls=[
+                self.edt_hora_ini,
+                ft.IconButton(
+                    right=5,
+                    icon=ft.Icons.SCHEDULE,                    
+                    on_click=lambda e:[self.page.open(self.hora_ini), self.page.update()],
+                    icon_color=AppColors.GRAY_LIGHT2,
+                )
+            ]
+        )
+
+        self.edt_date_agendamento = CustomTextField(
+            label='Data do agendamento',
+            readOnly=True
+        )
+
+        self.date_area = ft.Stack(
+            controls=[
+                self.edt_date_agendamento,
+                ft.IconButton(
+                    icon=ft.Icons.DATE_RANGE,
+                    icon_color=AppColors.GRAY_LIGHT2,
+                    right=5,
+                    on_click=lambda e:[self.page.open(self.calendario_agenda), self.page.update()]
+                )                
+            ]
+        )
+
+        self.modal_create_agenda = CustonModalView(
+            self.page,
+            callback=self.controller.confirm_agendamento,
+            callback2=lambda e: self.page.run_task(self.controller.fechar_modal_agenda, e),
+            controls=[
+                self.edt_client_name,
+                self.edt_client_telefone,
+                self.date_area,
+                self.area_ini,
+                self.area_fim
+            ],
+            height=360,
+        )
+
+        self.calendario = CustonRowDays(self.page, self)
+
+        self.container_calendario = ft.Container(
+            gradient=ft.LinearGradient(
+                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
+                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BACKGROUND_DARK,   # Cor final
+                ],                
+            ),             
+            height=90,
+            content=self.calendario,
+            padding=ft.padding.all(10),
+            margin=ft.margin.all(2),
+            bgcolor=AppColors.GRAY_DARK,
+            border_radius=ft.border_radius.all(10),
+        )
+
+        self.list_profissionais = CustonListProfessional(
+            self.page
+        )
+
+        self.list_agendamento = CustonList(
+            self.page
+        )
+
+        self.bottom_appbar = ft.BottomAppBar(
+            height=60,
+            bgcolor=AppColors.GRAY_DARK,
+            content=ft.Row(
+                controls=[
+                    ft.IconButton(
+                        icon=ft.Icons.HOME,
+                        icon_color=AppColors.ORANGE_BURNT,
+                        on_click=lambda e:self.page.go("/main")
+                    ),
+                    ft.Container(
+                        expand=True,
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.ADD,
+                        icon_color=AppColors.ORANGE_BURNT,
+                        on_click=self.controller.create_agenda
+                    ),
+                ],
+            )            
+        )        
+
+
+        self.controls = [
+            ft.Stack(
+                controls=[
+                    ft.Column(
+                        controls=[
+                            self.list_profissionais,
+                            self.month_container,
+                            self.container_calendario,
+                            self.list_agendamento,
+                        ]
+                    ),
+                    self.progressRing
+                ]
+            ),            
+        ]
+
+
+    def did_mount(self):
+        self.page.run_task(self.controller.get_data)    

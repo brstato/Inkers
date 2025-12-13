@@ -32,7 +32,7 @@ class ProductModel:
 
     async def createProductData(self, nome:str, inf_valor:str, insumo:str,  
                                 id_loja:str, comissionado:str, valor_custo:float, valor_venda:float,
-                                comissao:int, quantidade_estoque:int, min_estoque: int,
+                                quantidade_estoque:int, min_estoque: int,
                                 token:str) -> httpx.Response:
         payload = {
             "id_loja":id_loja,
@@ -41,7 +41,6 @@ class ProductModel:
             "insumo":insumo,
             "valor_custo":valor_custo,
             "valor_venda":valor_venda,
-            "comissao":comissao,
             "quantidade_estoque":quantidade_estoque,
             "min_estoque":min_estoque,
             "comissionado":comissionado

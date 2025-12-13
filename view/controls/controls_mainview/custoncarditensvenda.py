@@ -12,7 +12,7 @@ class CustonCardItensVenda(ft.Card):
             page: ft.Page,
             instance, 
             icon:None, 
-            valor:float,
+            valor:float=0.00,
             name:str='', 
             id=None, 
             estoque:int=0, 
@@ -20,6 +20,7 @@ class CustonCardItensVenda(ft.Card):
             inf_valor:bool=False,
             comissionado:bool=False,
             comissao:int=0,
+            valor_visible:bool=True,
             tap:callable=None,
             on_change:callable=None
         ):
@@ -44,6 +45,7 @@ class CustonCardItensVenda(ft.Card):
         self.inf_valor = inf_valor
         self.comissionado = comissionado
         self.comissao = comissao
+        self.valor_visible = valor_visible
         
         self.border_radius=ft.border_radius.all(10)
         self.elevation=10
@@ -119,6 +121,25 @@ class CustonCardItensVenda(ft.Card):
             value=f'Estoque: {self.estoque}', 
             color=AppColors.GRAY_LIGHT, size=14
         )
+
+        self.text_valor = ft.Text( 
+            visible=self.valor_visible,
+            size=18, 
+            offset=ft.Offset(x=0, y=-0.4),                                   
+            spans=[
+                self.text_valor, 
+                ft.TextSpan(
+                    text=f' X ',
+                    style=ft.TextStyle(size=12, color=AppColors.GRAY_LIGHT3,),                                                                                                                       
+                ),    
+                self.text_quant,  
+                ft.TextSpan(
+                    text=f' = ',
+                    style=ft.TextStyle(size=12, color=AppColors.GRAY_LIGHT3,),                                                                                                                       
+                ),       
+                self.text_total,                                                                                                                                     
+            ],                                
+        )
         
         self.container=ft.Container(
             gradient=ft.LinearGradient(
@@ -141,23 +162,7 @@ class CustonCardItensVenda(ft.Card):
                         content=ft.Column(
                             controls=[
                                 ft.Text(value=self.name, color=AppColors.ORANGE_DARK, size=16, weight=ft.FontWeight.BOLD,),
-                                ft.Text( 
-                                    size=18, 
-                                    offset=ft.Offset(x=0, y=-0.4),                                   
-                                    spans=[
-                                        self.text_valor, 
-                                        ft.TextSpan(
-                                            text=f' X ',
-                                            style=ft.TextStyle(size=12, color=AppColors.GRAY_LIGHT3,),                                                                                                                       
-                                        ),    
-                                        self.text_quant,  
-                                        ft.TextSpan(
-                                            text=f' = ',
-                                            style=ft.TextStyle(size=12, color=AppColors.GRAY_LIGHT3,),                                                                                                                       
-                                        ),       
-                                        self.text_total,                                                                                                                                     
-                                    ],                                
-                                ),
+                                self.text_valor,
                                 self.text_estoque,
                             ],
                             width=self.width / 2,
@@ -284,17 +289,18 @@ class CustonCardItensVenda(ft.Card):
 
 
     async def Confirm_inf_valor(self, e):
-        self.valor = float(self.edtValVenda.value.replace(',', '.'))
+        if not self.edtValVenda.value == '':
+            self.valor = float(self.edtValVenda.value.replace(',', '.'))
 
-        if self.valor < self.valor_original:
-            self.page.open(self.dialog)
+            if self.valor < self.valor_original:
+                self.page.open(self.dialog)
 
-        self.total = self.valor * self.quantidade
-        self.text_valor.text = f'R$ {formatar_moeda_brasileira(self.valor)}'        
-        self.text_total.text = f'R$ {formatar_moeda_brasileira(self.total)}'        
-        self.page.close(self.moda_view)   
-        self.on_change()     
-        self.page.update()          
+            self.total = self.valor * self.quantidade
+            self.text_valor.text = f'R$ {formatar_moeda_brasileira(self.valor)}'        
+            self.text_total.text = f'R$ {formatar_moeda_brasileira(self.total)}'        
+            self.page.close(self.moda_view)   
+            self.on_change()     
+            self.page.update()          
 
 
     def confirm_valor(self, e):

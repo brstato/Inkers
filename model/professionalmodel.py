@@ -1,4 +1,5 @@
 import httpx
+import model.config
 
 
 class ProfessionlModel:

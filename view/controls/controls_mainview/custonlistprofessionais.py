@@ -13,7 +13,7 @@ class CustonListProfessional(ft.Row):
         self.selected_card = None
   
 
-    def on_card_selected(self, card_instance: CustonCardProfessional):
+    async def on_card_selected(self, card_instance: CustonCardProfessional):
         # Percorre todos os cards na lista de controles
         for card in self.controls:
             if isinstance(card, CustonCardProfessional): # Garante que estamos lidando com um CustonCard

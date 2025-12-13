@@ -31,14 +31,13 @@ class ServiceModel:
 
     async def createServiceData(self, nome:str, inf_valor:str,  
                                 id_loja:str, comissionado:str, valor_custo:float, valor_venda:float,
-                                comissao:int, token:str) -> httpx.Response:
+                                token:str) -> httpx.Response:
         payload = {
             "id_loja":id_loja,
             "nome":nome,
             "inf_valor":inf_valor,
             "valor_custo":valor_custo,
             "valor_venda":valor_venda,
-            "comissao":comissao,
             "comissionado":comissionado
         }
         header = {
@@ -58,14 +57,13 @@ class ServiceModel:
 
     async def editServiceData(self, id:int, nome:str, inf_valor:str, comissionado:str, 
                              valor_custo:float, valor_venda:float,
-                            comissao:int, token:str) -> httpx.Response:
+                             token:str) -> httpx.Response:
         payload = {
             "id":id,
             "nome":nome,
             "inf_valor":inf_valor,
             "valor_custo":valor_custo,
             "valor_venda":valor_venda,
-            "comissao":comissao,
             "comissionado":comissionado
         }
         header = {
