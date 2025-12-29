@@ -26,10 +26,10 @@ class AnamneseDTO:
     estilo_tatuagem: str
     nome: str
     insta: str
-    id_loja_ex: str
     assinatura: str
     telefone: str
     data_nascimento: str
+    telefone_estudio: str
 
 
     def to_dict(self):

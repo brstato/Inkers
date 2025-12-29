@@ -11,6 +11,7 @@ from view.controls.custonmodalview import CustonModalView
 from view.controls.custoncardsimples import CustonCardSimples
 from view.controls.custontextfield import CustomTextField
 from view.controls.custondialog import CustonDialog
+from view.controls.custonbuttons import CustonButton
 
 class MainView(ft.View):
     def __init__(
@@ -328,10 +329,6 @@ class MainView(ft.View):
             controls=[
                 self.text_total,
                 self.text_troco,
-                #self.edt_dinheiro,
-                #self.edt_pix,
-                #self.edt_debito,
-                #self.edt_credito,
                 self.area_dinheiro,
                 self.area_pix,
                 self.area_debito,
@@ -468,76 +465,25 @@ class MainView(ft.View):
                 ft.Container(                    
                     content=ft.Column(                        
                         controls=[
-                            ft.ElevatedButton(
-                                text="Minha conta",
-                                bgcolor=AppColors.GRAY_DARK,
-                                color=AppColors.WHITE,
-                                elevation=5,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                    side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
-                                    color=AppColors.GRAY_LIGHT,
+                            ft.Container(
+                                height=50,
+                                content=ft.TextButton(
+                                    icon=ft.Icons.SHARE,
+                                    icon_color=AppColors.ORANGE_DARK,
+                                    text="Compartilhar anamnese",
+                                    style=ft.ButtonStyle(
+                                        color=AppColors.ORANGE_DARK,
+                                    ),
                                 ),
-                                width=250,
-                                height=45,
-                                on_click=lambda e: self.page.go("/account"),
                             ),
-                            ft.ElevatedButton(
-                                text="Profissionais",
-                                bgcolor=AppColors.GRAY_DARK,
-                                color=AppColors.WHITE,
-                                elevation=5,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                    side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
-                                    color=AppColors.GRAY_LIGHT,
-                                ),
-                                width=250,
-                                height=45,
-                                on_click=lambda e: self.page.go("/professional"),
-                            ),   
-                            ft.ElevatedButton(
-                                text="Produtos",
-                                bgcolor=AppColors.GRAY_DARK,
-                                color=AppColors.WHITE,
-                                elevation=5,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                    side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
-                                    color=AppColors.GRAY_LIGHT,
-                                ),
-                                width=250,
-                                height=45,
-                                on_click=lambda e: self.page.go("/product"),
-                            ),    
-                            ft.ElevatedButton(
-                                text="Serviços",
-                                bgcolor=AppColors.GRAY_DARK,
-                                color=AppColors.WHITE,
-                                elevation=5,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                    side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
-                                    color=AppColors.GRAY_LIGHT,
-                                ),
-                                width=250,
-                                height=45,
-                                on_click=lambda e: self.page.go("/services"),
-                            ),                                                                               
-                            ft.ElevatedButton(
-                                text="Clientes",
-                                bgcolor=AppColors.GRAY_DARK,
-                                color=AppColors.WHITE,
-                                elevation=5,
-                                style=ft.ButtonStyle(
-                                    shape=ft.RoundedRectangleBorder(radius=8),
-                                    side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
-                                    color=AppColors.GRAY_LIGHT,
-                                ),
-                                width=250,
-                                height=45,
-                                on_click=lambda e: self.page.go("/clients"),
-                            ),      
+
+
+                            CustonButton(self.page, "Minha conta", "/account"),
+                            CustonButton(self.page, "Profissionais", "/professional"),
+                            CustonButton(self.page, "Produtos", "/product"),  
+                            CustonButton(self.page, "Serviços", "/services"),  
+                            CustonButton(self.page, "Clientes", "/clients"),                                                
+                                               
                             ft.ElevatedButton(
                                 text="Sair",
                                 bgcolor=AppColors.GRAY_DARK,

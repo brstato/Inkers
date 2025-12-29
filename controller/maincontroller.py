@@ -10,6 +10,7 @@ from view.controls.custoncardsimples import CustonCardSimples
 from view.controls.colors import AppColors
 from controller.call_api import ProtectedApiCall
 from view.controls.custondialog import CustonDialog
+from model.accountmodel import AccountModel
 import datetime
 
 
@@ -21,6 +22,7 @@ class MainController:
         self.model = mainModel()
         self.model_professional = ProfessionlModel()
         self.model_clientes = ClientModel()
+        self.account_model = AccountModel()
 
 
     async def atribuir_nota_cliente(self, e):
@@ -49,13 +51,29 @@ class MainController:
         self.page.update()
     
     
+    async def get_account_data(self):
+        
+        response = await ProtectedApiCall(
+            self.page, self.instance, self.account_model.getAccountData,
+            id=self.instance.id_loja,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        if response.status_code == 200:
+            data = json.loads(response.content)
+            await self.page.client_storage.set_async("account_name", data["nome"])
+            await self.page.client_storage.set_async("account_telefone", data["telefone"])
+
+
     async def get_status_caixa(self):
+
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.status_caixa, 
             id_loja=self.instance.id_loja,
             token=self.instance.token
-        ).call_api_refresh_token()   
-        if response.status_code == 200:
+        ).call_api_refresh_token()
+        
+        if response.status_code == 200:           
             self.instance.status_caixa = json.loads(response.content)["status"]
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
             await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
@@ -120,6 +138,7 @@ class MainController:
         self.instance.progressRing.visible = True
         self.page.update()
 
+        await self.get_account_data()
         await self.listPorfissionais()
         await self.listItens()
         await self.listClientes()

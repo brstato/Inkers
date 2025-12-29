@@ -25,28 +25,7 @@ class AnamneseController:
         if not self.instance.signature_pad.is_empty():
             arquivo:str = f'sig_{int(time.time())}.png'
 
-            caminho:str = os.path.join('/tmp', arquivo)
-
-            # try:
-            #     width, height = 400, 200
-            #     image = Image.new("RGB", (width, height), "white")
-            #     draw = ImageDraw.Draw(image)
-
-            #     for stroke in self.instance.signature_pad.draw_data:
-            #         if len(stroke) > 1:
-            #             draw.line(stroke, fill="black", width=3)
-            #         else:
-            #             x, y = stroke[0]
-            #             r = 1.5
-            #             draw.ellipse((x-r, y-r, x+r, y+r), fill="black")
-            #     image.save(caminho, format="PNG")
-                                
-            #     # CRÍTICO: Dá permissão para o Delphi/WKHTML lerem
-            #     os.chmod(caminho, 0o777)
-                
-            # except Exception as ex:
-            #     print(f"Erro ao salvar assinatura: {ex}")
-            #     caminho = "" # Falhou, vai sem assinatura       
+            caminho:str = os.path.join('/tmp', arquivo)      
 
         assinatura_base64:str = self.instance.signature_pad.export_to_base64()
 
@@ -80,18 +59,21 @@ class AnamneseController:
             estilo_tatuagem       = self.instance.estilo_tatuagem_dropdown.value,
             nome                  = self.instance.nome_input.value,
             insta                 = self.instance.instagram_input.value,
-            id_loja_ex            = self.instance.id_loja,
             assinatura            = assinatura_base64,
             telefone              = self.instance.telefone_input.value,
-            data_nascimento       = self.instance.nascimento_input.value                 
+            data_nascimento       = self.instance.nascimento_input.value,
+            telefone_estudio      = self.instance.tel                
         )
  
-        await ProtectedApiCall(
+        response = await ProtectedApiCall(
             self.page,
             self.instance,
             self.model.CreateAnamnese,
             dados=dto
         ).call_api_refresh_token()
+
+        if response.status_code == 200:
+            self.page.go("/anamneseresponse")
 
 
     def selected_medicamento(self, e):

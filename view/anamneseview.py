@@ -7,7 +7,7 @@ from view.controls.signaturepad import SignaturePad
 
 
 class AnamneseView(ft.View):
-    def __init__(self, page:ft.Page, id_loja:str=''):
+    def __init__(self, page:ft.Page, name:str='', tel:str=''):
         super().__init__(
             route="/anamnese", 
             scroll="auto",
@@ -18,20 +18,32 @@ class AnamneseView(ft.View):
         self.page.title = "InkedAPP Anamnese"
         self.page.padding = 20
 
-        self.id_loja:str = id_loja
+        self.name:str = name
+        self.tel:str = tel
         self.token:str = ''
         self.r_token:str = ''
 
         self.controller = AnamneseController(self.page, self)
 
         self.area_title = ft.Container(
-            content=ft.Row(
+            content=ft.Column(
                 controls=[
-                    ft.Container(expand=True),
-                    ft.Text(value="Anamnese", color=AppColors.GRAY_LIGHT2, size=18),
-                    ft.Container(expand=True),
+                    ft.Row(
+                        controls=[
+                            ft.Container(expand=True),
+                            ft.Text(value="Anamnese", color=AppColors.GRAY_LIGHT2, size=18),
+                            ft.Container(expand=True),
+                        ]
+                    ),             
+                    ft.Row(
+                        controls=[
+                            ft.Container(expand=True),
+                            ft.Text(value=self.name, color=AppColors.GRAY_LIGHT2, size=18),
+                            ft.Container(expand=True),
+                        ],
+                    ),                           
                 ]
-            )
+            ),
         )
 
         self.nascimento_calendar = ft.DatePicker(on_change=self.controller.selected_birth_date)

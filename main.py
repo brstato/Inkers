@@ -11,6 +11,7 @@ from view.serviceview import ServiceView
 from view.clientview import ClientView
 from view.agendaview import AgendaView
 from view.anamneseview import AnamneseView
+from view.anamnese_response import AnamneseResponse
 
 def main(page: ft.Page):
     # Configurações iniciais da página/janela
@@ -43,13 +44,15 @@ def main(page: ft.Page):
             page.views.append(ClientView(page))
         elif troute.match("/agenda"):
             page.views.append(AgendaView(page))               
-        elif troute.match("/anamnese/:id"):
-            page.views.append(AnamneseView(page, troute.id))                                       
+        elif troute.match("/anamnese/:name/:tel"):
+            page.views.append(AnamneseView(page, troute.name, troute.tel))         
+        elif troute.match("/anamneseresponse"):                                  
+            page.views.append(AnamneseResponse())
 
         page.update()
 
     page.on_route_change = route_change
-    page.go("/anamnese/D5412312-87CF-46F3-B1E6-879241B1E40F")
+    page.go("/")  # Rota inicial
 
 if __name__ == "__main__":
     ft.app(target=main, assets_dir="assets")
