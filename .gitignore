@@ -1,5 +1,11 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+*.pyc
+*.pyo
+caixacerto_wpa/
+.venv/
+env/
+.env
 *.py[codz]
 *$py.class
 
