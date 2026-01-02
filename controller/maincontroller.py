@@ -24,6 +24,12 @@ class MainController:
         self.model_clientes = ClientModel()
         self.account_model = AccountModel()
 
+    def create_link_anamnese(self, e):
+        base_url = f"https://dev.brunotattoo.com.br/anamnese/{self.instance.account_name}/{self.instance.account_tel}"
+        self.page.set_clipboard(base_url)
+        self.page.open(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
+        self.page.update()
+
 
     async def atribuir_nota_cliente(self, e):
         nota = self.instance.radio_group_nota_cliente.value
@@ -52,7 +58,7 @@ class MainController:
     
     
     async def get_account_data(self):
-        
+     
         response = await ProtectedApiCall(
             self.page, self.instance, self.account_model.getAccountData,
             id=self.instance.id_loja,
@@ -61,8 +67,9 @@ class MainController:
 
         if response.status_code == 200:
             data = json.loads(response.content)
-            await self.page.client_storage.set_async("account_name", data["nome"])
-            await self.page.client_storage.set_async("account_telefone", data["telefone"])
+
+            self.instance.account_name = data["nome"]
+            self.instance.account_tel  = data["telefone"]
 
 
     async def get_status_caixa(self):
@@ -121,6 +128,11 @@ class MainController:
         self.instance.token        = await self.page.client_storage.get_async("token"  )
         self.instance.r_token      = await self.page.client_storage.get_async("r_token")   
 
+        if not self.instance.token or not self.instance.id_loja:    
+             self.page.go("/")
+             self.page.update()
+             return
+        
         await self.get_status_caixa()
 
         if self.instance.total == 0:            

@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw
 
 
 class SignaturePad(ft.Container):
-    def __init__(self, height=200, width=None, stroke_color=ft.Colors.BLACK, stroke_width=3, visible:bool=False):
+    def __init__(self, instance:None, page:ft.Page,height=200, width=None, stroke_color=ft.Colors.BLACK, stroke_width=3, visible:bool=False):
         super().__init__()
         self.content = ft.Column()
         self.stroke_color = stroke_color
@@ -17,6 +17,8 @@ class SignaturePad(ft.Container):
         self.shapes = []
         self.draw_data = []
         self.current_points = []
+        self.page = page
+        self.instance = instance
         
         # Canvas onde o desenho acontece
         self.canvas = cv.Canvas(
@@ -40,6 +42,9 @@ class SignaturePad(ft.Container):
 
     def start_stroke(self, e: ft.DragStartEvent):
         # Inicia um novo caminho (Path) quando o usuário toca na tela
+        # self.page.scroll = None
+        # self.page.update()
+
         self.current_path = cv.Path(
             [cv.Path.MoveTo(e.local_x, e.local_y)],
             paint=ft.Paint(
@@ -55,7 +60,7 @@ class SignaturePad(ft.Container):
         self.current_points = [(e.local_x, e.local_y)]
         self.update()
 
-    def update_stroke(self, e: ft.DragUpdateEvent):
+    def update_stroke(self, e: ft.DragUpdateEvent):   
         # Adiciona linhas ao caminho enquanto o usuário arrasta
         if self.current_path:
             self.current_path.elements.append(cv.Path.LineTo(e.local_x, e.local_y))
@@ -83,6 +88,7 @@ class SignaturePad(ft.Container):
 
     def end_stroke(self, e: ft.DragEndEvent):
             # Salva o traço completo na lista principal
+
             if self.current_points:
                 # garante que o ponto final esteja presente
                 # alguns eventos de drag_end podem não trazer as coordenadas finais
@@ -95,8 +101,10 @@ class SignaturePad(ft.Container):
                 self.draw_data.append(self.current_points)
                 self.current_points = []
             # finalizar o caminho atual
-            self.current_path = None
-            self.update()
+            # self.current_path = None
+            # self.page.scroll = ft.ScrollMode.AUTO
+
+            self.page.update()
 
 
 # No arquivo signaturepad.py

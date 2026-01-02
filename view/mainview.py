@@ -27,7 +27,8 @@ class MainView(ft.View):
         self.id_loja:str = ''
         self.token:str   = ''
         self.r_token:str = ''
-
+        self.account_name:str = ''
+        self.account_tel:str=''
         self.client:str = ''
 
         self.ident_serv:int = 0
@@ -474,6 +475,7 @@ class MainView(ft.View):
                                     style=ft.ButtonStyle(
                                         color=AppColors.ORANGE_DARK,
                                     ),
+                                    on_click=lambda e: [self.controller.create_link_anamnese(e), self.page.close(self.drawer), self.page.update()],
                                 ),
                             ),
 

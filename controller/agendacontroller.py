@@ -295,6 +295,11 @@ class AgendaController:
         self.instance.token   = await self.page.client_storage.get_async("token"  )
         self.instance.r_token = await self.page.client_storage.get_async("r_token")     
         
+        if not self.instance.token or not self.instance.id_loja:
+            self.page.go("/")
+            self.page.update()
+            return
+
         await self.ListProfissionais() 
         await self.build_month()
         await self.build_calendar(self.today.year, self.today.month) 

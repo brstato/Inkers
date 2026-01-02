@@ -97,6 +97,11 @@ class ClientController:
 
     async def listClientData(self):
 
+        if not self.instance.token or not self.instance.id_loja:    
+            self.page.go("/")
+            self.page.update()
+            return
+
         self.instance.progressRing.visible = True
         self.page.update()
 

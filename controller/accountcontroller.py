@@ -21,6 +21,8 @@ class AccountController:
         r_token: str = await self.page.client_storage.get_async("r_token")
 
         if (id == '') or (r_token == ''):
+            self.page.go("/")
+            self.page.update()
             return
 
         view_instance.progressRing.visible = True

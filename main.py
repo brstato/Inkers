@@ -52,8 +52,8 @@ def main(page: ft.Page):
         page.update()
 
     page.on_route_change = route_change
-    page.go("/")  # Rota inicial
+    page.go(page.route)
 
-if __name__ == "__main__":
-    ft.app(target=main, assets_dir="assets")
-#app = ft.app(target=main, assets_dir="assets", export_asgi_app=True)
+#if __name__ == "__main__":
+#    ft.app(target=main, assets_dir="assets", port=8083, view=ft.WEB_BROWSER)
+app = ft.app(target=main, assets_dir="assets", export_asgi_app=True)
