@@ -15,7 +15,7 @@ class AnamneseResponse(ft.View):
                 ft.Text(
                     value="Obrigado por preencher sua anamnese!",
                     color=AppColors.GRAY_LIGHT,
-                    size=24,
+                    size=18,
                     weight=ft.FontWeight.BOLD
                 ),    
                 ft.Container(expand=True),

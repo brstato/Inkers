@@ -53,7 +53,8 @@ class CustonCardItensVenda(ft.Card):
 
         self.edtValVenda = CustomTextField(
             label="Valor de venda:", 
-            chars=r"^[0-9,]*$"
+            chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         )
 
         self.moda_view = CustonModalView(
@@ -156,8 +157,8 @@ class CustonCardItensVenda(ft.Card):
             padding=ft.padding.all(10),
             content=ft.Row(
                 controls=[
-                    ft.Icon(name=self.icon, color=AppColors.ORANGE_DARK),
-                    ft.VerticalDivider(color=AppColors.ORANGE_DARK),
+                    #ft.Icon(name=self.icon, color=AppColors.ORANGE_DARK),
+                    #ft.VerticalDivider(color=AppColors.ORANGE_DARK),
                     ft.Container(
                         content=ft.Column(
                             controls=[

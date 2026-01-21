@@ -47,7 +47,6 @@ class ClientController:
         await self.listClientData()  
 
 
-
     async def editClient(self, e):
 
         self.page.close(self.instance.modalview)
@@ -83,7 +82,7 @@ class ClientController:
         await ProtectedApiCall(
             self.page,
             self.instance,
-            self.deleteclientData,
+            self.model.deleteclientData,
             id_client=id_client,
             token=self.instance.token
         ).call_api_refresh_token()
@@ -91,11 +90,11 @@ class ClientController:
         self.instance.progressRing.visible = False
         self.page.update()                              
 
-        await self.listClientData()
+        await self.listClientData(e=None)
 
 
 
-    async def listClientData(self):
+    async def listClientData(self, e, param:str = ''):
 
         if not self.instance.token or not self.instance.id_loja:    
             self.page.go("/")
@@ -105,13 +104,60 @@ class ClientController:
         self.instance.progressRing.visible = True
         self.page.update()
 
-        response = await ProtectedApiCall(
-            self.page,
-            self.instance,
-            self.model.getclientData,
-            id=self.instance.id_loja,
-            token=self.instance.token
-        ).call_api_refresh_token()
+        if param == '':
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.model.getclientData,
+                id_loja=self.instance.id_loja,
+                token=self.instance.token
+            ).call_api_refresh_token()
+
+        elif param == 'a': 
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.model.getclientDataA,
+                id_loja=self.instance.id_loja,
+                token=self.instance.token                
+            ).call_api_refresh_token()
+
+        elif param == 'b': 
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.model.getclientDataB,
+                id_loja=self.instance.id_loja,
+                token=self.instance.token                
+            ).call_api_refresh_token()
+
+        elif param == 'c': 
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.model.getclientDataC,
+                id_loja=self.instance.id_loja,
+                token=self.instance.token                
+            ).call_api_refresh_token()
+
+        elif param == 'maior': 
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.model.getclientDataMaior,
+                id_loja=self.instance.id_loja,
+                token=self.instance.token                
+            ).call_api_refresh_token()
+
+        elif param == 'menor': 
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.model.getclientDataMenor,
+                id_loja=self.instance.id_loja,
+                token=self.instance.token                
+            ).call_api_refresh_token()                        
+
         
         array = json.loads(response.content)["message"]
         self.instance.count = json.loads(response.content)["count"]

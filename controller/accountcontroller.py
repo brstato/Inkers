@@ -20,42 +20,50 @@ class AccountController:
         token: str = await self.page.client_storage.get_async("token")
         r_token: str = await self.page.client_storage.get_async("r_token")
 
-        if (id == '') or (r_token == ''):
-            self.page.go("/")
+        if id and r_token:
+
+            view_instance.progressRing.visible = True
             self.page.update()
-            return
+            
+            response = await self.model.getAccountData(id, token)
 
-        view_instance.progressRing.visible = True
-        self.page.update()
-        
-        response = await self.model.getAccountData(id, token)
+            if response.status_code == 401:
+                response = await LoginModel().refresh_token(r_token, id)
+                if response.status_code == 200:
+                    await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
+                    await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
 
-        if response.status_code == 401:
-            response = await LoginModel().refresh_token(r_token, id)
-            if response.status_code == 200:
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                    token: str = await self.page.client_storage.get_async("token")
+                    r_token: str = await self.page.client_storage.get_async("r_token")
 
-                token: str = await self.page.client_storage.get_async("token")
-                r_token: str = await self.page.client_storage.get_async("r_token")
+                    response = await self.model.getAccountData(id, token)
 
-                response = await self.model.getAccountData(id, token)
+                    view_instance.txt_username.value = json.loads(response.content)["nome"]
+                    view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
+                    view_instance.txt_email.value = json.loads(response.content)["email"]
 
+                    self.page.update()
+                else:    
+                    self.page.go("/")
+
+            elif response.status_code == 200:
                 view_instance.txt_username.value = json.loads(response.content)["nome"]
                 view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
                 view_instance.txt_email.value = json.loads(response.content)["email"]
 
-                self.page.update()
-            else:    
-                self.page.go("/")
+            if not view_instance.txt_telefone.value:
+                dialog = CustonDialog(
+                    self.page,
+                    'Atenção!',
+                    'Complete seus dados.',
+                    [
+                        ft.TextButton('Ok', on_click=lambda e:[self.page.close(dialog), self.page.update()])
+                    ]
+                )    
+                self.page.open(dialog)
 
-        elif response.status_code == 200:
-            view_instance.txt_username.value = json.loads(response.content)["nome"]
-            view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
-            view_instance.txt_email.value = json.loads(response.content)["email"]
-
-        view_instance.progressRing.visible = False
-        self.page.update()
+            view_instance.progressRing.visible = False
+            self.page.update()
 
 
     def navigation(self, e, id:str = None):
@@ -63,7 +71,8 @@ class AccountController:
             self.page.close(self.dialog)
             self.dialog = None
             self.page.update() 
-        if self.r_token != '' or self.r_token is not None:
+            
+        if self.r_token:
             self.page.go("/main")
             self.page.update()
         else:
@@ -128,11 +137,23 @@ class AccountController:
                     title="Sucesso",
                     content="Conta criada com sucesso!",
                     actions=[
+                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update(), self.page.go("/")])
+                    ]
+                )
+                self.page.open(self.dialog)  
+                return
+
+            if response.status_code == 409:
+                self.dialog = CustonDialog(
+                    self.page,
+                    title="Erro!",
+                    content=f"Atenção o nome {self.username} ja esta em uso!",
+                    actions=[
                         ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
-                self.page.update()    
+                self.page.open(self.dialog) 
+                return                  
                     
         else:
             if not all([self.username, self.telefone, self.email]):

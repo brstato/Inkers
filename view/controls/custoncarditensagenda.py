@@ -46,7 +46,8 @@ class CustonCardItensAgenda(ft.Card):
 
         self.edtValor = CustomTextField(
             label="Valor de venda:", 
-            chars=r"^[0-9,]*$"
+            chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         )
 
 

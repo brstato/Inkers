@@ -12,7 +12,7 @@ class CustonList(ft.ListView):
         )
 
         self.instance = instance
-        self.page = page
+        #self.page = page
         self.selected_card = None
 
 

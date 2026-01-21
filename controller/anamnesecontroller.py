@@ -17,12 +17,6 @@ class AnamneseController:
 
     def validate_fields(self):
         error_found:bool = False
-        first_error_field = None
-
-        if not self.instance.termo_check.value:
-            self.page.open(ft.SnackBar(ft.Text("Você deve concordar com os termos para prosseguir.")))
-            self.page.update()
-            return False
             
         if self.instance.signature_pad.is_empty():
             self.page.open(ft.SnackBar(ft.Text("Você deve assinar o documento para prosseguir.")))
@@ -52,7 +46,7 @@ class AnamneseController:
                     
                     {
                         'control': self.instance.origem_dropdown, 
-                        'msg': "Selecione uma opção"
+                        'msg': "Selecione uma opção de como conheceu o estúdio"
                     },
                     
                     {
@@ -62,7 +56,7 @@ class AnamneseController:
                     },
                     {
                         'control': self.instance.problema_pele_input, 
-                        'msg': "Informe o problema", 
+                        'msg': "Informe o problema de pele", 
                         'check_if': self.instance.problema_pele_switch.value
                     },
                     {
@@ -79,25 +73,26 @@ class AnamneseController:
                         'control': self.instance.medicamentos_input, 
                         'msg': "Informe o medicamento", 
                         'check_if': self.instance.medicamento_switch.value
-                    },
-                    
+                    },                   
                 ]
         
         for item in validation_map:
             control = item['control']
             should_check = item.get('check_if', True)
             control.error_text = None
-            if should_check and control.value == '':
+            if should_check and (control.value is None or control.value == ''):
                 control.error_text = item['msg']
                 error_found = True
                 error_key_field = control.key
                 control.update()
+                break
                              
 
         if error_found:
             self.page.open(ft.SnackBar(ft.Text(control.error_text)))       
             self.page.update()
             return False
+        return True
 
 
     async def get_data(self):
@@ -109,7 +104,9 @@ class AnamneseController:
 
         if not self.validate_fields():
             return
-            
+        self.page.close(self.instance.dialog_signature)
+        self.instance.progress_ring.visible = True
+        self.page.update()  
 
         if not self.instance.signature_pad.is_empty():
             arquivo:str = f'sig_{int(time.time())}.png'
@@ -151,7 +148,8 @@ class AnamneseController:
             assinatura            = assinatura_base64,
             telefone              = self.instance.telefone_input.value,
             data_nascimento       = self.instance.nascimento_input.value,
-            telefone_estudio      = self.instance.tel                
+            telefone_estudio      = self.instance.tel,
+            nome_estudio          = self.instance.name
         )
  
         response = await ProtectedApiCall(
@@ -221,6 +219,7 @@ class AnamneseController:
 
 
     def selected_confirm_terms(self, e):
+               
         if self.instance.termo_check.value == False:
             #self.instance.signature_pad.visible = False
             self.page.close(self.instance.dialog_signature)

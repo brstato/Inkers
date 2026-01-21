@@ -343,7 +343,7 @@ class AgendaController:
             self.page,
             self.instance,
             self.clientmodel.getclientData,
-            id=self.instance.id_loja,
+            id_loja=self.instance.id_loja,
             token=self.instance.token
         ).call_api_refresh_token()
 

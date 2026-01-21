@@ -19,14 +19,17 @@ class ProtectedApiCall:
 
         response = await self.function(**self.kwargs)
 
-        if response != None:
-            if response.status_code != 200:
+        if response is not None:
+            if response.status_code in [401, 403]:
                 response = await self.model.refresh_token(self.instance.r_token, self.instance.id_loja)
 
                 if response.status_code == 200:
                     data = response.json()
                     self.instance.token = data["token"]
                     self.instance.r_token = data["r_token"]
+
+                    if 'token' in self.kwargs:
+                        self.kwargs['token'] = self.instance.token
 
                     await self.page.client_storage.set_async("token", self.instance.token)
                     await self.page.client_storage.set_async("r_token", self.instance.r_token)

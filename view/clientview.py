@@ -41,8 +41,17 @@ class ClientView(ft.View):
         self.edtNome         = CustomTextField(label="Nome do cliente:")    
         self.edtNoneSocial   = CustomTextField(label="Nome social:")
         
-        self.edtDtNascimento = CustomTextField(label="Aniversário:", readOnly=True)
-        self.edtTelefone     = CustomTextField(label="Telefone", chars=r"^[0-9]*$")      
+        self.edtDtNascimento = CustomTextField(
+            label="Aniversário:", 
+            regex=r"[0-9/]",
+            keyboard_type=ft.KeyboardType.DATETIME,
+        )
+
+        self.edtTelefone     = CustomTextField(
+            label="Telefone", 
+            regex=r"^[0-9]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
+        )      
 
 
         self.area_data = ft.Stack(
@@ -121,36 +130,31 @@ class ClientView(ft.View):
                         ft.PopupMenuItem(
                             icon=ft.Icons.PERSON,
                             text='Cliente A',
-                            on_click=lambda e: self.page.run_task(self.__get_client_data_categorizado, e, categoria='A', row=1, row_to=20)
+                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='a')
                         ),
                         ft.PopupMenuItem(
                             icon=ft.Icons.PERSON,
                             text='Cliente B',
-                            on_click=lambda e: self.page.run_task(self.__get_client_data_categorizado, e, categoria='B', row=1, row_to=20)
+                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='b')
                         ),                 
                         ft.PopupMenuItem(
                             icon=ft.Icons.PERSON,
                             text='Cliente C',
-                            on_click=lambda e: self.page.run_task(self.__get_client_data_categorizado, e, categoria='C', row=1, row_to=20)
+                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='c')
                         ),                       
                         ft.PopupMenuItem(
                             icon=ft.Icons.ARROW_UPWARD,
                             text='Maior valor gasto',
-                            on_click=lambda e: self.page.run_task(self.__get_client_data_categorizado, e, order_maior=True, row=1, row_to=20)
+                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='maior')
                         ),      
                         ft.PopupMenuItem(
                             icon=ft.Icons.ARROW_DOWNWARD,
                             text='Menor valor gasto',
-                            on_click=lambda e: self.page.run_task(self.__get_client_data_categorizado, e, order_menor=True, row=1, row_to=20)
-                        ),                           
-                        ft.PopupMenuItem(
-                            icon=ft.Icons.DATE_RANGE,
-                            text='Ultima compra',
-                            on_click=lambda e: self.page.run_task(self.__get_client_data_categorizado, e, data_ultima_compra=True, row=1, row_to=20)
-                        ),    
+                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='menor')
+                        ),                               
                         ft.PopupMenuItem(
                             text='Remover filtro',
-                            on_click=lambda e:self.page.run_task(self.__get_client_data_categorizado, e, row=1, row_to=20)
+                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e)
                         ),                                                                                       
                     ],                       
                 ),
@@ -259,7 +263,7 @@ class ClientView(ft.View):
         self.token:   str = await self.page.client_storage.get_async("token"  )
         self.r_token: str = await self.page.client_storage.get_async("r_token")      
 
-        await self.controller.listClientData()         
+        await self.controller.listClientData('')         
 
 
 

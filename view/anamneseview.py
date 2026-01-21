@@ -4,6 +4,8 @@ from view.controls.colors import AppColors
 from view.controls.custontextfield import CustomTextField
 from controller.anamnesecontroller import AnamneseController
 from view.controls.signaturepad import SignaturePad
+from view.controls.custonprogressring import CustonProgressRing
+from urllib.parse import unquote
 
 
 class AnamneseView(ft.View):
@@ -18,12 +20,14 @@ class AnamneseView(ft.View):
         self.page.title = "InkedAPP Anamnese"
         self.page.padding = 20
 
-        self.name:str = name
+        self.name:str = unquote(name)
         self.tel:str = tel
         self.token:str = ''
         self.r_token:str = ''
 
         self.controller = AnamneseController(self.page, self)
+
+        self.progress_ring = CustonProgressRing(self.page.height)
 
         self.area_title = ft.Container(
             content=ft.Column(
@@ -53,6 +57,7 @@ class AnamneseView(ft.View):
 
         self.nome_input = CustomTextField(
             label="Nome Completo",
+            keyboard_type=ft.KeyboardType.NAME,
             #key="nome_input",
         )    
 
@@ -64,9 +69,8 @@ class AnamneseView(ft.View):
         
         self.nascimento_input = CustomTextField(
             label="Data de Nascimento (DD/MM/AAAA)",
-            readOnly=True,     
-            #key="nascimento_input",       
-            keyboard_type=ft.KeyboardType.DATETIME
+            keyboard_type=ft.KeyboardType.DATETIME,
+            regex=r"[0-9/]",
         )
 
         self.nascimento_area = ft.Stack(
@@ -587,7 +591,8 @@ class AnamneseView(ft.View):
             ],
         )
 
-        self.controls = [
+        self.list = ft.ListView(
+            controls=[
             self.area_title,
             #self.area_dados_pessoais,
             self.nome_input,
@@ -603,6 +608,16 @@ class AnamneseView(ft.View):
             self.termo_check,
             #self.area_signature,
             #self.area_btn_salvar
+            ]
+        )
+
+        self.controls = [
+            ft.Stack(
+                controls=[
+                    self.list,
+                    self.progress_ring
+                ]
+            )
         ]
 
 

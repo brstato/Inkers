@@ -20,9 +20,9 @@ class MainView(ft.View):
         ):
         super().__init__(route="/main", bgcolor=AppColors.BACKGROUND_DARK,)
         
-        self.page = page
+        #page = page
 
-        self.controller = MainController(self.page, self)
+        self.controller = MainController(page, self)
 
         self.id_loja:str = ''
         self.token:str   = ''
@@ -30,6 +30,8 @@ class MainView(ft.View):
         self.account_name:str = ''
         self.account_tel:str=''
         self.client:str = ''
+        self.zap_instance:str=''
+        self.zap_status:str=''
 
         self.ident_serv:int = 0
 
@@ -48,7 +50,7 @@ class MainView(ft.View):
         self.bgcolor = AppColors.BACKGROUND_DARK
 
         self.dialog_nota_cliente = CustonDialog(
-            self.page,
+            page,
             "Atenção",
             "Deseja atribuir uma nota ao cliente?",
             [
@@ -58,7 +60,7 @@ class MainView(ft.View):
                 ),
                 ft.TextButton(
                     "OK",
-                    on_click=lambda e:[self.page.open(self.modal_nota_cliente), self.page.update()]
+                    on_click=lambda e:[page.open(self.modal_nota_cliente), page.update()]
                 )
             ]
         )
@@ -102,7 +104,7 @@ class MainView(ft.View):
         )
 
         self.modal_nota_cliente = CustonModalView(
-            self.page,
+            page,
             self.controller.atribuir_nota_cliente,
             self.controller.fechar_modal_nota_clientes,
             controls=[
@@ -115,22 +117,22 @@ class MainView(ft.View):
             height=250
         )
 
-        self.list_insumos = CustonList(self.page, self)
+        self.list_insumos = CustonList(page, self)
 
         self.modal_insumos = CustonModalView(
-            self.page,
+            page,
             self.controller.baixa_insumo,
             self.controller.fechar_modal_insumos,
             [
                 self.list_insumos
             ],
             500,
-            350,
+            380,
             'Dar baixa'
         )
 
         self.dialog_insumo = CustonDialog(
-            self.page,
+            page,
             'Atenção',
             'Deseja dar baixa nos materiais de insumo usados no atendimento?',
             [
@@ -170,45 +172,51 @@ class MainView(ft.View):
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),            
-            on_click=lambda e:self.page.run_task(self.controller.abrir_caixa)
+            on_click=lambda e:page.run_task(self.controller.abrir_caixa)
         )              
 
         self.edt_troco_inicial = CustomTextField(
             label="Troco inicial",
             chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
             on_change=self.controller.calculo_troco
         ) 
 
         self.edt_troco_fechamento = CustomTextField(
             label="Troco de fechamento",
             chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         ) 
 
         self.edt_dinheiro_fechamento = CustomTextField(
             label="Total de entrada em dinheiro",
             chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         ) 
 
         self.edt_pix_fechamento = CustomTextField(
             label="Total de entrada em pix",
             chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         )    
 
         self.edt_debito_fechamento = CustomTextField(
             label="Total de entrada em debito",
             chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         )              
 
         self.edt_credito_fechamento = CustomTextField(
             label="Total de entrada em credito",
             chars=r"^[0-9,]*$",
+            keyboard_type=ft.KeyboardType.NUMBER,
         ) 
 
         self.modal_fechamento_caixa = CustonModalView(
             height=380,
-            page=self.page,
+            page=page,
             callback=self.controller.confirmar_fechamento_caixa,
-            callback2=lambda e:[self.page.close(self.modal_fechamento_caixa), self.page.update()],
+            callback2=lambda e:[page.close(self.modal_fechamento_caixa), page.update()],
             text_button_1="Fechar caixa",
             controls=[
                self.edt_troco_fechamento,
@@ -220,9 +228,9 @@ class MainView(ft.View):
         )
 
         self.modal_caixa = CustonModalView(
-            self.page,
+            page,
             callback=self.controller.confirmar_abertura_caixa,
-            callback2=lambda e:[self.page.close(self.modal_caixa), self.page.update()],
+            callback2=lambda e:[page.close(self.modal_caixa), page.update()],
             text_button_1="Abrir caixa",
             height=150,
             controls=[
@@ -230,13 +238,13 @@ class MainView(ft.View):
             ]
         )
 
-        self.list_profissionais = CustonListProfessional(self.page)
+        self.list_profissionais = CustonListProfessional(page)
         
-        self.progressRing = CustonProgressRing()
+        self.progressRing = CustonProgressRing(page.height)
         
-        self.list_itens = CustonList(self.page, self)
+        self.list_itens = CustonList(page, self)
 
-        self.list_clients = CL(self.page)
+        self.list_clients = CL(page)
 
         self.text_total = ft.Text(
             color=AppColors.ORANGE_DARK,
@@ -251,7 +259,8 @@ class MainView(ft.View):
         self.edt_dinheiro = CustomTextField(
             label="Dinheiro",
             chars=r"^[0-9,]*$",
-            on_change=self.controller.calculo_troco
+            on_change=self.controller.calculo_troco,
+            keyboard_type=ft.KeyboardType.NUMBER,
         )
 
         self.area_dinheiro = ft.Stack(
@@ -269,7 +278,8 @@ class MainView(ft.View):
         self.edt_pix = CustomTextField(
             label="Pix",
             chars=r"^[0-9,]*$",
-            on_change=self.controller.calculo_troco
+            on_change=self.controller.calculo_troco,
+            keyboard_type=ft.KeyboardType.NUMBER,
         )        
 
         self.area_pix = ft.Stack(
@@ -287,7 +297,8 @@ class MainView(ft.View):
         self.edt_debito = CustomTextField(
             label="Debito",
             chars=r"^[0-9,]*$",
-            on_change=self.controller.calculo_troco
+            on_change=self.controller.calculo_troco,
+            keyboard_type=ft.KeyboardType.NUMBER,
         )    
 
         self.area_debito = ft.Stack(
@@ -305,7 +316,8 @@ class MainView(ft.View):
         self.edt_credito = CustomTextField(
             label="Credito",
             chars=r"^[0-9,]*$",
-            on_change=self.controller.calculo_troco
+            on_change=self.controller.calculo_troco,
+            keyboard_type=ft.KeyboardType.NUMBER,
         )          
 
         self.area_credito = ft.Stack(
@@ -323,7 +335,7 @@ class MainView(ft.View):
 
         self.modal_recebimento = CustonModalView(
             height=400,
-            page=self.page,
+            page=page,
             text_button_1="Receber",
             callback=self.controller.recebimento,
             callback2=self.controller.cancelar_receber_venda,
@@ -341,7 +353,7 @@ class MainView(ft.View):
             value=self.client,
             color=AppColors.ORANGE_DARK,
             visible=False,
-            #width=self.page.width / 2,
+            #width=page.width / 2,
         )
 
         self.edtPesquisaClientes = ft.TextField(
@@ -355,7 +367,7 @@ class MainView(ft.View):
 
         self.modal_pesquisa_clientes = CustonModalView(
             height=650,
-            page=self.page,
+            page=page,
             callback=self.controller.confirmar_pequisa_clientes,
             callback2=self.controller.cancelar_modal_pesquisa_clientes,
             controls=[
@@ -365,7 +377,7 @@ class MainView(ft.View):
         )
 
         self.edtPesquisa = ft.TextField(
-            width=self.page.width / 1.2,
+            width=page.width / 1.2,
             visible=False,
             color=AppColors.GRAY_LIGHT2,
             label="Pesquisar produto ou serviço por nome...",
@@ -433,17 +445,26 @@ class MainView(ft.View):
         )
 
         self.controls=[
-            ft.Container(
-                
-                bgcolor=AppColors.GRAY_DARK,
-                height=100,
-                border_radius=ft.border_radius.all(10),
-                padding=ft.padding.all(10),
-                content=self.list_profissionais,
-            ), 
-            #self.edtCliente,
-            self.container_pesquisa,
-            self.list_itens,
+            ft.Stack(
+                controls=[
+                    ft.Column(
+                        controls=[
+                            ft.Container(
+                                
+                                bgcolor=AppColors.GRAY_DARK,
+                                height=100,
+                                border_radius=ft.border_radius.all(10),
+                                padding=ft.padding.all(10),
+                                content=self.list_profissionais,
+                            ), 
+                            #self.edtCliente,
+                            self.container_pesquisa,
+                            self.list_itens,
+                        ]
+                    ),
+                    self.progressRing,        
+                ],        
+            ),
         ]
 
         self.btn_total = ft.ElevatedButton(
@@ -458,6 +479,62 @@ class MainView(ft.View):
             ),            
             on_click=self.controller.open_modal_recebimento
         ) 
+
+        self.status_whatsapp = ft.Text(
+            'Desconectado',
+            size=12,
+            color=AppColors.ORANGE_DARK,
+        )
+
+        self.botao_whatsapp = ft.ElevatedButton(
+            'Conectar',
+            elevation=5,
+            expand=True,
+            color=AppColors.GRAY_LIGHT2,
+            on_click=self.controller.create_instance_zap
+        )
+
+        self.span_whatsapp = ft.TextSpan(
+            text='',
+            style=ft.TextStyle(color=AppColors.GRAY_LIGHT2),
+        )
+
+        self.area_whatsapp = ft.Container(
+            padding=ft.padding.all(10),
+            #margin=ft.margin.all(10),
+            border_radius=ft.border_radius.all(10),
+            shadow=ft.BoxShadow(
+                color=AppColors.BLACK, 
+                blur_radius=10,
+                offset=ft.Offset(x=0, y=-0.5),
+            ),
+            height=120,
+            gradient=ft.LinearGradient(
+                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
+                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BACKGROUND_DARK,   # Cor final
+                ],                
+            ), 
+
+            content=ft.Column(
+                controls=[
+                    ft.Text('Whatsapp: ', size=12, color=AppColors.GRAY_LIGHT2, spans=[self.span_whatsapp]),
+                    ft.Row(
+                        controls=[
+                            ft.Text('status: ', size=12, color=AppColors.GRAY_LIGHT2),
+                            self.status_whatsapp,
+                        ],
+                    ),
+                    ft.Row(
+                        controls=[self.botao_whatsapp,],
+                    ),
+                ],
+                expand=True,
+            ), 
+            expand=True,          
+        )
 
         self.drawer = ft.NavigationDrawer(
             bgcolor=AppColors.GRAY_DARK,
@@ -475,16 +552,16 @@ class MainView(ft.View):
                                     style=ft.ButtonStyle(
                                         color=AppColors.ORANGE_DARK,
                                     ),
-                                    on_click=lambda e: [self.controller.create_link_anamnese(e), self.page.close(self.drawer), self.page.update()],
+                                    on_click=lambda e: [self.controller.create_link_anamnese(e), page.close(self.drawer), page.update()],
                                 ),
                             ),
 
-
-                            CustonButton(self.page, "Minha conta", "/account"),
-                            CustonButton(self.page, "Profissionais", "/professional"),
-                            CustonButton(self.page, "Produtos", "/product"),  
-                            CustonButton(self.page, "Serviços", "/services"),  
-                            CustonButton(self.page, "Clientes", "/clients"),                                                
+                            self.area_whatsapp,
+                            CustonButton(page, "Minha conta", "/account"),
+                            CustonButton(page, "Profissionais", "/professional"),
+                            CustonButton(page, "Produtos", "/product"),  
+                            CustonButton(page, "Serviços", "/services"),  
+                            CustonButton(page, "Clientes", "/clients"),                                                
                                                
                             ft.ElevatedButton(
                                 text="Sair",
@@ -499,10 +576,11 @@ class MainView(ft.View):
                                 width=250,
                                 height=45,
                                 on_click=lambda e: [
-                                    self.page.client_storage.set("token", ''), 
-                                    self.page.client_storage.set("r_token", ''), 
-                                    self.page.client_storage.set("status_caixa", ''),
-                                    self.page.go("/")
+                                    page.client_storage.set("token", ''), 
+                                    page.client_storage.set("r_token", ''), 
+                                    page.client_storage.set("id", ''),
+                                    page.client_storage.set("status_caixa", ''),
+                                    page.go("/")
                                 ],
                             ),                                                   
                         ],
@@ -524,14 +602,14 @@ class MainView(ft.View):
             bgcolor=AppColors.ORANGE_BURNT,
             shape=ft.CircleBorder(),
             tooltip="Agenda",
-            on_click=lambda e: self.page.go("/agenda")
+            on_click=lambda e: page.go("/agenda")
         )
 
         self.floating_action_button = self.btn_agenda
         self.floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED
 
         self.bottom_appbar = ft.BottomAppBar(
-            shape=ft.NotchShape.CIRCULAR,
+            shape=ft.NotchShape.CIRCULAR,   
             height=60,
             bgcolor=AppColors.GRAY_DARK,
             content=ft.Row(
@@ -539,7 +617,7 @@ class MainView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.MENU,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e: self.page.open(self.drawer)
+                        on_click=lambda e: page.open(self.drawer)
                     ),
                     ft.Container(expand=True),
                     self.text_client,

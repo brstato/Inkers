@@ -10,7 +10,7 @@ class CustonButton(ft.ElevatedButton):
             elevation=5,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=8),
-                side=ft.BorderSide(1, AppColors.GRAY_LIGHT),
+                side=ft.BorderSide(1, AppColors.GRAY_LIGHT4),
                 color=AppColors.GRAY_LIGHT,
             ),
             width=250,

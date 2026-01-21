@@ -10,6 +10,7 @@ from view.controls.custonmodalview import CustonModalView
 from view.controls.custonlist import CustonList
 
 
+
 class AgendaView(ft.View):
     def __init__(self, page:ft.Page):
         super().__init__(
@@ -78,7 +79,8 @@ class AgendaView(ft.View):
 
         self.edt_client_telefone = CustomTextField(
             label='Telefone',
-            readOnly=True
+            readOnly=True,
+            keyboard_type=ft.KeyboardType.NUMBER,
         )
 
         self.client_area = ft.Stack(
@@ -134,7 +136,9 @@ class AgendaView(ft.View):
 
         self.edt_date_agendamento = CustomTextField(
             label='Data do agendamento',
-            readOnly=True
+            readOnly=True,
+            keyboard_type=ft.KeyboardType.DATETIME,
+            regex=r"[0-9/]"
         )
 
         self.date_area = ft.Stack(

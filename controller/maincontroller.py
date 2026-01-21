@@ -11,7 +11,9 @@ from view.controls.colors import AppColors
 from controller.call_api import ProtectedApiCall
 from view.controls.custondialog import CustonDialog
 from model.accountmodel import AccountModel
+from urllib.parse import quote, urlparse
 import datetime
+from model.zapmodel import ZapModel
 
 
 class MainController:
@@ -23,11 +25,83 @@ class MainController:
         self.model_professional = ProfessionlModel()
         self.model_clientes = ClientModel()
         self.account_model = AccountModel()
+        self.zap_model = ZapModel()
+
 
     def create_link_anamnese(self, e):
-        base_url = f"https://dev.brunotattoo.com.br/anamnese/{self.instance.account_name}/{self.instance.account_tel}"
+        account_name = quote(self.instance.account_name)
+        parsed_url = urlparse(self.page.url)
+        base_domain = f"https://{parsed_url.netloc}"
+        base_url = f"{base_domain}/anamnese/{account_name}/{self.instance.account_tel}"
         self.page.set_clipboard(base_url)
         self.page.open(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
+        self.page.update()
+
+
+    async def create_instance_zap(self, e):
+        self.page.close(self.instance.drawer)
+
+        self.instance.progressRing.visible = True
+        self.page.update()
+
+
+        response = await ProtectedApiCall(
+            self.page, self.instance, self.zap_model.CreateInstanceZap,
+            id_loja=self.instance.id_loja,
+            zap_number=self.instance.account_tel,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        if response.status_code in [200, 201]:
+            resposta = json.loads(response.content)
+
+            qr_code = resposta.get('qrcode', {})
+            par_code = qr_code.get('pairingCode', '')
+
+            self.page.set_clipboard(par_code)
+
+            zap_dialog = CustonDialog(
+                page=self.page,
+                title='Atenção!',
+                content=f'O código {par_code} foi colado na sua area de transferência, informe este código no seu whatsapp.',
+                actions=[
+                    ft.TextButton(
+                        'OK',
+                        on_click=lambda e: [self.page.close(zap_dialog), self.page.update()]
+                    ),
+                ]
+            )
+
+            self.page.open(zap_dialog)
+
+        self.instance.progressRing.visible = False
+
+        self.page.update()    
+
+
+    async def get_connection_zap(self):
+        response = await ProtectedApiCall(
+            self.page, self.instance, self.zap_model.GetConnectionZap,
+            zap_instance=self.instance.zap_instance,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        #print(response.content)
+        
+        resposta = json.loads(response.content)
+
+        instance = resposta.get("instance", {})
+        state = instance.get("state", '')
+
+        self.instance.zap_status = state
+
+        if self.instance.zap_status != 'open':
+            self.instance.botao_whatsapp.text = 'Conectar'
+            self.instance.status_whatsapp.value = 'Desconectado'
+        else:
+            self.instance.botao_whatsapp.text = 'Desconectar'
+            self.instance.status_whatsapp.value = 'Conectado'
+
         self.page.update()
 
 
@@ -68,8 +142,13 @@ class MainController:
         if response.status_code == 200:
             data = json.loads(response.content)
 
-            self.instance.account_name = data["nome"]
-            self.instance.account_tel  = data["telefone"]
+            self.instance.account_name = data["nome"        ]
+            self.instance.account_tel  = data["telefone"    ]
+            self.instance.zap_instance = data["zap_instance"]
+
+        if not self.instance.account_tel:
+            self.page.go("/account")
+
 
 
     async def get_status_caixa(self):
@@ -83,6 +162,7 @@ class MainController:
         if response.status_code == 200:           
             self.instance.status_caixa = json.loads(response.content)["status"]
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
+
             await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
             await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
 
@@ -155,6 +235,7 @@ class MainController:
         await self.listItens()
         await self.listClientes()
         await self.listInsumos()
+        await self.get_connection_zap()
 
         self.instance.progressRing.visible = False
         self.page.update()         
@@ -462,9 +543,9 @@ class MainController:
 
             card = CustonCardItensVenda(
                 page=self.page,
-                width=300,
+                width=280,
                 instance=self.instance,
-                icon=ft.Icons.CATEGORY,
+                icon=None,
                 name=name,
                 id=id_prod,
                 estoque=estoque,
@@ -683,7 +764,7 @@ class MainController:
         await self.limpar_venda(e)
 
 
-    async def abrir_dialogo_nota_clientes(self, e):
+    def abrir_dialogo_nota_clientes(self, e):
         if not self.instance.id_client == 0:
             self.page.open(self.instance.dialog_nota_cliente)
             self.page.update()
@@ -707,10 +788,10 @@ class MainController:
         self.page.update()
 
 
-    async def fechar_modal_insumos(self, e):
+    def fechar_modal_insumos(self, e):
         self.page.close(self.instance.modal_insumos) 
         self.page.update() 
-        await self.abrir_dialogo_nota_clientes()   
+        self.abrir_dialogo_nota_clientes(e)   
     
 
 

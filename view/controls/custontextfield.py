@@ -11,7 +11,8 @@ class CustomTextField(ft.TextField):
             visible:bool=True,       
             on_change=None,
             readOnly:bool=False,  
-            keyboard_type: ft.KeyboardType = ft.KeyboardType.TEXT,  
+            keyboard_type: ft.KeyboardType = ft.KeyboardType.TEXT,
+            regex: str = '.*',
             **kwargs            
         ):
 
@@ -28,7 +29,8 @@ class CustomTextField(ft.TextField):
             visible=visible,
             read_only=readOnly,
             on_change = on_change,
-            keyboard_type=keyboard_type
+            keyboard_type=keyboard_type,
+            input_filter = ft.InputFilter(regex_string=regex, replacement_string="", allow=True),
         )     
 
 
