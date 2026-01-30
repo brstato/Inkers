@@ -96,15 +96,15 @@ class AnamneseController:
 
 
     async def get_data(self):
-        self.instance.token   = await self.page.client_storage.get_async("token"  )
-        self.instance.r_token = await self.page.client_storage.get_async("r_token")  
+        self.instance.token   = await ft.SharedPreferences().get("token"  )
+        self.instance.r_token = await ft.SharedPreferences().get("r_token")  
 
 
     async def create_anamnese(self, e):
 
         if not self.validate_fields():
             return
-        self.page.close(self.instance.dialog_signature)
+        self.page.pop_dialog()
         self.instance.progress_ring.visible = True
         self.page.update()  
 
@@ -213,7 +213,7 @@ class AnamneseController:
 
     def cancel_signature(self, e):
         self.instance.signature_pad.clear()
-        self.page.close(self.instance.dialog_signature)
+        self.page.pop_dialog()
         self.instance.termo_check.value = False
         self.page.update()
 
@@ -222,11 +222,11 @@ class AnamneseController:
                
         if self.instance.termo_check.value == False:
             #self.instance.signature_pad.visible = False
-            self.page.close(self.instance.dialog_signature)
+            self.page.pop_dialog()
         else:    
             self.instance.signature_pad.visible = True
             #self.instance.scroll_to(key="signature_area", duration=1000)
-            self.page.open(self.instance.dialog_signature)
+            self.page.show_dialog(self.instance.dialog_signature)
         self.page.update() 
 
 

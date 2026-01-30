@@ -14,6 +14,7 @@ from model.accountmodel import AccountModel
 from urllib.parse import quote, urlparse
 import datetime
 from model.zapmodel import ZapModel
+import asyncio
 
 
 class MainController:
@@ -33,8 +34,8 @@ class MainController:
         parsed_url = urlparse(self.page.url)
         base_domain = f"https://{parsed_url.netloc}"
         base_url = f"{base_domain}/anamnese/{account_name}/{self.instance.account_tel}"
-        self.page.set_clipboard(base_url)
-        self.page.open(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
+        self.page.clipboard(base_url)
+        self.page.show_dialog(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
         self.page.update()
 
 
@@ -58,7 +59,7 @@ class MainController:
             qr_code = resposta.get('qrcode', {})
             par_code = qr_code.get('pairingCode', '')
 
-            self.page.set_clipboard(par_code)
+            self.page.clipboard(par_code)
 
             zap_dialog = CustonDialog(
                 page=self.page,
@@ -67,12 +68,12 @@ class MainController:
                 actions=[
                     ft.TextButton(
                         'OK',
-                        on_click=lambda e: [self.page.close(zap_dialog), self.page.update()]
+                        on_click=lambda e: [self.page.pop_dialog(), self.page.update()]
                     ),
                 ]
             )
 
-            self.page.open(zap_dialog)
+            self.page.show_dialog(zap_dialog)
 
         self.instance.progressRing.visible = False
 
@@ -85,8 +86,6 @@ class MainController:
             zap_instance=self.instance.zap_instance,
             token=self.instance.token
         ).call_api_refresh_token()
-
-        #print(response.content)
         
         resposta = json.loads(response.content)
 
@@ -96,10 +95,10 @@ class MainController:
         self.instance.zap_status = state
 
         if self.instance.zap_status != 'open':
-            self.instance.botao_whatsapp.text = 'Conectar'
+            self.instance.botao_whatsapp.content = 'Conectar'
             self.instance.status_whatsapp.value = 'Desconectado'
         else:
-            self.instance.botao_whatsapp.text = 'Desconectar'
+            self.instance.botao_whatsapp.content = 'Desconectar'
             self.instance.status_whatsapp.value = 'Conectado'
 
         self.page.update()
@@ -112,8 +111,10 @@ class MainController:
         await ProtectedApiCall(self.page, self.instance, self.model.UpdateNotaCliente,
             id_cliente=id_cliente,
             nota=nota,
-            token=self.instance.token).call_api_refresh_token()
-        self.page.close(self.instance.modal_nota_cliente)
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        self.page.pop_dialog()
         self.page.update()
         await self.limpar_venda(e)
 
@@ -127,27 +128,32 @@ class MainController:
         self.instance.text_troco.value   = 'Troco: R$ 0,00'
         
         self.instance.text_total.value = f'Total: R$ {formatar_moeda_brasileira(self.instance.total)}'
-        self.page.open(self.instance.modal_recebimento)                
+        self.page.show_dialog(self.instance.modal_recebimento)                
         self.page.update()
     
     
     async def get_account_data(self):
-     
-        response = await ProtectedApiCall(
-            self.page, self.instance, self.account_model.getAccountData,
-            id=self.instance.id_loja,
-            token=self.instance.token
-        ).call_api_refresh_token()
-
-        if response.status_code == 200:
+        try:
+            response = await ProtectedApiCall(
+                self.page, self.instance, self.account_model.getAccountData,
+                id=self.instance.id_loja,
+                token=self.instance.token
+            ).call_api_refresh_token()
+            
             data = json.loads(response.content)
 
             self.instance.account_name = data["nome"        ]
             self.instance.account_tel  = data["telefone"    ]
             self.instance.zap_instance = data["zap_instance"]
 
-        if not self.instance.account_tel:
-            self.page.go("/account")
+            await ft.SharedPreferences().set("zap_instance", self.instance.zap_instance)
+
+            if not self.instance.account_tel:
+                await self.page.push_route("/account")
+        except Exception as ex:
+            print(f"ERROR em get_account_data: {ex}")
+            import traceback
+            traceback.print_exc()
 
 
 
@@ -157,14 +163,13 @@ class MainController:
             self.page, self.instance, self.model.status_caixa, 
             id_loja=self.instance.id_loja,
             token=self.instance.token
-        ).call_api_refresh_token()
-        
-        if response.status_code == 200:           
-            self.instance.status_caixa = json.loads(response.content)["status"]
-            self.instance.id_caixa = json.loads(response.content)["id_caixa"]
+        ).call_api_refresh_token()       
+                
+        self.instance.status_caixa = json.loads(response.content)["status"]
+        self.instance.id_caixa = json.loads(response.content)["id_caixa"]
 
-            await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
-            await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+        await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa)
+        await ft.SharedPreferences().set("id_caixa", str(self.instance.id_caixa))
 
 
     def _collect_payment_values(self):
@@ -204,41 +209,52 @@ class MainController:
 
 
     async def get_Data(self):
-        self.instance.id_loja      = await self.page.client_storage.get_async("id"     )
-        self.instance.token        = await self.page.client_storage.get_async("token"  )
-        self.instance.r_token      = await self.page.client_storage.get_async("r_token")   
+        try:
+            try:
+                self.instance.id_loja = await asyncio.wait_for(ft.SharedPreferences().get("id"), timeout=5.0)
+                self.instance.token = await asyncio.wait_for(ft.SharedPreferences().get("token"), timeout=5.0)
+                self.instance.r_token = await asyncio.wait_for(ft.SharedPreferences().get("r_token"), timeout=5.0)
+            except asyncio.TimeoutError:
+                self.instance.id_loja = None
+            except Exception as e:
+                print(f"DEBUG: Erro ao obter id_loja: {e}")
+                self.instance.id_loja = None
+                self.instance.token = None
+            
+            if not self.instance.token or not self.instance.id_loja:    
+                await self.page.push_route("/")
+                return
+            
+            await self.get_status_caixa()
 
-        if not self.instance.token or not self.instance.id_loja:    
-             self.page.go("/")
-             self.page.update()
-             return
-        
-        await self.get_status_caixa()
+            if self.instance.total == 0:            
+                self.instance.btn_total.visible = False
+                self.instance.btn_fechar_caixa.visible = True  
 
-        if self.instance.total == 0:            
-            self.instance.btn_total.visible = False
-            self.instance.btn_fechar_caixa.visible = True  
+            if self.instance.status_caixa == 'F':
+                self.instance.btn_abrir_caixa.visible = True
+                self.instance.btn_fechar_caixa.visible = False
 
-        if self.instance.status_caixa == 'F':
-            self.instance.btn_abrir_caixa.visible = True
-            self.instance.btn_fechar_caixa.visible = False
+            elif self.instance.status_caixa == 'A':   
+                self.instance.btn_fechar_caixa.visible = True
+                self.instance.btn_abrir_caixa.visible = False        
 
-        elif self.instance.status_caixa == 'A':   
-            self.instance.btn_fechar_caixa.visible = True
-            self.instance.btn_abrir_caixa.visible = False        
+            self.instance.progressRing.visible = True
+            self.page.update()
 
-        self.instance.progressRing.visible = True
-        self.page.update()
+            await self.get_account_data()
+            await self.listPorfissionais()
+            await self.listItens()
+            await self.listClientes()
+            await self.listInsumos()
+            await self.get_connection_zap()
 
-        await self.get_account_data()
-        await self.listPorfissionais()
-        await self.listItens()
-        await self.listClientes()
-        await self.listInsumos()
-        await self.get_connection_zap()
-
-        self.instance.progressRing.visible = False
-        self.page.update()         
+            self.instance.progressRing.visible = False
+            self.page.update()
+        except Exception as ex:
+            print(f"ERROR em get_Data: {ex}")
+            import traceback
+            traceback.print_exc()         
 
 
     def exibir_edt_pesquisa_produtos(self, e):
@@ -250,19 +266,20 @@ class MainController:
 
 
     def exibir_lista_clientes(self, e):
-        self.page.open(self.instance.modal_pesquisa_clientes)
+        self.page.show_dialog(self.instance.modal_pesquisa_clientes)
+        self.instance.btn_agenda.visible = False
         self.page.update()        
 
 
     def cancelar_modal_pesquisa_clientes(self, e):
         self.instance.id_client = 0
         self.instance.text_client.visible = False
-        self.page.close(self.instance.modal_pesquisa_clientes)
+        self.page.pop_dialog()
         self.page.update()           
 
 
     async def confirmar_pequisa_clientes(self, e):
-        self.page.close(self.instance.modal_pesquisa_clientes)
+        self.page.pop_dialog()
         self.page.update()
 
 
@@ -273,13 +290,14 @@ class MainController:
         self.instance.edt_debito.value   = ''
         self.instance.edt_credito.value  = ''
 
-        self.page.close(self.instance.modal_recebimento)
+        self.page.pop_dialog()
         self.page.update()   
 
 
     async def limpar_venda(self, e):
         self.instance.btn_fechar_caixa.visible = True
         self.instance.btn_total.visible = False
+        self.instance.btn_agenda.visible = True
         self.instance.total = 0
         self.instance.text_client.value = ''
         self.instance.id_client = 0
@@ -351,12 +369,12 @@ class MainController:
 
         self.instance.status_caixa = "F"
 
-        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)   
-        await self.page.client_storage.set_async("id_caixa", "0")   
+        await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa)   
+        await ft.SharedPreferences().set("id_caixa", "0")   
 
         self.instance.btn_fechar_caixa.visible = False                    
         self.instance.btn_abrir_caixa.visible = True
-        self.page.close(self.instance.modal_fechamento_caixa)
+        self.page.pop_dialog()
         self.page.update()
 
 
@@ -368,16 +386,16 @@ class MainController:
                 content="Por favor selecione o profissional!",
                 actions=[
                     ft.TextButton(
-                        text="Voltar",
+                        content="Voltar",
                         on_click=lambda e: [
-                            self.page.close(self.dialog_profissional_caixa),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
             
-            self.page.open(self.dialog_profissional_caixa)
+            self.page.show_dialog(self.dialog_profissional_caixa)
             self.page.update()
             return      
         
@@ -387,7 +405,7 @@ class MainController:
         self.instance.edt_debito_fechamento.value   = ''
         self.instance.edt_credito_fechamento.value  = ''
 
-        self.page.open(self.instance.modal_fechamento_caixa)
+        self.page.show_dialog(self.instance.modal_fechamento_caixa)
         self.page.update()
    
 
@@ -424,7 +442,7 @@ class MainController:
 
         self.instance.status_caixa = 'A'    
 
-        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa )    
+        await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa )    
 
         data_abertura = datetime.datetime.now().timestamp()
 
@@ -446,16 +464,15 @@ class MainController:
 
         if response.status_code == 200:
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
-            await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+            await ft.SharedPreferences().set("id_caixa", self.instance.id_caixa)
 
             self.instance.btn_abrir_caixa.visible = False
             self.instance.btn_fechar_caixa.visible = True
-            self.page.close(self.instance.modal_caixa)
-
+            self.page.pop_dialog()
             self.page.update()
         else:
             self.instance.status_caixa = 'F'
-            await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
+            await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa)
             self.dialog_erro_abrir_caixa = CustonDialog(
                 page = self.page,
                 title="Atenção",
@@ -464,13 +481,17 @@ class MainController:
                     ft.TextButton(
                         text="OK",
                         on_click=lambda e:[
-                            self.page.close(self.dialog_erro_abrir_caixa),
+                            self.page.pop_dialog(),
                             self.page.update()                            
                         ]
 
                     )
                 ]
-            )       
+            )  
+
+            self.page.show_dialog(self.dialog_erro_abrir_caixa)     
+            self.page.update()
+            return
         
     
     async def abrir_caixa(self):
@@ -481,20 +502,20 @@ class MainController:
                 content="Por favor selecione o profissional!",
                 actions=[
                     ft.TextButton(
-                        text="Voltar",
+                        content="Voltar",
                         on_click=lambda e: [
-                            self.page.close(self.dialog_profissional_abrir_caixa),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
-            
-            self.page.open(self.dialog_profissional_abrir_caixa)
+
+            self.page.show_dialog(self.dialog_profissional_abrir_caixa)
             self.page.update()
             return
 
-        self.page.open(self.instance.modal_caixa)
+        self.page.show_dialog(self.instance.modal_caixa)
         self.page.update()  
         
 
@@ -519,8 +540,8 @@ class MainController:
             token=self.instance.token
         ).call_api_refresh_token()
 
-        self.page.close(self.instance.modal_insumos)
-        self.page.open(self.instance.dialog_nota_cliente)
+        self.page.pop_dialog()
+        self.page.show_dialog(self.instance.dialog_nota_cliente)
         self.page.update()
         #await self.limpar_venda(e)
         #await self.abrir_dialogo_nota_clientes(e)
@@ -529,7 +550,8 @@ class MainController:
     async def listInsumos(self):         
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.GetInsumosData, 
-            id_loja=self.instance.id_loja, token=self.instance.token).call_api_refresh_token()
+            id_loja=self.instance.id_loja, token=self.instance.token
+        ).call_api_refresh_token()
            
         array = json.loads(response.content)
 
@@ -696,13 +718,13 @@ class MainController:
                     ft.TextButton(
                         text="Voltar",
                         on_click=lambda e:[
-                            self.page.close(self.dialog),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
-            self.page.open(self.dialog)
+            self.page.show_dialog(self.dialog)
             self.page.update()
             return
         
@@ -725,7 +747,7 @@ class MainController:
                     color=AppColors.GRAY_LIGHT,
                 ),
             )
-            self.page.open(snackbar)
+            self.page.show_dialog(snackbar)
             self.page.update()
             return
         
@@ -748,10 +770,10 @@ class MainController:
             itens=itens
         ).call_api_refresh_token()
 
-        self.page.close(self.instance.modal_recebimento)
+        self.page.pop_dialog()
 
         if self.instance.ident_serv == 1:
-            self.page.open(self.instance.dialog_insumo)
+            self.page.show_dialog(self.instance.dialog_insumo)
         else:
             await self.limpar_venda(e)
 
@@ -759,39 +781,47 @@ class MainController:
 
 
     async def fechar_dialogo_nota_clientes(self, e):
-        self.page.close(self.instance.dialog_nota_cliente) 
+        self.page.pop_dialog()
         self.page.update()
         await self.limpar_venda(e)
 
 
     def abrir_dialogo_nota_clientes(self, e):
         if not self.instance.id_client == 0:
-            self.page.open(self.instance.dialog_nota_cliente)
+            self.page.show_dialog(self.instance.dialog_nota_cliente)
             self.page.update()
 
 
     async def fechar_modal_nota_clientes(self, e):
-        self.page.close(self.instance.modal_nota_cliente) 
+        self.page.pop_dialog() 
         self.page.update() 
         await self.limpar_venda(e)
 
 
     async def fechar_dialogo_insumos(self, e):
-        self.page.close(self.instance.dialog_insumo) 
+        self.page.pop_dialog()
         self.page.update() 
         await self.abrir_dialogo_nota_clientes(e)        
 
 
     async def abrir_modal_insumos(self, e):
-        self.page.close(self.instance.dialog_insumo)
-        self.page.open(self.instance.modal_insumos)
+        self.page.pop_dialog()
+        self.page.show_dialog(self.instance.modal_insumos)
         self.page.update()
 
 
     def fechar_modal_insumos(self, e):
-        self.page.close(self.instance.modal_insumos) 
+        self.page.pop_dialog()
         self.page.update() 
         self.abrir_dialogo_nota_clientes(e)   
+
+
+    async def handler_logout(self):
+        await asyncio.wait_for(ft.SharedPreferences().set("token",        ''), 5), 
+        await asyncio.wait_for(ft.SharedPreferences().set("r_token",      ''), 5), 
+        await asyncio.wait_for(ft.SharedPreferences().set("id",           ''), 5),
+        await asyncio.wait_for(ft.SharedPreferences().set("status_caixa", ''), 5),
+        await self.page.push_route("/")    
     
 
 

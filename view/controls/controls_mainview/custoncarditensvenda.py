@@ -29,7 +29,7 @@ class CustonCardItensVenda(ft.Card):
         self.ident_serv = ident_serv
         self.on_change = on_change
         self.width = width
-        self.page = page
+#        self.page = page
         self.valor = valor
         self.valor_original = valor
         self.estoque = estoque
@@ -47,9 +47,9 @@ class CustonCardItensVenda(ft.Card):
         self.comissao = comissao
         self.valor_visible = valor_visible
         
-        self.border_radius=ft.border_radius.all(10)
+        self.border_radius=ft.BorderRadius.all(10)
         self.elevation=10
-        self.padding = ft.padding.all(10)
+        self.padding = ft.Padding.all(10)
 
         self.edtValVenda = CustomTextField(
             label="Valor de venda:", 
@@ -61,7 +61,7 @@ class CustonCardItensVenda(ft.Card):
             height=150,
             callback=self.handler_inf_valor,
             callback2=lambda e: self.Cancel_inf_valor(e),
-            page=self.page, 
+            page=page, 
             controls=[
                 self.edtValVenda
             ]
@@ -94,22 +94,22 @@ class CustonCardItensVenda(ft.Card):
             on_click=lambda e: self.remove_quant(e)                                                          
         )             
 
-        self.btn_cancel = ft.ElevatedButton(
-            text='Cancelar',
+        self.btn_cancel = ft.Button(
+            content='Cancelar',
             color=AppColors.GRAY_LIGHT,
             bgcolor=AppColors.BACKGROUND_DARK,
             on_click=lambda e: self.cancel_valor(e)
         )
 
-        self.btn_confirm = ft.ElevatedButton(
-            text='Confirmar',
+        self.btn_confirm = ft.Button(
+            content='Confirmar',
             color=AppColors.GRAY_LIGHT,
             bgcolor=AppColors.BACKGROUND_DARK,
             on_click=lambda e: self.confirm_valor(e)
         )        
 
         self.dialog = CustonDialog(
-            self.page, 
+            page, 
             'Atenção', 
             'O valor informado é menor que o valor original, deseja continuar?',
             actions=[
@@ -144,8 +144,8 @@ class CustonCardItensVenda(ft.Card):
         
         self.container=ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -153,23 +153,23 @@ class CustonCardItensVenda(ft.Card):
             ),
             bgcolor = AppColors.GRAY_DARK,
             border=None,
-            border_radius=ft.border_radius.all(10),
-            padding=ft.padding.all(10),
+            border_radius=ft.BorderRadius.all(10),
+            padding=ft.Padding.all(10),
             content=ft.Row(
                 controls=[
                     #ft.Icon(name=self.icon, color=AppColors.ORANGE_DARK),
                     #ft.VerticalDivider(color=AppColors.ORANGE_DARK),
                     ft.Container(
+                        expand=True,
                         content=ft.Column(
                             controls=[
                                 ft.Text(value=self.name, color=AppColors.ORANGE_DARK, size=16, weight=ft.FontWeight.BOLD,),
                                 self.text_valor,
                                 self.text_estoque,
                             ],
-                            width=self.width / 2,
+                            width=page.width / 2,
                         ),
                     ), 
-                    ft.Container(expand=True),
                     ft.Container(                            
                         content=ft.Column(                                                
                             controls=[
@@ -177,11 +177,11 @@ class CustonCardItensVenda(ft.Card):
                                 self.btn_remove,                                                        
                             ],
                         ), 
-                        border=ft.border.all(1, AppColors.GRAY_MED2),
-                        border_radius=ft.border_radius.all(5),
+                        border=ft.Border.all(1, AppColors.GRAY_MED2),
+                        border_radius=ft.BorderRadius.all(5),
                         bgcolor=AppColors.GRAY_DARK,
                         shadow=ft.BoxShadow(color=AppColors.BLACK, blur_radius=5),
-                        padding=ft.padding.all(5),
+                        padding=ft.Padding.all(5),
                     ),                     
 
                 ],
@@ -204,9 +204,8 @@ class CustonCardItensVenda(ft.Card):
 
 
     def select(self):
-        self.container.border = ft.border.all(1, AppColors.ORANGE_BURNT)
+        self.container.border = ft.Border.all(1, AppColors.ORANGE_BURNT)
         self.selected = True
-        #self.instance.id_prof = self.id
         self.update()
 
 
@@ -235,20 +234,20 @@ class CustonCardItensVenda(ft.Card):
                     ft.TextButton(
                         text="OK",
                         on_click=lambda e:[
-                            self.page.close(self.dialog_alert),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
-            self.page.open(self.dialog_alert)
+            self.page.show_dialog(self.dialog_alert)
             self.page.update()
             return
 
         if self.inf_valor == 'True' and self.quantidade == 0:
-            self.page.open(self.moda_view)
+            self.page.show_dialog(self.moda_view)
 
-        self.container.border = ft.border.all(1, AppColors.ORANGE_BURNT)
+        self.container.border = ft.Border.all(1, AppColors.ORANGE_BURNT)
         self.quantidade = self.quantidade + 1 
         self.text_quant.text = self.quantidade
         self.total = self.valor * self.quantidade
@@ -285,7 +284,7 @@ class CustonCardItensVenda(ft.Card):
 
 
     def Cancel_inf_valor(self, e):
-        self.page.close(self.moda_view)        
+        self.page.pop_dialog()        
         self.page.update()  
 
 
@@ -294,19 +293,19 @@ class CustonCardItensVenda(ft.Card):
             self.valor = float(self.edtValVenda.value.replace(',', '.'))
 
             if self.valor < self.valor_original:
-                self.page.open(self.dialog)
+                self.page.show_dialog(self.dialog)
 
             self.total = self.valor * self.quantidade
             self.text_valor.text = f'R$ {formatar_moeda_brasileira(self.valor)}'        
             self.text_total.text = f'R$ {formatar_moeda_brasileira(self.total)}'        
-            self.page.close(self.moda_view)   
+            self.page.pop_dialog()   
             self.on_change()     
             self.page.update()          
 
 
     def confirm_valor(self, e):
         self.edtValVenda.value = ''
-        self.page.close(self.dialog)
+        self.page.pop_dialog()
         self.page.update()
 
 
@@ -316,6 +315,6 @@ class CustonCardItensVenda(ft.Card):
         self.total = self.valor * self.quantidade
         self.text_valor.text = f'R$ {formatar_moeda_brasileira(self.valor)}'        
         self.text_total.text = f'R$ {formatar_moeda_brasileira(self.total)}'        
-        self.page.close(self.dialog)   
+        self.page.pop_dialog()   
         self.on_change()     
         self.page.update()            

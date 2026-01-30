@@ -12,7 +12,7 @@ class CustonList(ft.ListView):
 
 #        self.page = page
         self.selected_card = None
-        self.height = 500
+        self.height = 350
 
     def on_card_selected(self, card_instance: CustonCardSimples):
         # Percorre todos os cards na lista de controles

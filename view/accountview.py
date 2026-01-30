@@ -13,11 +13,11 @@ class AccountView(ft.View):
             padding=0 
         )
 
-        self.page = page
+        #page = page
 
-        self.progressRing = CustonProgressRing(self.page.height)             
+        self.progressRing = CustonProgressRing(page.height)             
 
-        self.controller = AccountController(self.page)    
+        self.controller = AccountController(page)    
 
         self.txt_username = CustomTextField("Estudio ou tatuador") 
         self.txt_telefone = CustomTextField("Telefone", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER) 
@@ -27,7 +27,7 @@ class AccountView(ft.View):
 
         self.btn_save = ft.Row(
             controls=[
-                ft.ElevatedButton(
+                ft.Button(
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
                         side=ft.BorderSide(1, AppColors.GRAY_DARK),
@@ -35,7 +35,7 @@ class AccountView(ft.View):
                     expand=True,
                     height=45,
                     elevation=5,
-                    text='Salvar',
+                    content='Salvar',
                     bgcolor=AppColors.ORANGE_BURNT,
                     color=AppColors.GRAY_LIGHT,
 
@@ -55,14 +55,14 @@ class AccountView(ft.View):
                     ),
                     expand=True,
                     height=45,
-                    text='Voltar',
-                    on_click=lambda e:self.controller.navigation(e, self.id)
+                    content='Voltar',
+                    on_click=self.controller.navigation
                 )
             ],
         )        
 
         main_container = ft.Container(
-            padding=ft.padding.all(20),
+            padding=ft.Padding.all(20),
             bgcolor=AppColors.BACKGROUND_DARK,
             content=ft.Column(
                 controls=[
@@ -83,7 +83,7 @@ class AccountView(ft.View):
                 controls=[
                     ft.Container(
                         content=main_container,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment.CENTER,
                         expand=True,
                     ),
                     self.progressRing
@@ -97,8 +97,8 @@ class AccountView(ft.View):
 
 
     async def _getAccountData(self):
-        self.id      = await self.page.client_storage.get_async("id")
-        self.token   = await self.page.client_storage.get_async("token")
-        self.r_token = await self.page.client_storage.get_async("r_token") 
+        self.id      = await ft.SharedPreferences().get("id")
+        self.token   = await ft.SharedPreferences().get("token")
+        self.r_token = await ft.SharedPreferences().get("r_token") 
 
         await self.controller.getAccountData(self)          

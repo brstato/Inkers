@@ -21,8 +21,8 @@ class CustonCardProfessional(ft.Card):
 
         self.container=ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK2,    # Cor inicial
                     AppColors.GRAY_DARK,   # Cor final
@@ -34,7 +34,7 @@ class CustonCardProfessional(ft.Card):
             padding=ft.padding.all(10),
             content=ft.Row(
                 controls=[
-                    ft.Icon(name=ft.Icons.PERSON, color=AppColors.ORANGE_DARK),
+                    ft.Icon(icon=ft.Icons.PERSON, color=AppColors.ORANGE_DARK),
                     ft.VerticalDivider(color=AppColors.ORANGE_DARK),
                     ft.Text(value=self.name, color=AppColors.GRAY_LIGHT, size=16)
                 ],

@@ -31,6 +31,7 @@ class CustomTextField(ft.TextField):
             on_change = on_change,
             keyboard_type=keyboard_type,
             input_filter = ft.InputFilter(regex_string=regex, replacement_string="", allow=True),
+            expand=True,
         )     
 
 

@@ -11,7 +11,7 @@ class CustonList(ft.ListView):
             
         )
 
-        self.page = page
+        #self.page = page
         self.selected_card = None
         self._heigt = height
 

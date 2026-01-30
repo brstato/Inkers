@@ -24,7 +24,7 @@ class ServiceController:
 
     async def createService(self, e):
 
-        self.page.close(self.instance.modalviewCreateService)
+        self.page.pop_dialog(self.instance.modalviewCreateService)
         
         self.instance.progressRing.visible = True
         self.page.update()          
@@ -42,11 +42,11 @@ class ServiceController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-            await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+            await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+            await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await self.page.client_storage.get_async("token")
-            self.instance.r_token = await self.page.client_storage.get_async("r_token")          
+            self.instance.token = await ft.SharedPreferences().get("token")
+            self.instance.r_token = await ft.SharedPreferences().get("r_token")          
 
             if response.status_code != 200:
                 self.page.go("/")
@@ -69,7 +69,7 @@ class ServiceController:
 
     async def editService(self, e):
 
-        self.page.close(self.instance.modalview)
+        self.page.pop_dialog(self.instance.modalview)
         
         self.instance.progressRing.visible = True
         self.page.update()  
@@ -87,11 +87,11 @@ class ServiceController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-            await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+            await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+            await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await self.page.client_storage.get_async("token")
-            self.instance.r_token = await self.page.client_storage.get_async("r_token")
+            self.instance.token = await ft.SharedPreferences().get("token")
+            self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
             if response.status_code != 200:
                 self.page.go("/")
@@ -127,11 +127,11 @@ class ServiceController:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = await ft.SharedPreferences().get("token")
+                self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
                 await self.model.deleteServiceData(id_prof, self.instance.token)
             else:
@@ -162,11 +162,11 @@ class ServiceController:
 
             if response.status_code == 200:
 
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = await ft.SharedPreferences().get("token")
+                self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
                 response = await self.model.getServiceData(self.instance.id_loja, self.instance.token)
 
@@ -221,23 +221,29 @@ class ServiceController:
 
             if response.status_code == 200:
 
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = await ft.SharedPreferences().get("token")
+                self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
                 response = await self.model.DetailServiceData(id=id, token=self.instance.token)
             else:    
                 self.page.go("/login")                
 
         elif response.status_code == 200:
-            self.instance.edtValcusto.value  = formatar_moeda_brasileira(json.loads(response.content)["valor_custo"])
-            self.instance.edtValVenda.value  = formatar_moeda_brasileira(json.loads(response.content)["valor_venda"])
-            self.instance.edtNome.value      = json.loads(response.content)["nome"        ]
-            self.instance.infvalor.value     = json.loads(response.content)["inf_valor"   ] 
-            self.instance.Comissionado.value = json.loads(response.content)["comissionado"]
+            data = json.loads(response.content)
 
-            self.page.open(self.instance.modalview)
+            self.instance.edtValcusto.value  = formatar_moeda_brasileira(data.get("valor_custo", 0))
+            self.instance.edtValVenda.value  = formatar_moeda_brasileira(data.get("valor_venda", 0))
+            
+            self.instance.edtNome.value      = data.get("nome", 0)
 
+            infvalor:bool = bool(data.get("inf_valor",    False))
+            Comissionado:bool = bool(data.get("comissionado", False))
+
+            self.instance.infvalor.value     = infvalor
+            self.instance.Comissionado.value = Comissionado
+
+            self.page.show_dialog(self.instance.modalview)
         self.page.update()    

@@ -16,9 +16,9 @@ class AccountController:
 
 
     async def getAccountData(self, view_instance):
-        id: str = await self.page.client_storage.get_async("id")
-        token: str = await self.page.client_storage.get_async("token")
-        r_token: str = await self.page.client_storage.get_async("r_token")
+        id: str = await ft.SharedPreferences().get("id")
+        token: str = await ft.SharedPreferences().get("token")
+        r_token: str = await ft.SharedPreferences().get("r_token")
 
         if id and r_token:
 
@@ -30,11 +30,11 @@ class AccountController:
             if response.status_code == 401:
                 response = await LoginModel().refresh_token(r_token, id)
                 if response.status_code == 200:
-                    await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                    await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                    await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                    await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
 
-                    token: str = await self.page.client_storage.get_async("token")
-                    r_token: str = await self.page.client_storage.get_async("r_token")
+                    token: str = await ft.SharedPreferences().get("token")
+                    r_token: str = await ft.SharedPreferences().get("r_token")
 
                     response = await self.model.getAccountData(id, token)
 
@@ -57,26 +57,25 @@ class AccountController:
                     'Atenção!',
                     'Complete seus dados.',
                     [
-                        ft.TextButton('Ok', on_click=lambda e:[self.page.close(dialog), self.page.update()])
+                        ft.TextButton('Ok', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                     ]
                 )    
-                self.page.open(dialog)
+                self.page.show_dialog(dialog)
 
             view_instance.progressRing.visible = False
             self.page.update()
 
 
-    def navigation(self, e, id:str = None):
+    async def navigation(self, e):
         if self.dialog is not None:
-            self.page.close(self.dialog)
+            self.page.pop_dialog()
             self.dialog = None
             self.page.update() 
             
         if self.r_token:
-            self.page.go("/main")
-            self.page.update()
+            await self.page.push_route("/main")
         else:
-            self.page.go("/")    
+            await self.page.push_route("/")    
 
 
     async def handle_save(self, e, view_instance):
@@ -99,10 +98,10 @@ class AccountController:
                     title="Atenção",
                     content="Por favor preencha todos os campos.",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
                 return
         
@@ -112,10 +111,10 @@ class AccountController:
                     title="Atenção",
                     content="As senhas não coincidem!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
                 return    
         
@@ -137,10 +136,10 @@ class AccountController:
                     title="Sucesso",
                     content="Conta criada com sucesso!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update(), self.page.go("/")])
+                        ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update(), self.page.go("/")])
                     ]
                 )
-                self.page.open(self.dialog)  
+                self.page.show_dialog(self.dialog)  
                 return
 
             if response.status_code == 409:
@@ -149,10 +148,10 @@ class AccountController:
                     title="Erro!",
                     content=f"Atenção o nome {self.username} ja esta em uso!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog) 
+                self.page.show_dialog(self.dialog) 
                 return                  
                     
         else:
@@ -162,10 +161,10 @@ class AccountController:
                     title="Atenção",
                     content="Por favor preencha todos os campos.",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
                 return
 
@@ -175,10 +174,10 @@ class AccountController:
                     title="Atenção",
                     content="As senhas não coincidem!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
                 return                
 
@@ -203,10 +202,10 @@ class AccountController:
                     title="Sucesso",
                     content="Dados atualizados com sucesso!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update() 
 
             elif response.status_code == 401:
@@ -215,8 +214,8 @@ class AccountController:
                 response = await LoginModel().refresh_token(r_token, id)
                 
                 if response.status_code == 200:
-                    await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                    await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                    await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                    await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
 
                     token: str = json.loads(response.content)["token"]
                     r_token: str = json.load(response.content)["r_token"]
@@ -239,7 +238,7 @@ class AccountController:
                             title="Sucesso",
                             content="Dados atualizados com sucesso!",
                             actions=[
-                                ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
+                                ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                             ]
                         )
         self.page.update()

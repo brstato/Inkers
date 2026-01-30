@@ -39,9 +39,10 @@ class CustonList(ft.ListView):
                 self.instance.total += card.total
         
         # Atualiza o texto do total na MainView
-        self.instance.btn_total.text = f'Receber: R$ {formatar_moeda_brasileira(self.instance.total)}'
+        self.instance.btn_total.content = f'R$ {formatar_moeda_brasileira(self.instance.total)}'
 
         if self.instance.total > 0:
+            self.instance.btn_agenda.visible = False
             self.instance.btn_total.bgcolor = AppColors.ORANGE_BURNT
             self.instance.btn_total.color   = AppColors.GRAY_LIGHT
             self.instance.btn_cancelar.visible = True

@@ -16,7 +16,7 @@ class CustonModalView(ft.AlertDialog):
         ):
         super().__init__()
         self.text_button_1 = text_button_1
-        self.page = page
+        page = page
         self.width = width
         self.height = height
         self.open = False
@@ -26,19 +26,29 @@ class CustonModalView(ft.AlertDialog):
         self.content = ft.Container(
             height=self.height,
             width=self.width,
+            bgcolor=AppColors.GRAY_DARK,
             content=ft.Column(
+                expand=True,
+                scroll=ft.ScrollMode.AUTO,
                 controls=[
                     ft.Container(
+                        expand=True,
                         content=ft.Column(
+                            expand=True,
+                            scroll=ft.ScrollMode.AUTO,
                             controls=controls,
+                            spacing=10,
                         ),
+                        padding=10,
                     ),
+                    ft.Container(height=10),
                     ft.Column(
+                        spacing=10,
                         controls=[
                             ft.Row(
                                 expand=True,
                                 controls=[
-                                    ft.ElevatedButton(
+                                    ft.Button(
                                         style=ft.ButtonStyle(
                                             shape=ft.RoundedRectangleBorder(radius=8),
                                             side=ft.BorderSide(1, AppColors.GRAY_DARK),
@@ -46,7 +56,7 @@ class CustonModalView(ft.AlertDialog):
                                         expand=True,
                                         height=45,
                                         elevation=5,
-                                        text=self.text_button_1,
+                                        content=self.text_button_1,
                                         bgcolor=AppColors.ORANGE_BURNT,
                                         color=AppColors.GRAY_LIGHT,
 
@@ -60,13 +70,11 @@ class CustonModalView(ft.AlertDialog):
                                     ft.OutlinedButton(
                                         expand=True,
                                         height=45,
-                                        text="Fechar",
+                                        content="Fechar",
                                         style=ft.ButtonStyle(
                                             shape=ft.RoundedRectangleBorder(radius=8),
-                                            #side=ft.BorderSide(1, AppColors.GRAY_DARK),
                                             color=AppColors.GRAY_LIGHT,
                                         ),
-                                        #on_click=lambda e:self.callback2(e)
                                         on_click=self.close
                                     )
                                 ],
@@ -82,4 +90,4 @@ class CustonModalView(ft.AlertDialog):
         await self.callback(e)
 
     def close(self, e):
-        self.callback2(e)    
+        self.callback2(e)

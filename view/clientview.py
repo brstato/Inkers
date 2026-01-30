@@ -16,9 +16,9 @@ class ClientView(ft.View):
             scroll = ft.ScrollMode.AUTO
         )
         
-        self.page    = page
+        #page   = page
 
-        self.width = self.page.width
+        self.width = page.width
 
         self.id_loja = None
         self.token   = None
@@ -34,7 +34,7 @@ class ClientView(ft.View):
         self.row_to:int = 20
         self.count:int = 0
 
-        self.controller  = ClientController(self.page, self)
+        self.controller  = ClientController(page, self)
 
         self.calendario = ft.DatePicker(on_change=self.controller.selected_date_calendar)       
 
@@ -59,7 +59,7 @@ class ClientView(ft.View):
                 self.edtDtNascimento, 
                 ft.IconButton(
                     icon=ft.Icons.DATE_RANGE,
-                    on_click=lambda e: [self.page.open(self.calendario), self.page.update()],
+                    on_click=lambda e: [page.show_dialog(self.calendario), page.update()],
                     icon_color=AppColors.GRAY_LIGHT2,
                     right=10,
                 )
@@ -94,8 +94,8 @@ class ClientView(ft.View):
         )        
 
         self.modalviewCreateClient = CustonModalView(
-            self.page,
-            height=300,
+            page,
+            height=350,
             callback=self.controller.createClient,
             callback2=self.close_modal_view_create_client,
             controls=[
@@ -106,8 +106,8 @@ class ClientView(ft.View):
         )        
         
         self.modalview = CustonModalView(
-            self.page,
-            height=300,
+            page,
+            height=350,
             callback=self.controller.editClient,
             callback2=self.close_modal_view,
             controls=[
@@ -118,8 +118,8 @@ class ClientView(ft.View):
         )
 
         self.selected_card = None
-        self.list = CustonList(self.page)
-        self.progressRing = CustonProgressRing(self.page.height)  
+        self.list = CustonList(page)
+        self.progressRing = CustonProgressRing(page.height)  
         
         self.appbar = ft.AppBar(
             actions=[
@@ -129,32 +129,32 @@ class ClientView(ft.View):
                     items=[
                         ft.PopupMenuItem(
                             icon=ft.Icons.PERSON,
-                            text='Cliente A',
-                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='a')
+                            content='Cliente A',
+                            on_click=lambda e: page.run_task(self.controller.listClientData, e, param='a')
                         ),
                         ft.PopupMenuItem(
                             icon=ft.Icons.PERSON,
-                            text='Cliente B',
-                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='b')
+                            content='Cliente B',
+                            on_click=lambda e: page.run_task(self.controller.listClientData, e, param='b')
                         ),                 
                         ft.PopupMenuItem(
                             icon=ft.Icons.PERSON,
-                            text='Cliente C',
-                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='c')
+                            content='Cliente C',
+                            on_click=lambda e: page.run_task(self.controller.listClientData, e, param='c')
                         ),                       
                         ft.PopupMenuItem(
                             icon=ft.Icons.ARROW_UPWARD,
-                            text='Maior valor gasto',
-                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='maior')
+                            content='Maior valor gasto',
+                            on_click=lambda e: page.run_task(self.controller.listClientData, e, param='maior')
                         ),      
                         ft.PopupMenuItem(
                             icon=ft.Icons.ARROW_DOWNWARD,
-                            text='Menor valor gasto',
-                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e, param='menor')
+                            content='Menor valor gasto',
+                            on_click=lambda e: page.run_task(self.controller.listClientData, e, param='menor')
                         ),                               
                         ft.PopupMenuItem(
-                            text='Remover filtro',
-                            on_click=lambda e: self.page.run_task(self.controller.listClientData, e)
+                            content='Remover filtro',
+                            on_click=lambda e: page.run_task(self.controller.listClientData, e)
                         ),                                                                                       
                     ],                       
                 ),
@@ -178,7 +178,7 @@ class ClientView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.HOME,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e:self.page.go("/main")
+                        on_click=lambda e:page.go("/main")
                     ),
                     ft.Container(
                         expand=True,
@@ -243,25 +243,25 @@ class ClientView(ft.View):
         self.edtNoneSocial.value = ''
         self.edtDtNascimento.value = ''
         self.edtTelefone.value = ''  
-        self.page.open(self.modalviewCreateClient)
+        self.page.show_dialog(self.modalviewCreateClient)
         self.page.update()
 
 
     def close_modal_view_create_client(self, e):
-        self.page.close(self.modalviewCreateClient)
+        self.page.pop_dialog(self.modalviewCreateClient)
         self.page.update()
 
 
     def close_modal_view(self, e):
-        self.page.close(self.modalview)
+        self.page.pop_dialog(self.modalview)
         self.page.update()
 
 
     async def _get_client_data(self):
         
-        self.id_loja: str = await self.page.client_storage.get_async("id"     )
-        self.token:   str = await self.page.client_storage.get_async("token"  )
-        self.r_token: str = await self.page.client_storage.get_async("r_token")      
+        self.id_loja: str = await ft.SharedPreferences().get("id"     )
+        self.token:   str = await ft.SharedPreferences().get("token"  )
+        self.r_token: str = await ft.SharedPreferences().get("r_token")      
 
         await self.controller.listClientData('')         
 

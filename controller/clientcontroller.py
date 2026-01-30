@@ -26,7 +26,7 @@ class ClientController:
 
     async def createClient(self, e):
 
-        self.page.close(self.instance.modalviewCreateClient)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()          
@@ -49,7 +49,7 @@ class ClientController:
 
     async def editClient(self, e):
 
-        self.page.close(self.instance.modalview)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()  
@@ -70,7 +70,7 @@ class ClientController:
         self.instance.progressRing.visible = False
         self.page.update()  
 
-        await self.listClientData()        
+        await self.listClientData(e)        
 
 
 
@@ -97,7 +97,7 @@ class ClientController:
     async def listClientData(self, e, param:str = ''):
 
         if not self.instance.token or not self.instance.id_loja:    
-            self.page.go("/")
+            await self.page.push_route("/")
             self.page.update()
             return
 
@@ -220,6 +220,6 @@ class ClientController:
         self.instance.edtTelefone.value     = json.loads(response.content)["telefone"       ] 
         
 
-        self.page.open(self.instance.modalview)
+        self.page.show_dialog(self.instance.modalview)
 
         self.page.update()    

@@ -16,6 +16,10 @@ class Config:
     DELETE_AGENDA_URL     = f"{BASE_API_URL}/agenda/delete"
     DETAIL_AGENDA_URL     = f"{BASE_API_URL}/agenda/detail"
     UPDATE_AGENDA_URL     = f"{BASE_API_URL}/agenda/update"
+    CONF_AGENDA_ZAP       = f"{BASE_API_URL}/agenda/send_confirmation"  
     CREATE_ANAMENESE_URL  = f"{BASE_API_URL}/anamnese/create"
     GET_CONNECT_ZAP       = f"{BASE_API_URL}/whatsapp/connect"
     CREATE_ZAP_URL        = f"{BASE_API_URL}/whatsapp/create"
+      
+
+    CREATE_EVENT_CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"

@@ -22,11 +22,15 @@ class AgendaView(ft.View):
         self.id_agenda:int = 0
         self.id_prof:int = 0
 
-        self.page = page
+#        page = page
 
         self.id_loja:str = ''
         self.token:str   = ''
         self.r_token:str = ''
+
+        self.google_token: str = ''
+
+        self.zap_instance:str = ''
 
         self.client_name:str = ''
 
@@ -34,16 +38,16 @@ class AgendaView(ft.View):
 
         self.client_id:int = 0
 
-        self.progressRing = CustonProgressRing(self.page.height) 
+        self.progressRing = CustonProgressRing(page.height) 
 
-        self.controller = AgendaController(self.page, self)
+        self.controller = AgendaController(page, self)
 
-        self.month_row = CustonRowCalendar(self.page, self)
+        self.month_row = CustonRowCalendar(page, self)
 
         self.month_container = ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -74,7 +78,7 @@ class AgendaView(ft.View):
             border=ft.InputBorder.UNDERLINE,
             border_color=AppColors.ORANGE_DARK,
             focused_border_color=AppColors.ORANGE_DARK,           
-            on_change=self.controller.on_client_selected
+            on_text_change=self.controller.on_client_selected
         )
 
         self.edt_client_telefone = CustomTextField(
@@ -113,7 +117,7 @@ class AgendaView(ft.View):
                 ft.IconButton(
                     right=5,
                     icon=ft.Icons.SCHEDULE,                    
-                    on_click=lambda e:[self.page.open(self.hora_fim), self.page.update()],
+                    on_click=lambda e:[page.show_dialog(self.hora_fim), page.update()],
                     icon_color=AppColors.GRAY_LIGHT2,                    
                 )
             ]
@@ -128,7 +132,7 @@ class AgendaView(ft.View):
                 ft.IconButton(
                     right=5,
                     icon=ft.Icons.SCHEDULE,                    
-                    on_click=lambda e:[self.page.open(self.hora_ini), self.page.update()],
+                    on_click=lambda e:[page.show_dialog(self.hora_ini), page.update()],
                     icon_color=AppColors.GRAY_LIGHT2,
                 )
             ]
@@ -148,15 +152,15 @@ class AgendaView(ft.View):
                     icon=ft.Icons.DATE_RANGE,
                     icon_color=AppColors.GRAY_LIGHT2,
                     right=5,
-                    on_click=lambda e:[self.page.open(self.calendario_agenda), self.page.update()]
+                    on_click=lambda e:[page.show_dialog(self.calendario_agenda), page.update()]
                 )                
             ]
         )
 
         self.modal_create_agenda = CustonModalView(
-            self.page,
+            page,
             callback=self.controller.confirm_agendamento,
-            callback2=lambda e: self.page.run_task(self.controller.fechar_modal_agenda, e),
+            callback2=lambda e: page.run_task(self.controller.fechar_modal_agenda, e),
             controls=[
                 self.edt_client_name,
                 self.edt_client_telefone,
@@ -164,15 +168,15 @@ class AgendaView(ft.View):
                 self.area_ini,
                 self.area_fim
             ],
-            height=360,
+            height=380,
         )
 
-        self.calendario = CustonRowDays(self.page, self)
+        self.calendario = CustonRowDays(page, self)
 
         self.container_calendario = ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -187,11 +191,11 @@ class AgendaView(ft.View):
         )
 
         self.list_profissionais = CustonListProfessional(
-            self.page
+            page
         )
 
         self.list_agendamento = CustonList(
-            self.page
+            page
         )
 
         self.bottom_appbar = ft.BottomAppBar(
@@ -202,7 +206,7 @@ class AgendaView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.HOME,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e:self.page.go("/main")
+                        on_click=lambda e:page.go("/main")
                     ),
                     ft.Container(
                         expand=True,

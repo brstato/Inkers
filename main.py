@@ -1,6 +1,7 @@
 # main.py
 #id do cliente 184100860737-52caf580q16d4ht8hgkl7ak8p7dr92js.apps.googleusercontent.com
 #chave secreta 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
+import traceback
 import flet as ft
 import flet.fastapi as flet_fastapi
 from view.loginview import LoginView
@@ -13,51 +14,59 @@ from view.clientview import ClientView
 from view.agendaview import AgendaView
 from view.anamneseview import AnamneseView
 from view.anamnese_response import AnamneseResponse
+import asyncio
 
 async def main(page: ft.Page):
-    # mudanca no projeto para InkedApp
-    # Configurações iniciais da página/janela
-    page.title = "InkedApp"
+    page.title = "App.Inkers"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.update()
+    page.wasm = True
+    #page.platform_brightness()
 
-    #mainview = MainView(page)
+    def view_pop(view):
+        page.views.pop() 
+        top_view = page.views[-1] 
+        page.go(top_view.route) 
 
 
-    async def route_change(route):
+    async def route_change(e=None):
         page.views.clear()
-
         troute = ft.TemplateRoute(page.route)
+        try:
+            if troute.match("/"):
+                page.views.append(LoginView(page))
+            elif troute.match("/account"):
+                page.views.append(AccountView(page)) 
+            elif troute.match("/main"):
+                page.views.append(MainView(page))     
+            elif troute.match("/professional"):   
+                page.views.append(ProfessionalView(page)) 
+            elif troute.match("/product"):   
+                page.views.append(ProductView(page))    
+            elif troute.match("/services"):   
+                page.views.append(ServiceView(page))   
+            elif troute.match("/clients"):
+                page.views.append(ClientView(page))
+            elif troute.match("/agenda"):
+                page.views.append(AgendaView(page))               
+            elif troute.match("/anamnese/:name/:tel"):
+                page.views.append(AnamneseView(page, troute.name, troute.tel))         
+            elif troute.match("/anamneseresponse"):                                  
+                page.views.append(AnamneseResponse())
 
-        if troute.match("/"):
-            page.views.append(LoginView(page))
-        elif troute.match("/account"):
-            page.views.append(AccountView(page)) 
-        elif troute.match("/main"):
-            page.views.append(MainView(page))     
-        elif troute.match("/professional"):   
-            page.views.append(ProfessionalView(page)) 
-        elif troute.match("/product"):   
-            page.views.append(ProductView(page))    
-        elif troute.match("/services"):   
-            page.views.append(ServiceView(page))   
-        elif troute.match("/clients"):
-            page.views.append(ClientView(page))
-        elif troute.match("/agenda"):
-            page.views.append(AgendaView(page))               
-        elif troute.match("/anamnese/:name/:tel"):
-            page.views.append(AnamneseView(page, troute.name, troute.tel))         
-        elif troute.match("/anamneseresponse"):                                  
-            page.views.append(AnamneseResponse())
+            page.update()
 
-        page.update()
+        except Exception as e:  
+            print("ERRO FATAL NA VIEW:")
+            traceback.print_exc()
+
 
     page.on_route_change = route_change
-    page.go(page.route)
+    page.on_view_pop = view_pop
     #page.go("/")
+    await route_change("/")        
 
-#if __name__ == "__main__":
-#    ft.app(target=main, assets_dir="assets", port=8086)
+# if __name__ == "__main__":
+#     ft.run(main=main, assets_dir="assets", port=8087)
 app = ft.app(target=main, assets_dir="assets", export_asgi_app=True)
 

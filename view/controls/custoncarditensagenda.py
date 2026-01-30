@@ -18,6 +18,7 @@ class CustonCardItensAgenda(ft.Card):
             name:str='', 
             id_agenda:int=0, 
             id_client:int=0,
+            event_id:str='',
             delete:callable=None,
             tap:callable=None,
             edit:callable=None
@@ -25,7 +26,7 @@ class CustonCardItensAgenda(ft.Card):
         super().__init__()
 
         self.edit = edit
-        self.page = page
+        page = page
         self.valor = valor
         self.name:str = name
         self.atendimento=atendimento
@@ -39,6 +40,7 @@ class CustonCardItensAgenda(ft.Card):
         self.height = 135
         self.telefone = telefone
         self.delete = delete
+        self.event_id = event_id
         
         self.border_radius=ft.border_radius.all(10)
         self.elevation=10
@@ -86,8 +88,8 @@ class CustonCardItensAgenda(ft.Card):
 
         self.container=ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -99,7 +101,7 @@ class CustonCardItensAgenda(ft.Card):
             padding=ft.padding.all(10),
             content=ft.Row(
                 controls=[
-                    ft.Icon(name=ft.Icons.DATE_RANGE, color=AppColors.ORANGE_DARK),
+                    ft.Icon(icon=ft.Icons.DATE_RANGE, color=AppColors.ORANGE_DARK),
                     ft.VerticalDivider(color=AppColors.ORANGE_DARK),
                     ft.Container(
                         content=ft.Column(

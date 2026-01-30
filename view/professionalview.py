@@ -1,3 +1,4 @@
+import asyncio
 import flet as ft
 from view.controls.colors import AppColors
 from view.controls.custonprogressring import CustonProgressRing
@@ -15,33 +16,34 @@ class ProfessionalView(ft.View):
             scroll = ft.ScrollMode.AUTO
         )
         
-        self.page    = page
+#        self.page    = page
 
-        self.width = self.page.width
+        self.width = page.width
         
         self.id_loja = None
         self.token   = None
         self.r_token = None
         self.id_prof = None
-        self.controller = ProfessionalController(self.page, self)
+        self.controller = ProfessionalController(page, self)
         self.edtName     = CustomTextField(label="Nome do profissional:")    
         self.edtTelefone = CustomTextField(label="Telefone:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
         self.edtComissao = CustomTextField(label="Comissão, %:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
 
         self.modalviewCreateProfessional = CustonModalView(
-            self.page,
+            page,
             callback=self.controller.createProfessional,
             callback2=self.close_modal_view,
             controls=[
                 self.edtName,
                 self.edtTelefone,
                 self.edtComissao
-            ],            
+            ],  
+            height=320,          
         )        
         
         self.modalview = CustonModalView(
-            self.page,
+            page,
             callback=self.controller.editProfessional,
             callback2=self.close_modal_view,
             controls=[
@@ -49,11 +51,12 @@ class ProfessionalView(ft.View):
                 self.edtTelefone,
                 self.edtComissao
             ],
+            height=320,
         )
 
         self.selected_card = None
-        self.list = CustonList(self.page)
-        self.progressRing = CustonProgressRing(self.page.height)  
+        self.list = CustonList(page)
+        self.progressRing = CustonProgressRing(page.height)  
         
         self.appbar = ft.AppBar(
             automatically_imply_leading=False,
@@ -73,7 +76,7 @@ class ProfessionalView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.HOME,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e:self.page.go("/main")
+                        on_click=lambda _:self.page.go("/main")
                     ),
                     ft.Container(
                         expand=True,
@@ -106,25 +109,25 @@ class ProfessionalView(ft.View):
         self.edtName.value = ''
         self.edtTelefone.value = ''
         self.edtComissao.value = ''
-        self.page.open(self.modalviewCreateProfessional)
+        self.page.show_dialog(self.modalviewCreateProfessional)
         self.page.update()
 
 
     def close_modal_view_create_professional(self):
-        self.page.close(self.modalviewCreateProfessional)
+        self.page.pop_dialog()
         self.page.update()
 
 
     def close_modal_view(self, e):
-        self.page.close(self.modalview)
+        self.page.pop_dialog()
         self.page.update()
 
 
     async def _get_professional_data(self):
         
-        self.id_loja: str = await self.page.client_storage.get_async("id"     )
-        self.token:   str = await self.page.client_storage.get_async("token"  )
-        self.r_token: str = await self.page.client_storage.get_async("r_token")      
+        self.id_loja: str = await ft.SharedPreferences().get("id"     )
+        self.token:   str = await ft.SharedPreferences().get("token"  )
+        self.r_token: str = await ft.SharedPreferences().get("r_token")      
 
         self.controller = ProfessionalController(self.page, self)
 

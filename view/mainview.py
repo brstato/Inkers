@@ -12,6 +12,7 @@ from view.controls.custoncardsimples import CustonCardSimples
 from view.controls.custontextfield import CustomTextField
 from view.controls.custondialog import CustonDialog
 from view.controls.custonbuttons import CustonButton
+import asyncio
 
 class MainView(ft.View):
     def __init__(
@@ -147,9 +148,9 @@ class MainView(ft.View):
             ]
         )
 
-        self.btn_fechar_caixa = ft.ElevatedButton(
+        self.btn_fechar_caixa = ft.Button(
             visible=False,
-            text='Fechar caixa', 
+            content='Fechar caixa', 
             color=AppColors.GRAY_LIGHT3,
             bgcolor=AppColors.GRAY_DARK,
             elevation=5,
@@ -161,9 +162,9 @@ class MainView(ft.View):
             on_click=self.controller.fechar_caixa
         )      
 
-        self.btn_abrir_caixa = ft.ElevatedButton(
+        self.btn_abrir_caixa = ft.Button(
             visible=False,
-            text='Abrir caixa', 
+            content='Abrir caixa', 
             color=AppColors.GRAY_LIGHT3,
             bgcolor=AppColors.GRAY_DARK,
             elevation=5,
@@ -172,7 +173,7 @@ class MainView(ft.View):
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),            
-            on_click=lambda e:page.run_task(self.controller.abrir_caixa)
+            on_click=lambda e: self.page.create_task(self.controller.abrir_caixa())
         )              
 
         self.edt_troco_inicial = CustomTextField(
@@ -216,7 +217,7 @@ class MainView(ft.View):
             height=380,
             page=page,
             callback=self.controller.confirmar_fechamento_caixa,
-            callback2=lambda e:[page.close(self.modal_fechamento_caixa), page.update()],
+            callback2=lambda e:[page.pop_dialog(), page.update()],
             text_button_1="Fechar caixa",
             controls=[
                self.edt_troco_fechamento,
@@ -324,7 +325,7 @@ class MainView(ft.View):
             controls=[
                 self.edt_credito,
                 ft.IconButton(
-                    alignment=ft.alignment.center_right,
+                    alignment=ft.Alignment.CENTER_RIGHT,
                     icon=ft.Icons.MONETIZATION_ON,
                     icon_color=AppColors.GRAY_LIGHT3,
                     on_click=lambda e: self.controller.preencher_valor_total(self.edt_credito, e),
@@ -353,7 +354,7 @@ class MainView(ft.View):
             value=self.client,
             color=AppColors.ORANGE_DARK,
             visible=False,
-            #width=page.width / 2,
+            width=page.width / 4,
         )
 
         self.edtPesquisaClientes = ft.TextField(
@@ -366,7 +367,7 @@ class MainView(ft.View):
         ) 
 
         self.modal_pesquisa_clientes = CustonModalView(
-            height=650,
+            height=600,
             page=page,
             callback=self.controller.confirmar_pequisa_clientes,
             callback2=self.controller.cancelar_modal_pesquisa_clientes,
@@ -390,11 +391,11 @@ class MainView(ft.View):
             on_blur=lambda e: self.controller.on_exit_edt_pesquisa(e)
         )        
 
-        self.btn_pesquisa_produtos = ft.ElevatedButton(
+        self.btn_pesquisa_produtos = ft.Button(
             width=150,
             icon=ft.Icons.SEARCH,
             icon_color=AppColors.GRAY_LIGHT2,
-            text='Produtos',
+            content='Produtos',
             bgcolor=AppColors.GRAY_DARK,
             elevation=5,            
             style=ft.ButtonStyle(
@@ -405,11 +406,11 @@ class MainView(ft.View):
             on_click=lambda e: self.controller.exibir_edt_pesquisa_produtos(e)
         )
 
-        self.btn_pesquisa_clientes = ft.ElevatedButton(
+        self.btn_pesquisa_clientes = ft.Button(
             width=150,
             icon=ft.Icons.SEARCH,
             icon_color=AppColors.GRAY_LIGHT2,
-            text='Clientes',
+            content='Clientes',
             elevation=5,
             bgcolor=AppColors.GRAY_DARK,
             style=ft.ButtonStyle(
@@ -421,7 +422,7 @@ class MainView(ft.View):
         )
 
         self.btn_fechar_pesquisa = ft.IconButton(
-            alignment=ft.alignment.center_right,
+            alignment=ft.Alignment.CENTER_RIGHT,
             icon=ft.Icons.CLOSE,
             icon_color=AppColors.ORANGE_DARK,
             visible=False,     
@@ -453,8 +454,8 @@ class MainView(ft.View):
                                 
                                 bgcolor=AppColors.GRAY_DARK,
                                 height=100,
-                                border_radius=ft.border_radius.all(10),
-                                padding=ft.padding.all(10),
+                                border_radius=ft.BorderRadius.all(10),
+                                padding=ft.Padding.all(10),
                                 content=self.list_profissionais,
                             ), 
                             #self.edtCliente,
@@ -467,8 +468,8 @@ class MainView(ft.View):
             ),
         ]
 
-        self.btn_total = ft.ElevatedButton(
-            text=f'Receber: R$ {formatar_moeda_brasileira(self.total)}', 
+        self.btn_total = ft.Button(
+            content=f'Receber: R$ {formatar_moeda_brasileira(self.total)}', 
             color=AppColors.GRAY_LIGHT3,
             bgcolor=AppColors.GRAY_DARK,
             elevation=5,
@@ -486,7 +487,7 @@ class MainView(ft.View):
             color=AppColors.ORANGE_DARK,
         )
 
-        self.botao_whatsapp = ft.ElevatedButton(
+        self.botao_whatsapp = ft.Button(
             'Conectar',
             elevation=5,
             expand=True,
@@ -500,9 +501,9 @@ class MainView(ft.View):
         )
 
         self.area_whatsapp = ft.Container(
-            padding=ft.padding.all(10),
+            padding=ft.Padding.all(10),
             #margin=ft.margin.all(10),
-            border_radius=ft.border_radius.all(10),
+            border_radius=ft.BorderRadius.all(10),
             shadow=ft.BoxShadow(
                 color=AppColors.BLACK, 
                 blur_radius=10,
@@ -510,8 +511,8 @@ class MainView(ft.View):
             ),
             height=120,
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -548,11 +549,11 @@ class MainView(ft.View):
                                 content=ft.TextButton(
                                     icon=ft.Icons.SHARE,
                                     icon_color=AppColors.ORANGE_DARK,
-                                    text="Compartilhar anamnese",
+                                    content="Compartilhar anamnese",
                                     style=ft.ButtonStyle(
                                         color=AppColors.ORANGE_DARK,
                                     ),
-                                    on_click=lambda e: [self.controller.create_link_anamnese(e), page.close(self.drawer), page.update()],
+                                    on_click=lambda e: [self.controller.create_link_anamnese(e), page.close_drawer(), page.update()],
                                 ),
                             ),
 
@@ -563,8 +564,8 @@ class MainView(ft.View):
                             CustonButton(page, "Serviços", "/services"),  
                             CustonButton(page, "Clientes", "/clients"),                                                
                                                
-                            ft.ElevatedButton(
-                                text="Sair",
+                            ft.Button(
+                                content="Sair",
                                 bgcolor=AppColors.GRAY_DARK,
                                 color=AppColors.WHITE,
                                 elevation=5,
@@ -575,17 +576,11 @@ class MainView(ft.View):
                                 ),
                                 width=250,
                                 height=45,
-                                on_click=lambda e: [
-                                    page.client_storage.set("token", ''), 
-                                    page.client_storage.set("r_token", ''), 
-                                    page.client_storage.set("id", ''),
-                                    page.client_storage.set("status_caixa", ''),
-                                    page.go("/")
-                                ],
+                                on_click=self.controller.handler_logout,
                             ),                                                   
                         ],
                     ),
-                    padding=ft.padding.all(20),
+                    padding=ft.Padding.all(20),
                 ),
             ],
         )
@@ -602,14 +597,15 @@ class MainView(ft.View):
             bgcolor=AppColors.ORANGE_BURNT,
             shape=ft.CircleBorder(),
             tooltip="Agenda",
-            on_click=lambda e: page.go("/agenda")
+            on_click=lambda e: page.go("/agenda"),
+            visible=True,
         )
 
         self.floating_action_button = self.btn_agenda
         self.floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED
 
         self.bottom_appbar = ft.BottomAppBar(
-            shape=ft.NotchShape.CIRCULAR,   
+            shape=ft.CircularRectangleNotchShape(),   
             height=60,
             bgcolor=AppColors.GRAY_DARK,
             content=ft.Row(
@@ -617,7 +613,7 @@ class MainView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.MENU,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e: page.open(self.drawer)
+                        on_click=page.show_drawer
                     ),
                     ft.Container(expand=True),
                     self.text_client,
@@ -631,7 +627,7 @@ class MainView(ft.View):
 
 
     def did_mount(self):
-        self.page.run_task(self.controller.get_Data) 
+        asyncio.create_task(self.controller.get_Data())
 
 
             

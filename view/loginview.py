@@ -14,16 +14,15 @@ class LoginView(ft.View):
             padding=0,
            
         )
-        self.page = page
+        #self.page = page
 
-        self.controller = LoginController(self.page)
+        self.controller = LoginController(page)
 
-        self.progress_ring = CustonProgressRing(self.page.height)
+        self.progress_ring = CustonProgressRing(page.height)
 
         self.logo = ft.Image(
             width=300,
             src=f"logo.png", 
-            fit=ft.ImageFit.CONTAIN,
         )
 
 
@@ -34,8 +33,8 @@ class LoginView(ft.View):
         self.btn_login_google = ft.Row(
             expand=True,
             controls=[
-                ft.ElevatedButton(
-                    text="Entrar usando google",
+                ft.Button(
+                    content=ft.Text("Entrar usando google"),
                     bgcolor=AppColors.ORANGE_BURNT,
                     color=AppColors.WHITE,
                     elevation=5,
@@ -46,7 +45,7 @@ class LoginView(ft.View):
                     ),
                     expand=True,
                     height=45,
-                    on_click=lambda e:self.controller.handle_login_google(e),
+                    on_click=self._on_click_login_google,
                 )
             ],
         )
@@ -54,8 +53,8 @@ class LoginView(ft.View):
         self.btn_login = ft.Row(
             expand=True,
             controls=[
-                ft.ElevatedButton(
-                    text="Entrar",
+                ft.Button(
+                    content=ft.Text("Entrar"),
                     bgcolor=AppColors.ORANGE_BURNT,
                     color=AppColors.WHITE,
                     elevation=5,
@@ -78,12 +77,12 @@ class LoginView(ft.View):
                 ft.OutlinedButton(
                     expand=True,
                     height=45,
-                    text="Criar Conta",
+                    content="Criar Conta",
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
                         color=AppColors.GRAY_LIGHT,
                     ),
-                    on_click=lambda e: page.go("/account")
+                    on_click=self._go_to_account
                 )
             ],
         )
@@ -95,7 +94,7 @@ class LoginView(ft.View):
                 ft.OutlinedButton(
                     expand=True,
                     height=45,
-                    text="Esqueci minha senha",
+                    content="Esqueci minha senha",
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
                         #side=ft.BorderSide(1, AppColors.GRAY_DARK),
@@ -113,7 +112,7 @@ class LoginView(ft.View):
                 ft.OutlinedButton(
                     expand=True,
                     height=45,
-                    text="Suporte",
+                    content="Suporte",
                     style=ft.ButtonStyle(
                         shape=ft.RoundedRectangleBorder(radius=8),
                         #side=ft.BorderSide(1, AppColors.GRAY_DARK),
@@ -152,7 +151,7 @@ class LoginView(ft.View):
                 controls=[
                     ft.Container(
                         content=main_container,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment.CENTER,
                         expand=True,
                     ),
                     self.progress_ring,
@@ -164,6 +163,11 @@ class LoginView(ft.View):
     def did_mount(self):
        self.page.run_task(self._refresh_token_task)
        
+       
+
+    async def _go_to_account(self, e):
+        await self.page.push_route("/account")       
+
 
     async def _refresh_token_task(self):
         await self.controller.refresh_token(self)        
@@ -171,6 +175,10 @@ class LoginView(ft.View):
 
     async def _on_click_forgot(self, e):
         await self.controller.handler_forgot_password(e, self)         
+
+
+    async def _on_click_login_google(self, e):
+        await self.controller.handle_login_google()
 
 
     async def _on_click_login(self, e):

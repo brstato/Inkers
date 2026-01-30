@@ -24,7 +24,7 @@ class ProductController:
 
     async def createProduct(self, e):
 
-        self.page.close(self.instance.modalviewCreateProduct)
+        self.page.pop_dialog(self.instance.modalviewCreateProduct)
         
         self.instance.progressRing.visible = True
         self.page.update()          
@@ -45,11 +45,11 @@ class ProductController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-            await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+            await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+            await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await self.page.client_storage.get_async("token")
-            self.instance.r_token = await self.page.client_storage.get_async("r_token")          
+            self.instance.token = await ft.SharedPreferences().get("token")
+            self.instance.r_token = await ft.SharedPreferences().get("r_token")          
 
             if response.status_code != 200:
                 self.page.go("/")
@@ -75,10 +75,10 @@ class ProductController:
 
     async def editProduct(self, e):
 
-        self.page.close(self.instance.modalview)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
-        self.page.update()  
+        self.page.update() 
 
         response = await self.model.editProductData(
             self.instance.id_prod,
@@ -96,11 +96,11 @@ class ProductController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-            await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+            await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+            await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await self.page.client_storage.get_async("token")
-            self.instance.r_token = await self.page.client_storage.get_async("r_token")
+            self.instance.token = await ft.SharedPreferences().get("token")
+            self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
             if response.status_code != 200:
                 self.page.go("/")
@@ -139,11 +139,11 @@ class ProductController:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = await ft.SharedPreferences().get("token")
+                self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
                 await self.model.deleteProductData(id_prof, self.instance.token)
             else:
@@ -173,11 +173,11 @@ class ProductController:
 
             if response.status_code == 200:
 
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = await ft.SharedPreferences().get("token")
+                self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
                 response = await self.model.getProductData(self.instance.id_loja, self.instance.token)
 
@@ -234,26 +234,35 @@ class ProductController:
 
             if response.status_code == 200:
 
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
+                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = await ft.SharedPreferences().get("token")
+                self.instance.r_token = await ft.SharedPreferences().get("r_token")
 
                 response = await self.model.DetailProductData(id=id, token=self.instance.token)
             else:    
                 self.page.go("/login")                
 
         elif response.status_code == 200:
-            self.instance.edtValcusto.value  = formatar_moeda_brasileira(json.loads(response.content)["valor_custo"])
-            self.instance.edtValVenda.value  = formatar_moeda_brasileira(json.loads(response.content)["valor_venda"])
-            self.instance.edtNome.value      = json.loads(response.content)["nome"        ]
-            self.instance.infvalor.value     = json.loads(response.content)["inf_valor"   ] 
-            self.instance.insumo.value       = json.loads(response.content)["insumo"      ]            
-            self.instance.Comissionado.value = json.loads(response.content)["comissionado"]
-            self.instance.edtEstoque.value   = json.loads(response.content)["estoque"     ]
-            self.instance.edtMEstoque.value  = json.loads(response.content)["min_estoque" ]
+            data = json.loads(response.content)
+            
+            self.instance.edtValcusto.value  = formatar_moeda_brasileira(data.get("valor_custo", 0))
+            self.instance.edtValVenda.value  = formatar_moeda_brasileira(data.get("valor_venda", 0))
+            self.instance.edtNome.value      = data.get("nome", "")
+            self.instance.edtEstoque.value   = str(data.get("estoque", 0))
+            self.instance.edtMEstoque.value  = str(data.get("min_estoque", 0))
+            
+            # Converter para booleano corretamente
+            inf_valor = data.get("inf_valor", False)
+            insumo = data.get("insumo", False)
+            comissionado = data.get("comissionado", False)
+            
+            # Se for string, converter para booleano
+            self.instance.infvalor.value = bool(inf_valor) if isinstance(inf_valor, bool) else str(inf_valor).lower() == "true"
+            self.instance.insumo.value = bool(insumo) if isinstance(insumo, bool) else str(insumo).lower() == "true"
+            self.instance.Comissionado.value = bool(comissionado) if isinstance(comissionado, bool) else str(comissionado).lower() == "true"
 
-            self.page.open(self.instance.modalview)
+            self.page.show_dialog(self.instance.modalview)
 
         self.page.update()    
