@@ -9,7 +9,7 @@ class CustonListProfessional(ft.Row):
             expand=True
         )
         self.scroll = ft.ScrollMode.AUTO
-        self.page = page
+        #self.page = page
         self.selected_card = None
   
 

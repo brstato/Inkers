@@ -17,3 +17,5 @@ class Config:
     DETAIL_AGENDA_URL     = f"{BASE_API_URL}/agenda/detail"
     UPDATE_AGENDA_URL     = f"{BASE_API_URL}/agenda/update"
     CREATE_ANAMENESE_URL  = f"{BASE_API_URL}/anamnese/create"
+    GET_CONNECT_ZAP       = f"{BASE_API_URL}/whatsapp/connect"
+    CREATE_ZAP_URL        = f"{BASE_API_URL}/whatsapp/create"

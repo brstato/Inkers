@@ -12,7 +12,7 @@ class AnamneseModel:
         header = {
             'Content-Type': 'application/json'            
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=60.0)as client:
             response = await client.post(
                 url=url,
                 json=payload,

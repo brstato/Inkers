@@ -4,10 +4,12 @@ from view.controls.colors import AppColors
 from view.controls.custontextfield import CustomTextField
 from controller.anamnesecontroller import AnamneseController
 from view.controls.signaturepad import SignaturePad
+from view.controls.custonprogressring import CustonProgressRing
+from urllib.parse import unquote
 
 
 class AnamneseView(ft.View):
-    def __init__(self, page:ft.Page, id_loja:str=''):
+    def __init__(self, page:ft.Page, name:str='', tel:str=''):
         super().__init__(
             route="/anamnese", 
             scroll="auto",
@@ -18,36 +20,57 @@ class AnamneseView(ft.View):
         self.page.title = "InkedAPP Anamnese"
         self.page.padding = 20
 
-        self.id_loja:str = id_loja
+        self.name:str = unquote(name)
+        self.tel:str = tel
         self.token:str = ''
         self.r_token:str = ''
 
         self.controller = AnamneseController(self.page, self)
 
+        self.progress_ring = CustonProgressRing(self.page.height)
+
         self.area_title = ft.Container(
-            content=ft.Row(
+            content=ft.Column(
                 controls=[
-                    ft.Container(expand=True),
-                    ft.Text(value="Anamnese", color=AppColors.GRAY_LIGHT2, size=18),
-                    ft.Container(expand=True),
+                    ft.Row(
+                        controls=[
+                            ft.Container(expand=True),
+                            ft.Text(value="Anamnese", color=AppColors.GRAY_LIGHT2, size=18),
+                            ft.Container(expand=True),
+                        ]
+                    ),             
+                    ft.Row(
+                        controls=[
+                            ft.Container(expand=True),
+                            ft.Text(value=self.name, color=AppColors.GRAY_LIGHT2, size=18),
+                            ft.Container(expand=True),
+                        ],
+                    ),                           
                 ]
-            )
+            ),
         )
 
-        self.nascimento_calendar = ft.DatePicker(on_change=self.controller.selected_birth_date)
+
+        self.nascimento_calendar = ft.DatePicker(
+            on_change=self.controller.selected_birth_date,
+        )
 
         self.nome_input = CustomTextField(
-            label="Nome Completo"
+            label="Nome Completo",
+            keyboard_type=ft.KeyboardType.NAME,
+            #key="nome_input",
         )    
 
         self.telefone_input = CustomTextField(
             label="Telefone",
-            chars=r"^[0-9]*$"
+            keyboard_type=ft.KeyboardType.PHONE,
+            #key="telefone_input",
         )             
         
         self.nascimento_input = CustomTextField(
             label="Data de Nascimento (DD/MM/AAAA)",
-            readOnly=True,            
+            keyboard_type=ft.KeyboardType.DATETIME,
+            regex=r"[0-9/]",
         )
 
         self.nascimento_area = ft.Stack(
@@ -63,7 +86,8 @@ class AnamneseView(ft.View):
         )        
 
         self.profissao_input = CustomTextField(
-            label="Profissão / Ocupação"
+            label="Profissão / Ocupação",
+            #key="profissao_input",
         )        
 
         self.instagram_input = CustomTextField(
@@ -109,6 +133,7 @@ class AnamneseView(ft.View):
 
         self.origem_dropdown = ft.Dropdown(
             label="Como conheceu nosso trabalho?",
+            #key="origem_dropdown",
             label_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
@@ -310,7 +335,11 @@ class AnamneseView(ft.View):
             on_change=self.controller.selected_problema_esporte
         )
 
-        self.esporte_input = CustomTextField(label="Qual?", visible=False)  
+        self.esporte_input = CustomTextField(
+            label="Qual?", 
+            visible=False,
+            #key="esporte_input",
+        )  
 
         self.diabetes_switch = ft.Switch(
             label="Diabético?", 
@@ -345,7 +374,11 @@ class AnamneseView(ft.View):
             on_change=self.controller.selected_problema_de_pele
         )          
 
-        self.problema_pele_input = CustomTextField(label="Qual?", visible=False)
+        self.problema_pele_input = CustomTextField(
+            label="Qual?", 
+            visible=False,
+            #key="problema_pele_input",
+        )
 
         self.gestante_switch = ft.Switch(
             label="Gestante ou amamentando?", 
@@ -372,7 +405,11 @@ class AnamneseView(ft.View):
             on_change=self.controller.selected_doenca
         )           
 
-        self.doenca_transmissivel_input = CustomTextField(label="Qual?", visible=False)
+        self.doenca_transmissivel_input = CustomTextField(
+            label="Qual?", 
+            visible=False,
+            #key="doenca_transmissivel_input"
+        )
         
         self.alergia_switch = ft.Switch(
             label="Alguma alergia?", 
@@ -383,7 +420,11 @@ class AnamneseView(ft.View):
             on_change=self.controller.selected_alergia
         ) 
 
-        self.alergias_input = CustomTextField(label="Qual?", visible=False)    
+        self.alergias_input = CustomTextField(
+            label="Qual?", 
+            visible=False,
+            #key="alergias_input"
+        )    
 
         self.medicamento_switch = ft.Switch(
             label="Faz uso de algum medicamento?", 
@@ -394,7 +435,11 @@ class AnamneseView(ft.View):
             on_change=self.controller.selected_medicamento
         )             
         
-        self.medicamentos_input = CustomTextField(label="Qual?", visible=False)        
+        self.medicamentos_input = CustomTextField(
+            label="Qual?", 
+            visible=False,
+            #key="medicamentos_input"
+        )        
 
         self.termo_texto_widget = ft.Text(
             value=(
@@ -462,10 +507,10 @@ class AnamneseView(ft.View):
             ),
         )  
 
-        self.signature_pad = SignaturePad(visible=False)
+        self.signature_pad = SignaturePad(self, self.page, visible=False)
 
         self.area_signature = ft.Container(
-            key="signature_area",
+            #key="signature_area",
             border_radius=ft.border_radius.all(10),
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
@@ -499,6 +544,7 @@ class AnamneseView(ft.View):
                 blur_radius=20,
                 offset=ft.Offset(0, 10)
             ),
+            height=300,
         )
 
 
@@ -521,17 +567,57 @@ class AnamneseView(ft.View):
             ]
         )
 
-        self.controls = [
+        self.dialog_signature = ft.AlertDialog(
+            modal=True,
+            #title=ft.Text("Assinatura", color=AppColors.GRAY_LIGHT2),
+            content=self.area_signature,
+            actions=[
+                self.area_btn_salvar,
+                ft.Container(height=10),
+                ft.Row(
+                    controls=[
+                        ft.ElevatedButton(
+                            color=AppColors.GRAY_LIGHT2,
+                            style=ft.ButtonStyle(
+                                shape=ft.RoundedRectangleBorder(radius=10),
+                                bgcolor=AppColors.TRANSPARENT,
+                            ),
+                            text="Fechar",
+                            expand=True,
+                            on_click=lambda e: self.controller.cancel_signature(e)
+                        )
+                    ]
+                ),
+            ],
+        )
+
+        self.list = ft.ListView(
+            controls=[
             self.area_title,
-            self.area_dados_pessoais,
+            #self.area_dados_pessoais,
+            self.nome_input,
+            self.telefone_input,
+            self.nascimento_area,
+            self.instagram_input,
+            self.profissao_input,            
             self.area_como_nos_conheceu,
             self.area_estilo,
             self.area_habitos,
             self.area_saude,
             self.termo_texto_widget,
             self.termo_check,
-            self.area_signature,
-            self.area_btn_salvar
+            #self.area_signature,
+            #self.area_btn_salvar
+            ]
+        )
+
+        self.controls = [
+            ft.Stack(
+                controls=[
+                    self.list,
+                    self.progress_ring
+                ]
+            )
         ]
 
 

@@ -19,9 +19,9 @@ class AccountView(ft.View):
 
         self.controller = AccountController(self.page)    
 
-        self.txt_username = CustomTextField("Usuário") 
-        self.txt_telefone = CustomTextField("Telefone", chars=r"^[0-9]*$") 
-        self.txt_email    = CustomTextField("e-mail") 
+        self.txt_username = CustomTextField("Estudio ou tatuador") 
+        self.txt_telefone = CustomTextField("Telefone", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER) 
+        self.txt_email    = CustomTextField("e-mail", keyboard_type=ft.KeyboardType.EMAIL) 
         self.txt_password = CustomTextField("Senha", password=True, can_reveal_password=True) 
         self.txt_conf_password = CustomTextField("Confirme a senha", password=True, can_reveal_password=True)
 

@@ -2,20 +2,23 @@ import flet as ft
 from view.controls.colors import AppColors
 
 class CustomTextField(ft.TextField):
-    def __init__(
-            self, 
+    def __init__( 
+            self,
             label:str='', 
+            value:str='',
             password:bool=False, 
-            can_reveal_password:bool=False,
-            chars: str = '',  
+            can_reveal_password:bool=False, 
             visible:bool=True,       
             on_change=None,
-            readOnly:bool=False,    
+            readOnly:bool=False,  
+            keyboard_type: ft.KeyboardType = ft.KeyboardType.TEXT,
+            regex: str = '.*',
             **kwargs            
         ):
 
         super().__init__(
             label=label,
+            value=value,
             password=password,
             can_reveal_password=can_reveal_password,
             border=ft.InputBorder.UNDERLINE,
@@ -23,11 +26,15 @@ class CustomTextField(ft.TextField):
             bgcolor=AppColors.TRANSPARENT,
             color=AppColors.WHITE,
             label_style=ft.TextStyle(color=AppColors.WHITE),
-            input_filter=ft.InputFilter(allow=True, regex_string=chars, replacement_string=""),  
             visible=visible,
             read_only=readOnly,
-            on_change = on_change
+            on_change = on_change,
+            keyboard_type=keyboard_type,
+            input_filter = ft.InputFilter(regex_string=regex, replacement_string="", allow=True),
         )     
-        
+
+
+
+    
         
 

@@ -27,10 +27,10 @@ class ProductView(ft.View):
         self.controller  = ProductController(self.page, self)
 
         self.edtNome     = CustomTextField(label="Nome do produto:")    
-        self.edtValcusto = CustomTextField(label="Valor de custo:", chars=r"^[0-9,]*$")
-        self.edtValVenda = CustomTextField(label="Valor de venda:", chars=r"^[0-9,]*$")
-        self.edtEstoque  = CustomTextField(label="Estoque:", chars=r"^[0-9]*$")
-        self.edtMEstoque = CustomTextField(label="Estoque mínimo:", chars=r"^[0-9]*$")
+        self.edtValcusto = CustomTextField(label="Valor de custo:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValVenda = CustomTextField(label="Valor de venda:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtEstoque  = CustomTextField(label="Estoque:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtMEstoque = CustomTextField(label="Estoque mínimo:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
         self.insumo      = ft.Switch(
             label="Insumo",

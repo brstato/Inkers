@@ -6,7 +6,7 @@ class CustonDialog(ft.AlertDialog):
         
         super().__init__()
 
-        self.page = page
+        #self.page = page
         self.bgcolor = AppColors.BACKGROUND_DARK
         self.title = ft.Text(title, color=AppColors.GRAY_LIGHT) 
         self.content = ft.Text(content, color=AppColors.GRAY_LIGHT) 
