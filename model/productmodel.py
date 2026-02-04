@@ -1,13 +1,14 @@
 import httpx
+from model.config import Config
 
 
 class ProductModel:
-    getproductdataURL:str    = "http://127.0.0.1:8082/api/v1/product/list"
-    createproductdataURL:str = "http://127.0.0.1:8082/api/v1/product/create"
-    deleteproductdataURL:str = "http://127.0.0.1:8082/api/v1/product/delete"
-    editproductdataURL:str   = "http://127.0.0.1:8082/api/v1/product/update"
-    detailproductdataURL:str = "http://127.0.0.1:8082/api/v1/product/detail"     
-    getservicedataURL:str    = "http://127.0.0.1:8082/api/v1/service/list"   
+    getproductdataURL:str    = Config.LIST_PRODUCT_URL
+    createproductdataURL:str = Config.CREATE_PRODUCT_URL
+    deleteproductdataURL:str = Config.DELETE_PRODUCT_URL
+    editproductdataURL:str   = Config.UPDATE_PRODUCT_URL
+    detailproductdataURL:str = Config.DETAIL_PRODUCT_URL     
+    getservicedataURL:str    = Config.LIST_SERVICE_URL   
 
 
 

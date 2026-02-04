@@ -1,3 +1,4 @@
+from email import header
 from model.config import Config
 import httpx
 
@@ -5,6 +6,7 @@ import httpx
 class AgendaModel:
     def __init__(self):
         self.create_event_calendar_url = Config.CREATE_EVENT_CALENDAR_URL
+        self.g_refresh_token_url       = Config.G_REFRESH_TOKEN_URL
 
         self.get_agenda_url        = Config.GET_AGENDA_URL
         self.get_agenda_resume_url = Config.GET_AGENDA_RESUME_URL
@@ -12,7 +14,7 @@ class AgendaModel:
         self.delete_agenda_url     = Config.DELETE_AGENDA_URL
         self.detail_agenda_url     = Config.DETAIL_AGENDA_URL
         self.update_agenda_url     = Config.UPDATE_AGENDA_URL
-        self.enviar_confirmacao_url= Config.CONF_AGENDA_ZAP
+        self.enviar_confirmacao_url= Config.CONF_AGENDA_ZAP   
 
 
     async def _post_request(self, url:str, payload:dict, token: str) -> httpx.Response:
@@ -28,6 +30,22 @@ class AgendaModel:
             )
             return response    
         
+
+    async def g_refresh_token(self, client_id: str, client_secret:str, refresh_token: str):
+        payload = {
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'refresh_token': refresh_token,
+            'grant_type': 'refresh_token'
+        }    
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url=self.g_refresh_token_url,
+                data=payload,
+            )
+            return response 
+
 
     async def enviar_confirmacao(self, mensagem, telefone:str, zap_instance:str, token:str):
         payload = {

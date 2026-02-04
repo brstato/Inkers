@@ -1,10 +1,12 @@
 import httpx
 from model.loginmodel import LoginModel
+from model.config import Config
+
 
 class AccountModel:
-    registerURL:str          = "http://127.0.0.1:8082/api/v1/account/register"
-    getaccountdataURL:str    = "http://127.0.0.1:8082/api/v1/account/get_data"
-    updateaccountdataURL:str = "http://127.0.0.1:8082/api/v1/account/update"
+    registerURL:str          = Config.ACCOUNT_REGISTER_URL
+    getaccountdataURL:str    = Config.GET_ACCOUNT_DATA_URL
+    updateaccountdataURL:str = Config.UPDATE_ACCOUNT_URL
 
 
     async def updateAccountData(self, id:str, nome:str, telefone:str, email:str,

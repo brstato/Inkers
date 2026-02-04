@@ -36,7 +36,7 @@ class LoginController:
             ]
         )
 
-        #self.provider.authorization_endpoint += "?access_type=offline&prompt=consent"
+        self.provider.authorization_endpoint += "?access_type=offline&prompt=consent"
 
         self.page.on_login = self.on_login
 
@@ -58,6 +58,9 @@ class LoginController:
         token_obj = await self.page.auth.get_token()  
 
         await ft.SharedPreferences().set("google_access_token", token_obj.access_token)
+        await ft.SharedPreferences().set("google_refresh_token", token_obj.refresh_token)
+
+        refresh = token_obj.refresh_token
 
         g_user = self.page.auth.user
         

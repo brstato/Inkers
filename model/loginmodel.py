@@ -1,10 +1,11 @@
 import httpx
+from model.config import Config
 
 class LoginModel:
-    recovery_passwordURL:str = "http://127.0.0.1:8082/api/v1/resenha"
-    loginURL:str             = "http://127.0.0.1:8082/api/v1/login"
-    refreshTokenURL:str      = "http://127.0.0.1:8082/api/v1/token/refresh"
-    logingoogleURL:str       = "http://127.0.0.1:8082/api/v1/login_google"
+    recovery_passwordURL:str = Config.RECOVERY_PASSWORD_URL
+    loginURL:str             = Config.LOGIN_URL
+    refreshTokenURL:str      = Config.REFRESH_TOKEN_URL
+    logingoogleURL:str       = Config.LOGIN_GOOGLE_URL
 
 
     async def login_google(self, g_email:str, g_id:str, g_token:str, g_name:str) -> httpx.Response:

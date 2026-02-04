@@ -32,6 +32,40 @@ class AgendaController:
         self.selected_date = self.today
 
 
+    async def renew_google_token(self): 
+
+            if not self.instance.g_r_token:
+                return False
+
+            client_id = '184100860737-52caf580q16d4ht8hgkl7ak8p7dr92js.apps.googleusercontent.com'
+            client_secret = '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'
+
+            try:
+                # Import requests se não tiver no topo: import requests
+                response = await self.agendamodel.g_refresh_token(
+                    client_id,
+                    client_secret,
+                    self.instance.g_r_token
+                )
+                
+                if response.status_code == 200:
+                    new_data = response.json()
+                    new_access_token = new_data['access_token']
+                    
+                    # Atualiza na Memória
+                    self.instance.g_token = new_access_token
+                    
+                    # Atualiza no Disco (Persistência)
+                    await ft.SharedPreferences().set("google_access_token", new_access_token)
+                    
+                    return True
+                else:
+                    return False
+            except Exception as e:
+                print(f"Erro na renovação: {e}")
+                return False
+
+
     async def enviar_confirmacao(self, telefone, nome_cliente, data, hora, link_google):
             
             mensagem = (
@@ -63,9 +97,9 @@ class AgendaController:
 
     async def create_event_google_calendar(self, titulo: str, data: str, hora_ini: str, hora_fim: str, descricao: str):
 
-        access_token = self.instance.google_token
-
         try:
+            await self.renew_google_token()
+
             date_obj = datetime.strptime(data, "%d/%m/%Y").date()
 
             start_dt = datetime.combine(date_obj, datetime.strptime(hora_ini, "%H:%M").time())
@@ -79,7 +113,7 @@ class AgendaController:
                     descricao=descricao,
                     start_iso=start_iso,
                     end_iso=end_iso,
-                    token=access_token
+                    token=self.instance.g_token
                )
 
             if response.status_code == 200:
@@ -87,6 +121,23 @@ class AgendaController:
                 google_id = created_event.get("id")
                 google_link = created_event.get("htmlLink")
                 return google_id, google_link
+
+            # elif response.status_code == 401:
+            #     if await self.renew_google_token():
+            #         response = await self.agendamodel.CreateEventGoogleCalendar(
+            #             titulo=titulo, 
+            #             descricao=descricao,
+            #             start_iso=start_iso,
+            #             end_iso=end_iso,
+            #             token=self.instance.g_token
+            #         )
+
+            # if response.status_code == 200:
+            #     created_event = response.json()
+            #     google_id = created_event.get("id")
+            #     google_link = created_event.get("htmlLink")
+            #     return google_id, google_link
+
             else:
                 print(f"Erro no Google Calendar: {response.status_code} - {response.text}")
                 return ''
@@ -357,11 +408,14 @@ class AgendaController:
 
 
     async def get_data(self):
-        self.instance.id_loja      = await ft.SharedPreferences().get("id"                 )
-        self.instance.token        = await ft.SharedPreferences().get("token"              )
-        self.instance.r_token      = await ft.SharedPreferences().get("r_token"            )   
-        self.instance.google_token = await ft.SharedPreferences().get("google_access_token")  
-        self.instance.zap_instance = await ft.SharedPreferences().get("zap_instance"       )
+        self.instance.id_loja      = await ft.SharedPreferences().get("id"                  )
+        self.instance.token        = await ft.SharedPreferences().get("token"               )
+        self.instance.r_token      = await ft.SharedPreferences().get("r_token"             )   
+        self.instance.g_token      = await ft.SharedPreferences().get("google_access_token" )  
+        self.instance.zap_instance = await ft.SharedPreferences().get("zap_instance"        )
+        self.instance.g_r_token    = await ft.SharedPreferences().get("google_refresh_token")
+
+        refresh = self.instance.r_token
         
         if not self.instance.token or not self.instance.id_loja:
             self.page.go("/")

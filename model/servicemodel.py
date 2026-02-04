@@ -1,12 +1,13 @@
 import httpx
+from model.config import Config
 
 
 class ServiceModel:
-    createservicedataURL:str = "http://127.0.0.1:8082/api/v1/service/create"
-    deleteservicedataURL:str = "http://127.0.0.1:8082/api/v1/service/delete"
-    editservicedataURL:str   = "http://127.0.0.1:8082/api/v1/service/update"
-    detailservicedataURL:str = "http://127.0.0.1:8082/api/v1/service/detail"     
-    getservicedataURL:str    = "http://127.0.0.1:8082/api/v1/service/list"   
+    createservicedataURL:str = Config.CREATE_SERVICE_URL
+    deleteservicedataURL:str = Config.DELETE_SERVICE_URL
+    editservicedataURL:str   = Config.UPDATE_SERVICE_URL
+    detailservicedataURL:str = Config.DETAIL_SERVICE_URL     
+    getservicedataURL:str    = Config.LIST_SERVICE_URL   
 
 
 

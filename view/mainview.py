@@ -553,7 +553,7 @@ class MainView(ft.View):
                                     style=ft.ButtonStyle(
                                         color=AppColors.ORANGE_DARK,
                                     ),
-                                    on_click=lambda e: [self.controller.create_link_anamnese(e), page.close_drawer(), page.update()],
+                                    on_click=lambda e: asyncio.create_task(self.controller.create_link_anamnese(e)),
                                 ),
                             ),
 
@@ -613,7 +613,7 @@ class MainView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.MENU,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=page.show_drawer
+                        on_click=self.controller.show_drawer,
                     ),
                     ft.Container(expand=True),
                     self.text_client,

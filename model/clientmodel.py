@@ -1,17 +1,18 @@
 import httpx
+from model.config import Config
 
 
 class ClientModel:
-    createclientdataURL:str   = "http://127.0.0.1:8082/api/v1/client/create"
-    deleteclientdataURL:str   = "http://127.0.0.1:8082/api/v1/client/delete"
-    editclientdataURL:str     = "http://127.0.0.1:8082/api/v1/client/update"
-    detailclientdataURL:str   = "http://127.0.0.1:8082/api/v1/client/detail"     
-    getclientdataURL:str      = "http://127.0.0.1:8082/api/v1/client/list"   
-    getclientdataAurl:str     = "http://127.0.0.1:8082/api/v1/client/list_A"
-    getclientdataBurl:str     = "http://127.0.0.1:8082/api/v1/client/list_B"
-    getclientdataCurl:str     = "http://127.0.0.1:8082/api/v1/client/list_C"    
-    getclientdataMaiorurl:str = "http://127.0.0.1:8082/api/v1/client/list_maior" 
-    getclientdataMenorurl:str = "http://127.0.0.1:8082/api/v1/client/list_menor"     
+    createclientdataURL:str   = Config.CREATE_CLIENT_URL
+    deleteclientdataURL:str   = Config.DELETE_CLIENT_URL
+    editclientdataURL:str     = Config.UPDATE_CLIENT_URL
+    detailclientdataURL:str   = Config.DETAIL_CLIENT_URL     
+    getclientdataURL:str      = Config.LIST_CLIENT_URL   
+    getclientdataAurl:str     = Config.LIST_CLIENT_A_URL
+    getclientdataBurl:str     = Config.LIST_CLIENT_B_URL
+    getclientdataCurl:str     = Config.LIST_CLIENT_C_URL    
+    getclientdataMaiorurl:str = Config.LIST_CLIENT_MAIOR_URL 
+    getclientdataMenorurl:str = Config.LIST_CLIENT_MENOR_URL     
 
 
 

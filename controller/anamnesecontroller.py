@@ -7,6 +7,7 @@ from PIL import Image, ImageDraw
 from model.dto import AnamneseDTO
 import time
 import os
+from datetime import datetime
 
 
 class AnamneseController:
@@ -14,6 +15,70 @@ class AnamneseController:
         self.page = page
         self.instance = instance
         self.model = AnamneseModel()
+
+    def validate_birth_date(self, date_str):
+        """Valida se a data está em formato válido e é uma data válida, e normaliza para DD/MM/YYYY"""
+        if not date_str or date_str.strip() == '':
+            return False, "Data de nascimento é obrigatória"
+        
+        date_str = date_str.strip()
+        
+        # Remove todos os caracteres não numéricos para contar dígitos
+        digits_only = ''.join(filter(str.isdigit, date_str))
+        
+        # Se não tem exatamente 8 dígitos, tenta formatos com separadores
+        if len(digits_only) != 8:
+            # Tenta formatos com separadores
+            formats_to_try = [
+                '%d/%m/%Y',  # DD/MM/AAAA
+                '%d-%m-%Y',  # DD-MM-AAAA
+                '%d.%m.%Y',  # DD.MM.AAAA
+                '%d %m %Y',  # DD MM AAAA
+            ]
+            
+            parsed_date = None
+            for fmt in formats_to_try:
+                try:
+                    parsed_date = datetime.strptime(date_str, fmt)
+                    break
+                except ValueError:
+                    continue
+            
+            if parsed_date is None:
+                return False, "Formato de data inválido. Use DD/MM/AAAA, DD-MM-AAAA, DD.MM.AAAA ou DDMMAAAA"
+        else:
+            # Tem 8 dígitos - formato DDMMAAAA
+            try:
+                day = int(digits_only[:2])
+                month = int(digits_only[2:4])
+                year = int(digits_only[4:])
+                parsed_date = datetime(year, month, day)
+                
+                # Se chegou aqui, a data é válida, então normaliza para DD/MM/YYYY
+                normalized_date = parsed_date.strftime('%d/%m/%Y')
+                # Atualiza o campo com o formato padronizado
+                self.instance.nascimento_input.value = normalized_date
+                self.instance.nascimento_input.update()
+                
+            except (ValueError, IndexError):
+                return False, "Data inválida. Verifique o dia, mês e ano"
+        
+        # Aqui parsed_date já foi definido
+        # Verifica se não é uma data futura
+        today = datetime.now()
+        if parsed_date > today:
+            return False, "Data de nascimento não pode ser no futuro"
+        
+        # Verifica se não é muito antiga (mais de 150 anos)
+        if parsed_date.year < (today.year - 150):
+            return False, "Data de nascimento inválida"
+        
+        # Verifica se não é muito recente (menos de 1 ano)
+        if parsed_date > today.replace(year=today.year - 1):
+            return False, "Data de nascimento deve ser de pelo menos 1 ano atrás"
+            
+        return True, ""
+    
 
     def validate_fields(self):
         error_found:bool = False
@@ -92,6 +157,16 @@ class AnamneseController:
             self.page.open(ft.SnackBar(ft.Text(control.error_text)))       
             self.page.update()
             return False
+        
+        # Validação específica da data de nascimento
+        is_valid_date, date_error = self.validate_birth_date(self.instance.nascimento_input.value)
+        if not is_valid_date:
+            self.instance.nascimento_input.error_text = date_error
+            self.instance.nascimento_input.update()
+            self.page.show_dialog(ft.SnackBar(ft.Text(date_error)))
+            self.page.update()
+            return False
+        
         return True
 
 

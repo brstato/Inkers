@@ -29,18 +29,23 @@ class MainController:
         self.zap_model = ZapModel()
 
 
-    def create_link_anamnese(self, e):
+    async def show_drawer(self):
+        await self.page.show_drawer()
+
+
+    async def create_link_anamnese(self, e):
         account_name = quote(self.instance.account_name)
         parsed_url = urlparse(self.page.url)
         base_domain = f"https://{parsed_url.netloc}"
         base_url = f"{base_domain}/anamnese/{account_name}/{self.instance.account_tel}"
-        self.page.clipboard(base_url)
+        await ft.Clipboard().set(base_url)
+        await self.page.close_drawer()
         self.page.show_dialog(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
         self.page.update()
 
 
     async def create_instance_zap(self, e):
-        self.page.close(self.instance.drawer)
+        await self.page.close_drawer()
 
         self.instance.progressRing.visible = True
         self.page.update()
@@ -156,7 +161,6 @@ class MainController:
             traceback.print_exc()
 
 
-
     async def get_status_caixa(self):
 
         response = await ProtectedApiCall(
@@ -268,6 +272,9 @@ class MainController:
     def exibir_lista_clientes(self, e):
         self.page.show_dialog(self.instance.modal_pesquisa_clientes)
         self.instance.btn_agenda.visible = False
+        self.instance.btn_cancelar.visible = True
+        self.instance.btn_fechar_caixa.visible = False
+
         self.page.update()        
 
 
@@ -298,6 +305,7 @@ class MainController:
         self.instance.btn_fechar_caixa.visible = True
         self.instance.btn_total.visible = False
         self.instance.btn_agenda.visible = True
+        self.instance.btn_fechar_caixa.visible = True       
         self.instance.total = 0
         self.instance.text_client.value = ''
         self.instance.id_client = 0

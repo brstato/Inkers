@@ -16,18 +16,18 @@ class AnamneseView(ft.View):
             bgcolor=AppColors.BACKGROUND_DARK            
         )
 
-        self.page = page
-        self.page.title = "InkedAPP Anamnese"
-        self.page.padding = 20
+        page = page
+        page.title = "Inkers Anamnese"
+        #page.padding = 20
 
         self.name:str = unquote(name)
         self.tel:str = tel
         self.token:str = ''
         self.r_token:str = ''
 
-        self.controller = AnamneseController(self.page, self)
+        self.controller = AnamneseController(page, self)
 
-        self.progress_ring = CustonProgressRing(self.page.height)
+        self.progress_ring = CustonProgressRing(page.height)
 
         self.area_title = ft.Container(
             content=ft.Column(
@@ -79,7 +79,7 @@ class AnamneseView(ft.View):
                 ft.IconButton(
                     icon_color=AppColors.GRAY_LIGHT2,
                     icon=ft.Icons.DATE_RANGE,
-                    on_click = lambda e: [self.page.open(self.nascimento_calendar), self.page.update()],
+                    on_click = lambda e: [page.open(self.nascimento_calendar), page.update()],
                     right=5
                 )
             ]
@@ -100,8 +100,8 @@ class AnamneseView(ft.View):
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -164,24 +164,25 @@ class AnamneseView(ft.View):
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
                 ],                
             ),            
             content=ft.Column(
+                expand=True,
                 controls=[
                     ft.Row(
                         controls=[
                             ft.Container(expand=True),
                             ft.Text(value="Como nos conheceu", color=AppColors.GRAY_LIGHT3),
                             ft.Container(expand=True),
-                        ]
+                        ],
+                        expand=True,
                     ),
-                    
-                    self.origem_dropdown
+                    ft.Row(expand=True, controls=[self.origem_dropdown])
                 ]
             ),
             shadow=ft.BoxShadow(
@@ -189,11 +190,12 @@ class AnamneseView(ft.View):
                 blur_radius=20,
                 offset=ft.Offset(0, 10)
             ),
+            
         )          
 
         self.tatuagem_switch = ft.Switch(
             label="Gosto de tatuagens", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -231,7 +233,7 @@ class AnamneseView(ft.View):
 
         self.piercings_switch = ft.Switch(
             label="Gosto de piercings", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -243,8 +245,8 @@ class AnamneseView(ft.View):
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -299,8 +301,8 @@ class AnamneseView(ft.View):
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -328,7 +330,7 @@ class AnamneseView(ft.View):
 
         self.esporte_switch = ft.Switch(
             label="Pratica esportes com frequência?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -343,7 +345,7 @@ class AnamneseView(ft.View):
 
         self.diabetes_switch = ft.Switch(
             label="Diabético?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -351,7 +353,7 @@ class AnamneseView(ft.View):
 
         self.hipertenso_switch = ft.Switch(
             label="Hipertenso / Cardíaco?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -359,7 +361,7 @@ class AnamneseView(ft.View):
 
         self.hemofilico_switch = ft.Switch(
             label="Hemofilico?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -367,7 +369,7 @@ class AnamneseView(ft.View):
 
         self.problema_pele_switch = ft.Switch(
             label="Algum problema de pele?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -382,7 +384,7 @@ class AnamneseView(ft.View):
 
         self.gestante_switch = ft.Switch(
             label="Gestante ou amamentando?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -390,7 +392,7 @@ class AnamneseView(ft.View):
 
         self.drogas_switch = ft.Switch(
             label="Alcool ou drogas nas ultimas 24h?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -398,7 +400,7 @@ class AnamneseView(ft.View):
 
         self.doenca_transmissivel_switch = ft.Switch(
             label="Alguma doença transmissivel?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -413,7 +415,7 @@ class AnamneseView(ft.View):
         
         self.alergia_switch = ft.Switch(
             label="Alguma alergia?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -428,7 +430,7 @@ class AnamneseView(ft.View):
 
         self.medicamento_switch = ft.Switch(
             label="Faz uso de algum medicamento?", 
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
             active_color=AppColors.ORANGE_DARK,
@@ -467,8 +469,8 @@ class AnamneseView(ft.View):
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -507,7 +509,7 @@ class AnamneseView(ft.View):
             ),
         )  
 
-        self.signature_pad = SignaturePad(self, self.page, visible=False)
+        self.signature_pad = SignaturePad(self, page, visible=False)
 
         self.area_signature = ft.Container(
             #key="signature_area",
@@ -515,8 +517,8 @@ class AnamneseView(ft.View):
             border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
             padding=ft.padding.all(10),
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -548,8 +550,8 @@ class AnamneseView(ft.View):
         )
 
 
-        self.btn_salvar = ft.ElevatedButton(
-            text="Salvar",
+        self.btn_salvar = ft.Button(
+            content="Salvar",
             bgcolor=AppColors.ORANGE_DARK,
             color=AppColors.WHITE,
             width=200,
@@ -576,13 +578,13 @@ class AnamneseView(ft.View):
                 ft.Container(height=10),
                 ft.Row(
                     controls=[
-                        ft.ElevatedButton(
+                        ft.Button(
                             color=AppColors.GRAY_LIGHT2,
                             style=ft.ButtonStyle(
                                 shape=ft.RoundedRectangleBorder(radius=10),
                                 bgcolor=AppColors.TRANSPARENT,
                             ),
-                            text="Fechar",
+                            content="Fechar",
                             expand=True,
                             on_click=lambda e: self.controller.cancel_signature(e)
                         )

@@ -22,20 +22,17 @@ class AgendaView(ft.View):
         self.id_agenda:int = 0
         self.id_prof:int = 0
 
-#        page = page
-
         self.id_loja:str = ''
         self.token:str   = ''
         self.r_token:str = ''
 
-        self.google_token: str = ''
+        self.g_token: str  = ''
+        self.g_r_token:str = ''
 
         self.zap_instance:str = ''
 
         self.client_name:str = ''
-
         self.client_telefone:int = 0
-
         self.client_id:int = 0
 
         self.progressRing = CustonProgressRing(page.height) 
