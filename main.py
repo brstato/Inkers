@@ -14,6 +14,7 @@ from view.clientview import ClientView
 from view.agendaview import AgendaView
 from view.anamneseview import AnamneseView
 from view.anamnese_response import AnamneseResponse
+from view.despesasview import DespesasView
 import asyncio
 
 async def main(page: ft.Page):
@@ -53,6 +54,8 @@ async def main(page: ft.Page):
                 page.views.append(AnamneseView(page, troute.name, troute.tel))         
             elif troute.match("/anamneseresponse"):                                  
                 page.views.append(AnamneseResponse())
+            elif troute.match("/despesas"):
+                page.views.append(DespesasView(page))    
 
             page.update()
 

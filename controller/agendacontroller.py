@@ -622,7 +622,7 @@ class AgendaController:
             event_link
         )
 
-        if self.instance.id_agenda == 0:
+        if self.instance.id == 0:
 
             await ProtectedApiCall(
                 self.page,
@@ -645,7 +645,7 @@ class AgendaController:
                 self.page,
                 self.instance,
                 self.agendamodel.UpadateAgendaData,
-                id_agenda=self.instance.id_agenda, 
+                id_agenda=self.instance.id, 
                 id_prof=self.instance.id_prof,  
                 telefone=self.instance.client_telefone, 
                 id_client=self.instance.client_id,
@@ -660,7 +660,7 @@ class AgendaController:
         self.page.pop_dialog()
         self.page.update()
 
-        self.instance.id_agenda = 0
+        self.instance.id = 0
 
         date_str = self.selected_date.strftime('%Y-%m-%d')
 
@@ -673,11 +673,11 @@ class AgendaController:
             self.page,
             self.instance,
             self.agendamodel.DeleteAgendaData,
-            id_agenda = self.instance.id_agenda,
+            id_agenda = self.instance.id,
             token = self.instance.token
         ).call_api_refresh_token()
 
-        self.instance.id_agenda = 0
+        self.instance.id = 0
 
         date_str = self.selected_date.strftime('%Y-%m-%d')
         await self.list_resume_agenda(date_str)
@@ -713,7 +713,7 @@ class AgendaController:
             self.page,
             self.instance,
             self.agendamodel.DetailAgendaData,
-            id_agenda = self.instance.id_agenda,
+            id_agenda = self.instance.id,
             token = self.instance.token
         ).call_api_refresh_token()
 

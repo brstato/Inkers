@@ -154,7 +154,7 @@ class AnamneseController:
                              
 
         if error_found:
-            self.page.open(ft.SnackBar(ft.Text(control.error_text)))       
+            self.page.show_dialog(ft.SnackBar(ft.Text(control.error_text)))       
             self.page.update()
             return False
         

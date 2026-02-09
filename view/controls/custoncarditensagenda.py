@@ -33,6 +33,7 @@ class CustonCardItensAgenda(ft.Card):
         self.hora_inicio=hora_inicio
         self.hora_fim=hora_fim
         self.id_agenda:int = id_agenda
+        self.id = id_agenda
         self.id_client:int = id_client
         self.selected:bool = False
         self.tap = tap
@@ -159,12 +160,12 @@ class CustonCardItensAgenda(ft.Card):
 
 
     async def delete_agendamento(self, e):
-        self.instance.id_agenda = self.id_agenda
+        self.instance.id = self.id
         self.page.run_task(self.delete, e)
 
 
     async def detail_agendamento(self, e):
-        self.instance.id_agenda = self.id_agenda
+        self.instance.id = self.id
         self.page.run_task(self.edit, e)
 
 

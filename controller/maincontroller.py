@@ -250,7 +250,6 @@ class MainController:
             await self.listPorfissionais()
             await self.listItens()
             await self.listClientes()
-            await self.listInsumos()
             await self.get_connection_zap()
 
             self.instance.progressRing.visible = False
@@ -541,7 +540,8 @@ class MainController:
                 }
 
                 itens_insumo.append(item_data)
-
+            else:
+                return
         await ProtectedApiCall(
             self.page, self.instance, self.model.UpdateInsumoData, 
             itens=itens_insumo,
@@ -551,8 +551,6 @@ class MainController:
         self.page.pop_dialog()
         self.page.show_dialog(self.instance.dialog_nota_cliente)
         self.page.update()
-        #await self.limpar_venda(e)
-        #await self.abrir_dialogo_nota_clientes(e)
         
 
     async def listInsumos(self):         
@@ -717,14 +715,14 @@ class MainController:
 
 
     async def recebimento(self, e):
-        if self.instance.id_prof == 0:
+        if not self.instance.id_prof:
             self.dialog = CustonDialog(
                 self.page,
                 title="Atenção",
                 content="Por favor selecione o profissional!",
                 actions=[
                     ft.TextButton(
-                        text="Voltar",
+                        content="Voltar",
                         on_click=lambda e:[
                             self.page.pop_dialog(),
                             self.page.update()
@@ -809,10 +807,11 @@ class MainController:
     async def fechar_dialogo_insumos(self, e):
         self.page.pop_dialog()
         self.page.update() 
-        await self.abrir_dialogo_nota_clientes(e)        
+        self.abrir_dialogo_nota_clientes(e)        
 
 
     async def abrir_modal_insumos(self, e):
+        await self.listInsumos()
         self.page.pop_dialog()
         self.page.show_dialog(self.instance.modal_insumos)
         self.page.update()

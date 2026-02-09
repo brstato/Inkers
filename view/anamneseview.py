@@ -79,7 +79,7 @@ class AnamneseView(ft.View):
                 ft.IconButton(
                     icon_color=AppColors.GRAY_LIGHT2,
                     icon=ft.Icons.DATE_RANGE,
-                    on_click = lambda e: [page.open(self.nascimento_calendar), page.update()],
+                    on_click = lambda e: [page.show_dialog(self.nascimento_calendar), page.update()],
                     right=5
                 )
             ]

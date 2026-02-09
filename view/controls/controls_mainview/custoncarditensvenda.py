@@ -292,15 +292,23 @@ class CustonCardItensVenda(ft.Card):
         if not self.edtValVenda.value == '':
             self.valor = float(self.edtValVenda.value.replace(',', '.'))
 
+            # 1. FECHE O DIÁLOGO ATUAL PRIMEIRO
+            self.page.pop_dialog()
+            self.page.update()
+
+            # 2. AGORA VERIFIQUE SE PRECISA ABRIR O PRÓXIMO
             if self.valor < self.valor_original:
                 self.page.show_dialog(self.dialog)
+                # self.page.update() # O show_dialog geralmente já trigga a abertura, mas se precisar forçar, use aqui
 
             self.total = self.valor * self.quantidade
             self.text_valor.text = f'R$ {formatar_moeda_brasileira(self.valor)}'        
             self.text_total.text = f'R$ {formatar_moeda_brasileira(self.total)}'        
-            self.page.pop_dialog()   
+            
+            # self.page.pop_dialog()  <-- REMOVA ESTA LINHA (já fechamos lá em cima)
+            
             self.on_change()     
-            self.page.update()          
+            self.page.update()       
 
 
     def confirm_valor(self, e):

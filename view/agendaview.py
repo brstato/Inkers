@@ -19,7 +19,7 @@ class AgendaView(ft.View):
             bgcolor=AppColors.BACKGROUND_DARK
         )
 
-        self.id_agenda:int = 0
+        self.id:int = 0
         self.id_prof:int = 0
 
         self.id_loja:str = ''
@@ -192,7 +192,8 @@ class AgendaView(ft.View):
         )
 
         self.list_agendamento = CustonList(
-            page
+            page,
+            instance=self
         )
 
         self.bottom_appbar = ft.BottomAppBar(

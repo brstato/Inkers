@@ -61,7 +61,7 @@ class MainView(ft.View):
                 ),
                 ft.TextButton(
                     "OK",
-                    on_click=lambda e:[page.open(self.modal_nota_cliente), page.update()]
+                    on_click=lambda e:[page.show_dialog(self.modal_nota_cliente), page.update()]
                 )
             ]
         )
@@ -562,7 +562,8 @@ class MainView(ft.View):
                             CustonButton(page, "Profissionais", "/professional"),
                             CustonButton(page, "Produtos", "/product"),  
                             CustonButton(page, "Serviços", "/services"),  
-                            CustonButton(page, "Clientes", "/clients"),                                                
+                            CustonButton(page, "Clientes", "/clients"),    
+                            CustonButton(page, "Despesas", "/despesas"),                                                
                                                
                             ft.Button(
                                 content="Sair",

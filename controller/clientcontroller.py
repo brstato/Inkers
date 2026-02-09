@@ -73,7 +73,6 @@ class ClientController:
         await self.listClientData(e)        
 
 
-
     async def deleteClient(self, id_client):
 
         self.instance.progressRing.visible = True
@@ -91,7 +90,6 @@ class ClientController:
         self.page.update()                              
 
         await self.listClientData(e=None)
-
 
 
     async def listClientData(self, e, param:str = ''):
