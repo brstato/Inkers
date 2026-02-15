@@ -38,6 +38,7 @@ class Config:
     LIST_MES_DESP_URL     = f"{BASE_API_URL}/despesas/list_mes"      
     DELETE_DESP_URL       = f"{BASE_API_URL}/despesas/delete"
     UPDATE_DESP_URL       = f"{BASE_API_URL}/despesas/update"
+    BAIXAR_DESP_URL       = f"{BASE_API_URL}/despesas/baixa"
     
     
     UPDATE_ACCOUNT_URL    = f"{BASE_API_URL}/account/update"

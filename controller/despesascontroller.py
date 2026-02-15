@@ -21,6 +21,33 @@ class DespesasController:
                "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
 
+    async def baixa_despesa(self):
+        response = await ProtectedApiCall(
+            self.page,
+            self.instance,
+            self.model.baixa_despesa,
+            id=self.instance.id,
+            token=self.instance.token
+        ).call_api_refresh_token()  
+
+        if response.status_code == 200:
+            message = "Despesa baixada com sucesso!"
+            await self.list_despesas_mes(self.instance.date)
+            await self.listar_despesas_resumo()
+            self.instance.btn_dar_baixa.visible = False
+            
+        else:
+            message = "Erro ao baixar despesa!"
+
+        self.page.show_dialog(
+            ft.SnackBar(
+                content=ft.Text(message, weight=ft.FontWeight.BOLD),
+                bgcolor=AppColors.ORANGE_DARK,
+            )
+        )
+        self.page.update()
+
+
     async def delete_despesa(self, id_despesa:int):
         response = await ProtectedApiCall(
             self.page,

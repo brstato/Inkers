@@ -24,7 +24,7 @@ class ProductController:
 
     async def createProduct(self, e):
 
-        self.page.pop_dialog(self.instance.modalviewCreateProduct)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()          

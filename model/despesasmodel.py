@@ -8,6 +8,7 @@ class despesas_model:
     list_mes_url:str            = Config.LIST_MES_DESP_URL
     delete_desp_url:str         = Config.DELETE_DESP_URL
     upadte_desp_url:str         = Config.UPDATE_DESP_URL
+    baixa_desp_url:str          = Config.BAIXAR_DESP_URL
 
 
     async def _post_request(self, url:str, payload:dict, token: str) -> httpx.Response:
@@ -22,6 +23,15 @@ class despesas_model:
                 headers=header
             )
             return response
+
+
+    async def baixa_despesa(self, id:int, token: str) -> httpx.Response:
+        payload = {
+            "id_despesa": id
+        }
+
+        return await self._post_request(self.baixa_desp_url, payload, token)
+
 
 
     async def create_despesa(self, descricao: str, status:str, 

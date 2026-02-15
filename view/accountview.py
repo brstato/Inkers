@@ -3,6 +3,7 @@ from view.controls.colors import AppColors
 from view.controls.custontextfield import CustomTextField
 from controller.accountcontroller import AccountController
 from view.controls.custonprogressring import CustonProgressRing
+from view.controls.custonschedule import ScheduleItem
 import asyncio
 
 class AccountView(ft.View):
@@ -24,6 +25,23 @@ class AccountView(ft.View):
         self.txt_email    = CustomTextField("e-mail", keyboard_type=ft.KeyboardType.EMAIL) 
         self.txt_password = CustomTextField("Senha", password=True, can_reveal_password=True) 
         self.txt_conf_password = CustomTextField("Confirme a senha", password=True, can_reveal_password=True)
+
+        self.days_map = [
+            ("2", "Seg"), ("3", "Ter"), ("4", "Qua"), 
+            ("5", "Qui"), ("6", "Sex"), ("7", "Sáb"), ("1", "Dom")
+        ]
+
+        self.schedule_controls = []
+        for day_id, day_name in self.days_map:
+            item = ScheduleItem(day_id, day_name)
+            self.schedule_controls.append(item)
+
+        self.schedule_container = ft.Column(
+            controls=[
+                ft.Text("Horário de Funcionamento", size=16, weight=ft.FontWeight.BOLD, color=AppColors.ORANGE_BURNT),
+                ft.Column(controls=self.schedule_controls, spacing=5)
+            ]
+        )            
 
         self.btn_save = ft.Row(
             controls=[
@@ -71,6 +89,8 @@ class AccountView(ft.View):
                     self.txt_email,
                     self.txt_password,
                     self.txt_conf_password,
+                    ft.Divider(color=AppColors.GRAY_DARK), # Separador visual
+                    self.schedule_container,                    
                     ft.Container(height=20),
                     self.btn_save,
                     self.btn_return 
@@ -94,6 +114,24 @@ class AccountView(ft.View):
 
     def did_mount(self):
        self.page.run_task(self._getAccountData)
+
+
+    def get_schedule_json_data(self):
+        import json
+        data = {}
+        for item in self.schedule_controls:
+            data[item.day_id] = item.get_data()
+        return data       
+
+
+    def load_schedule_data(self, json_data):
+        if not json_data:
+            return   
+
+        for item in self.schedule_controls:
+            day_config = json_data.get(item.day_id)
+            if day_config:
+                item.set_data(day_config)
 
 
     async def _getAccountData(self):

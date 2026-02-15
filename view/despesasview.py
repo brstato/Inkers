@@ -48,6 +48,14 @@ class DespesasView(ft.View):
 
         self.text_total = ft.Text('Total: R$ 0,00', color=AppColors.ORANGE_DARK)
 
+        self.btn_dar_baixa = ft.Button(
+            content='Dar baixa',
+            bgcolor=AppColors.ORANGE_BURNT,
+            color=AppColors.GRAY_LIGHT,
+            visible=False,
+            on_click=self.controller.baixa_despesa
+        )
+
         self.bottom_appbar = ft.BottomAppBar(
             height=60,
             bgcolor=AppColors.GRAY_DARK,
@@ -59,6 +67,7 @@ class DespesasView(ft.View):
                         on_click=lambda e:page.go("/main")
                     ),
                     ft.Container(expand=True),
+                    self.btn_dar_baixa,
                     self.text_total,
                 ]
             ),
@@ -112,6 +121,5 @@ class DespesasView(ft.View):
 
     def update_actions_visibility(self):
         is_visible = self.id != 0
-        self.edit_btn.visible = is_visible
-        self.delete_btn.visible = is_visible
+        self.btn_dar_baixa.visible = is_visible
         self.appbar.update()
