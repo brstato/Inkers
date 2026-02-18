@@ -17,13 +17,15 @@ class Config:
     UPDATE_NOTA_CLIENTE   = f"{BASE_API_URL}/caixa/cliente/update_nota"
     
     
-    GET_AGENDA_URL        = f"{BASE_API_URL}/agenda/list"
-    GET_AGENDA_RESUME_URL = f"{BASE_API_URL}/agenda/resume"
-    CREATE_AGENDAMENTO_URL= f"{BASE_API_URL}/agenda/create"
-    DELETE_AGENDA_URL     = f"{BASE_API_URL}/agenda/delete"
-    DETAIL_AGENDA_URL     = f"{BASE_API_URL}/agenda/detail"
-    UPDATE_AGENDA_URL     = f"{BASE_API_URL}/agenda/update"
-    CONF_AGENDA_ZAP       = f"{BASE_API_URL}/agenda/send_confirmation"  
+    GET_AGENDA_URL           = f"{BASE_API_URL}/agenda/list"
+    GET_AGENDA_RESUME_URL    = f"{BASE_API_URL}/agenda/resume"
+    CREATE_AGENDAMENTO_URL   = f"{BASE_API_URL}/agenda/create"
+    DELETE_AGENDA_URL        = f"{BASE_API_URL}/agenda/delete"
+    DETAIL_AGENDA_URL        = f"{BASE_API_URL}/agenda/detail"
+    UPDATE_AGENDA_URL        = f"{BASE_API_URL}/agenda/update"
+    CONF_AGENDA_ZAP          = f"{BASE_API_URL}/agenda/send_confirmation"  
+    CHECK_DIAS_FUNCIONAMENTO = f"{BASE_API_URL}/public/agenda/check"
+    LIST_CLIENT_TEL          = f"{BASE_API_URL}/public/agenda/list_client_tel"
     
 
     CREATE_ANAMENESE_URL   = f"{BASE_API_URL}/anamnese/create"

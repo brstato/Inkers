@@ -556,6 +556,18 @@ class MainView(ft.View):
                                     on_click=lambda e: asyncio.create_task(self.controller.create_link_anamnese(e)),
                                 ),
                             ),
+                            ft.Container(
+                                height=50,
+                                content=ft.TextButton(
+                                    icon=ft.Icons.SHARE,
+                                    icon_color=AppColors.ORANGE_DARK,
+                                    content="Compartilhar agenda",
+                                    style=ft.ButtonStyle(
+                                        color=AppColors.ORANGE_DARK,
+                                    ),
+                                    on_click=lambda e: asyncio.create_task(self.controller.create_link_agenda_turnos(e)),
+                                ),
+                            ),                            
 
                             self.area_whatsapp,
                             CustonButton(page, "Minha conta", "/account"),

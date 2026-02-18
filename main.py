@@ -12,6 +12,7 @@ from view.productview import ProductView
 from view.serviceview import ServiceView
 from view.clientview import ClientView
 from view.agendaview import AgendaView
+from view.agendaturnosview import AgendaTurnosView
 from view.anamneseview import AnamneseView
 from view.anamnese_response import AnamneseResponse
 from view.despesasview import DespesasView
@@ -56,6 +57,8 @@ async def main(page: ft.Page):
                 page.views.append(AnamneseResponse())
             elif troute.match("/despesas"):
                 page.views.append(DespesasView(page))    
+            elif troute.match("/agenda/:name/:tel"):
+                page.views.append(AgendaTurnosView(page, troute.name, troute.tel))  
 
             page.update()
 
