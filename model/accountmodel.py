@@ -10,7 +10,7 @@ class AccountModel:
 
 
     async def updateAccountData(self, id:str, nome:str, telefone:str, email:str,
-            senha:str, token,) -> httpx.Response:
+            senha:str, token,horarios) -> httpx.Response:
         
         payload = {
             "nome": nome,
@@ -18,6 +18,7 @@ class AccountModel:
             "email": email,
             "senha": senha,
             "id": id,
+            "horario": horarios
         }
         header = {
             "Authorization": f"Bearer {token}",
@@ -55,12 +56,13 @@ class AccountModel:
             return response
 
 
-    async def register(self, username:str, telefone: str, email:str, password: str) -> httpx.Response:
+    async def register(self, username:str, telefone: str, email:str, password: str, horario) -> httpx.Response:
         payload = {
             "nome": username,
             "telefone": telefone,
             "email": email,
-            "senha":password
+            "senha":password,
+            "horario": horario
         }
         header = {
             'Content-Type': 'application/json'

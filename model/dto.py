@@ -31,6 +31,7 @@ class AnamneseDTO:
     data_nascimento: str
     telefone_estudio: str
     nome_estudio:str
+    id_profissional:int
 
 
     def to_dict(self):

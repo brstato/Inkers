@@ -8,7 +8,10 @@ class LoginModel:
     logingoogleURL:str       = Config.LOGIN_GOOGLE_URL
 
 
+
+
     async def login_google(self, g_email:str, g_id:str, g_token:str, g_name:str) -> httpx.Response:
+
         payload = {
             "g_email":g_email,
             "g_id":   g_id,

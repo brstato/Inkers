@@ -125,9 +125,9 @@ class ProfessionalView(ft.View):
 
     async def _get_professional_data(self):
         
-        self.id_loja: str = await ft.SharedPreferences().get("id"     )
-        self.token:   str = await ft.SharedPreferences().get("token"  )
-        self.r_token: str = await ft.SharedPreferences().get("r_token")      
+        self.id_loja: str = self.page.session.store.get("id"     )
+        self.token:   str = self.page.session.store.get("token"  )
+        self.r_token: str = self.page.session.store.get("r_token")      
 
         self.controller = ProfessionalController(self.page, self)
 

@@ -56,7 +56,7 @@ class AgendaController:
                     self.instance.g_token = new_access_token
                     
                     # Atualiza no Disco (Persistência)
-                    await ft.SharedPreferences().set("google_access_token", new_access_token)
+                    self.page.session.store.set("google_access_token", new_access_token)
                     
                     return True
                 else:
@@ -408,12 +408,12 @@ class AgendaController:
 
 
     async def get_data(self):
-        self.instance.id_loja      = await ft.SharedPreferences().get("id"                  )
-        self.instance.token        = await ft.SharedPreferences().get("token"               )
-        self.instance.r_token      = await ft.SharedPreferences().get("r_token"             )   
-        self.instance.g_token      = await ft.SharedPreferences().get("google_access_token" )  
-        self.instance.zap_instance = await ft.SharedPreferences().get("zap_instance"        )
-        self.instance.g_r_token    = await ft.SharedPreferences().get("google_refresh_token")
+        self.instance.id_loja      = self.page.session.store.get("id"                  )
+        self.instance.token        = self.page.session.store.get("token"               )
+        self.instance.r_token      = self.page.session.store.get("r_token"             )   
+        self.instance.g_token      = self.page.session.store.get("google_access_token" )  
+        self.instance.zap_instance = self.page.session.store.get("zap_instance"        )
+        self.instance.g_r_token    = self.page.session.store.get("google_refresh_token")
 
         refresh = self.instance.r_token
         

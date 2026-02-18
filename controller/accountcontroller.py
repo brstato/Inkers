@@ -6,19 +6,27 @@ import json
 
 
 class AccountController:
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, instance):
         self.page = page
         self.model = AccountModel()
 
         self.dialog = None
 
-        self.r_token:str = ''
+        self.instance = instance
+
+
+    async def get_schedule_json_data(self, view_instance):
+        import json
+        data = {}
+        for item in view_instance.schedule_controls:
+            data[item.day_id] = item.get_data()    
+        return data     
 
 
     async def getAccountData(self, view_instance):
-        id: str = await ft.SharedPreferences().get("id")
-        token: str = await ft.SharedPreferences().get("token")
-        r_token: str = await ft.SharedPreferences().get("r_token")
+        id: str = self.page.session.store.get("id")
+        token: str = self.page.session.store.get("token")
+        r_token: str = self.page.session.store.get("r_token")
 
         if id and r_token:
 
@@ -30,11 +38,11 @@ class AccountController:
             if response.status_code == 401:
                 response = await LoginModel().refresh_token(r_token, id)
                 if response.status_code == 200:
-                    await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-                    await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
+                    self.page.session.store.set("token", json.loads(response.content)["token"])
+                    self.page.session.store.set("r_token", json.load(response.content)["r_token"])
 
-                    token: str = await ft.SharedPreferences().get("token")
-                    r_token: str = await ft.SharedPreferences().get("r_token")
+                    token: str = self.page.session.store.get("token")
+                    r_token: str = self.page.session.store.get("r_token")
 
                     response = await self.model.getAccountData(id, token)
 
@@ -47,9 +55,14 @@ class AccountController:
                     self.page.go("/")
 
             elif response.status_code == 200:
-                view_instance.txt_username.value = json.loads(response.content)["nome"]
-                view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
-                view_instance.txt_email.value = json.loads(response.content)["email"]
+                data = json.loads(response.content)
+                view_instance.txt_username.value = data.get("nome", "")
+                view_instance.txt_telefone.value = data.get("telefone", "")
+                view_instance.txt_email.value    = data.get("email", "")
+
+                horario_data = data.get("horario", {})
+
+                view_instance.load_schedule_data(horario_data)
 
             if not view_instance.txt_telefone.value:
                 dialog = CustonDialog(
@@ -64,6 +77,8 @@ class AccountController:
 
             view_instance.progressRing.visible = False
             self.page.update()
+        else:
+            return    
 
 
     async def navigation(self, e):
@@ -72,13 +87,15 @@ class AccountController:
             self.dialog = None
             self.page.update() 
             
-        if self.r_token:
+        if self.instance.r_token:
             await self.page.push_route("/main")
         else:
             await self.page.push_route("/")    
 
 
     async def handle_save(self, e, view_instance):
+
+        horario_funcionamento = await self.get_schedule_json_data(view_instance)    
 
         self.username = view_instance.txt_username.value
         self.telefone = view_instance.txt_telefone.value
@@ -190,7 +207,8 @@ class AccountController:
                 self.telefone,
                 self.email,
                 self.password,
-                self.token
+                self.token, 
+                horario_funcionamento   
             )    
 
             view_instance.progressRing.visible = False     
@@ -214,8 +232,8 @@ class AccountController:
                 response = await LoginModel().refresh_token(r_token, id)
                 
                 if response.status_code == 200:
-                    await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-                    await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
+                    self.page.session.store.set("token", json.loads(response.content)["token"])
+                    self.page.session.store.set("r_token", json.load(response.content)["r_token"])
 
                     token: str = json.loads(response.content)["token"]
                     r_token: str = json.load(response.content)["r_token"]
@@ -229,7 +247,8 @@ class AccountController:
                         self.telefone,
                         self.email,
                         self.password,
-                        token
+                        token,
+                        horario_funcionamento   
                     )    
 
                     if response.status_code == 200:

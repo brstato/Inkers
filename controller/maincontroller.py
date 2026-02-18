@@ -151,7 +151,7 @@ class MainController:
             self.instance.account_tel  = data["telefone"    ]
             self.instance.zap_instance = data["zap_instance"]
 
-            await ft.SharedPreferences().set("zap_instance", self.instance.zap_instance)
+            self.page.session.store.set("zap_instance", self.instance.zap_instance)
 
             if not self.instance.account_tel:
                 await self.page.push_route("/account")
@@ -172,8 +172,8 @@ class MainController:
         self.instance.status_caixa = json.loads(response.content)["status"]
         self.instance.id_caixa = json.loads(response.content)["id_caixa"]
 
-        await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa)
-        await ft.SharedPreferences().set("id_caixa", str(self.instance.id_caixa))
+        self.page.session.store.set("status_caixa", self.instance.status_caixa)
+        self.page.session.store.set("id_caixa", str(self.instance.id_caixa))
 
 
     def _collect_payment_values(self):
@@ -215,11 +215,9 @@ class MainController:
     async def get_Data(self):
         try:
             try:
-                self.instance.id_loja = await asyncio.wait_for(ft.SharedPreferences().get("id"), timeout=5.0)
-                self.instance.token = await asyncio.wait_for(ft.SharedPreferences().get("token"), timeout=5.0)
-                self.instance.r_token = await asyncio.wait_for(ft.SharedPreferences().get("r_token"), timeout=5.0)
-            except asyncio.TimeoutError:
-                self.instance.id_loja = None
+                self.instance.id_loja = self.page.session.store.get("id")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
             except Exception as e:
                 print(f"DEBUG: Erro ao obter id_loja: {e}")
                 self.instance.id_loja = None
@@ -376,8 +374,8 @@ class MainController:
 
         self.instance.status_caixa = "F"
 
-        await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa)   
-        await ft.SharedPreferences().set("id_caixa", "0")   
+        self.page.session.store.set("status_caixa", self.instance.status_caixa)   
+        self.page.session.store.set("id_caixa", "0")   
 
         self.instance.btn_fechar_caixa.visible = False                    
         self.instance.btn_abrir_caixa.visible = True
@@ -449,7 +447,7 @@ class MainController:
 
         self.instance.status_caixa = 'A'    
 
-        await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa )    
+        self.page.session.store.set("status_caixa", self.instance.status_caixa )    
 
         data_abertura = datetime.datetime.now().timestamp()
 
@@ -471,7 +469,7 @@ class MainController:
 
         if response.status_code == 200:
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
-            await ft.SharedPreferences().set("id_caixa", self.instance.id_caixa)
+            self.page.session.store.set("id_caixa", self.instance.id_caixa)
 
             self.instance.btn_abrir_caixa.visible = False
             self.instance.btn_fechar_caixa.visible = True
@@ -479,7 +477,7 @@ class MainController:
             self.page.update()
         else:
             self.instance.status_caixa = 'F'
-            await ft.SharedPreferences().set("status_caixa", self.instance.status_caixa)
+            self.page.session.store.set("status_caixa", self.instance.status_caixa)
             self.dialog_erro_abrir_caixa = CustonDialog(
                 page = self.page,
                 title="Atenção",
@@ -824,10 +822,10 @@ class MainController:
 
 
     async def handler_logout(self):
-        await asyncio.wait_for(ft.SharedPreferences().set("token",        ''), 5), 
-        await asyncio.wait_for(ft.SharedPreferences().set("r_token",      ''), 5), 
-        await asyncio.wait_for(ft.SharedPreferences().set("id",           ''), 5),
-        await asyncio.wait_for(ft.SharedPreferences().set("status_caixa", ''), 5),
+        self.page.session.store.set("token",        '')
+        self.page.session.store.set("r_token",      '')
+        self.page.session.store.set("id",           '')
+        self.page.session.store.set("status_caixa", '')
         await self.page.push_route("/")    
     
 

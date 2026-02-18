@@ -26,7 +26,8 @@ class Config:
     CONF_AGENDA_ZAP       = f"{BASE_API_URL}/agenda/send_confirmation"  
     
 
-    CREATE_ANAMENESE_URL  = f"{BASE_API_URL}/anamnese/create"
+    CREATE_ANAMENESE_URL   = f"{BASE_API_URL}/anamnese/create"
+    LIST_PROFISSIONAIS_URL = f"{BASE_API_URL}/anamnese/list_profissionais"
     
 
     GET_CONNECT_ZAP       = f"{BASE_API_URL}/whatsapp/connect"

@@ -29,10 +29,10 @@ class ScheduleItem(ft.Container):
         self.txt_start = ft.Dropdown(
             options=self.hour_options,
             value="09:00", # Valor padrão
-            width=85,      # Largura compacta
+            width=100,      # Largura compacta
             height=40,     # Altura compacta
             text_size=13,
-            content_padding=10,
+            content_padding=0,
             bgcolor=AppColors.BACKGROUND_DARK,
             color=AppColors.GRAY_LIGHT,
             border_color=AppColors.GRAY_DARK,
@@ -44,10 +44,10 @@ class ScheduleItem(ft.Container):
         self.txt_end = ft.Dropdown(
             options=self.hour_options,
             value="09:00", # Valor padrão
-            width=85,      # Largura compacta
+            width=100,      # Largura compacta
             height=40,     # Altura compacta
             text_size=13,
-            content_padding=10,
+            content_padding=0,
             bgcolor=AppColors.BACKGROUND_DARK,
             color=AppColors.GRAY_LIGHT,
             border_color=AppColors.GRAY_DARK,
@@ -61,7 +61,7 @@ class ScheduleItem(ft.Container):
                 self.cb_active,
                 self.lbl_day,
                 self.txt_start,
-                ft.Text("-", color=AppColors.GRAY_LIGHT),
+                #ft.Text("-", color=AppColors.GRAY_LIGHT),
                 self.txt_end
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN

@@ -57,8 +57,8 @@ class LoginController:
 
         token_obj = await self.page.auth.get_token()  
 
-        await ft.SharedPreferences().set("google_access_token", token_obj.access_token)
-        await ft.SharedPreferences().set("google_refresh_token", token_obj.refresh_token)
+        self.page.session.store.set("google_access_token", token_obj.access_token)
+        self.page.session.store.set("google_refresh_token", token_obj.refresh_token)
 
         refresh = token_obj.refresh_token
 
@@ -75,9 +75,9 @@ class LoginController:
 
           if response.status_code == 200:
             data = json.loads(response.content)
-            await ft.SharedPreferences().set("r_token", data["r_token"])
-            await ft.SharedPreferences().set("token",   data["token"  ])
-            await ft.SharedPreferences().set("id",      data["message"]["id"])
+            self.page.session.store.set("r_token", data["r_token"])
+            self.page.session.store.set("token",   data["token"  ])
+            self.page.session.store.set("id",      data["message"]["id"])
 
             self.page.update()
             self.page.go("/main")
@@ -136,8 +136,8 @@ class LoginController:
 
     async def refresh_token(self, view_instance):
 
-        r_token:str = await ft.SharedPreferences().get("r_token")
-        id:str      = await ft.SharedPreferences().get("id")
+        r_token:str = self.page.session.store.get("r_token")
+        id:str      = self.page.session.store.get("id")
 
         if r_token:
             view_instance.progress_ring.visible = True
@@ -149,8 +149,8 @@ class LoginController:
             )
 
             if response.status_code == 200:
-                await ft.SharedPreferences().set("token", json.loads(response.content)["token"]) 
-                await ft.SharedPreferences().set("r_token", json.loads(response.content)["r_token"]) 
+                self.page.session.store.set("token", json.loads(response.content)["token"]) 
+                self.page.session.store.set("r_token", json.loads(response.content)["r_token"]) 
                
                 self.page.update()
                 await self.page.push_route("/main")
@@ -160,53 +160,96 @@ class LoginController:
 
 
     async def handle_login(self, e, view_instance):
-        self.email = view_instance.txt_username.value
-        self.password = view_instance.txt_password.value
+            self.email = view_instance.txt_username.value
+            self.password = view_instance.txt_password.value
 
-        if not self.email or not self.password:
-            view_instance.progress_ring.visible = False
-            dialog = CustonDialog(
-                self.page,
-                title="Atenção",
-                content="Por favor preencha todos os campos.",
-                actions=[
-                    ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())
-                ]
-            )
-            self.page.show_dialog(dialog)          
+            if not self.email or not self.password:
+                dialog = CustonDialog(
+                    self.page,
+                    title="Atenção",
+                    content="Por favor, preencha o e-mail e a senha.",
+                    actions=[ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())]
+                )
+                self.page.show_dialog(dialog)
+                self.page.update()
+                return
+
+            view_instance.progress_ring.visible = True
             self.page.update()
-            return
 
-        view_instance.progress_ring.visible = True
-        self.page.update()
+            try:
+                response = await self.LoginModel.login(self.email, self.password) 
 
-        response = await self.LoginModel.login(self.email, self.password) 
+                if response.status_code == 200:
+                    data = json.loads(response.content)
+                    self.page.session.store.set("token",   data["token"]) 
+                    self.page.session.store.set("r_token", data["r_token"]) 
+                    self.page.session.store.set("id",      data["message"]["id"])
+                    
+                    view_instance.progress_ring.visible = False
+                    self.page.update()
+                    self.page.go("/main")
 
-        if response.status_code == 401:
-            view_instance.progress_ring.visible = False
-            dialog = CustonDialog(
-                self.page,
-                title="Erro",
-                content="Usuario e ou senha inválida!",
-                actions=[
-                    ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())
-                ]
-            )
-            self.page.show_dialog(dialog)          
-            self.page.update()
-            return
-            
-        elif response.status_code != 401:
-            view_instance.progress_ring.visible = False
-            await ft.SharedPreferences().set("token", json.loads(response.content)["token"]) 
-            await ft.SharedPreferences().set("r_token", json.loads(response.content)["r_token"]) 
+                elif response.status_code == 401:
+                    view_instance.progress_ring.visible = False
+                    dialog = CustonDialog(
+                        self.page,
+                        title="Acesso Negado",
+                        content="E-mail ou senha incorretos.",
+                        actions=[ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())]
+                    )
+                    self.page.show_dialog(dialog)
+                    self.page.update()
 
-            message = json.loads(response.content)["message"]
+                elif response.status_code == 404:
+                    view_instance.progress_ring.visible = False
+                    dialog = CustonDialog(
+                        self.page,
+                        title="Usuário não encontrado",
+                        content="Não encontramos uma conta com esse e-mail. Verifique o e-mail informado.",
+                        actions=[ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())]
+                    )
+                    self.page.show_dialog(dialog)
+                    self.page.update()
 
-            await ft.SharedPreferences().set("id", message["id"])
+                elif response.status_code == 422:
+                    view_instance.progress_ring.visible = False
+                    dialog = CustonDialog(
+                        self.page,
+                        title="Dados inválidos",
+                        content="Verifique os dados informados e tente novamente.",
+                        actions=[ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())]
+                    )
+                    self.page.show_dialog(dialog)
+                    self.page.update()
 
-            self.page.update()
-            self.page.go("/main")
+                else:
+                    # Log técnico apenas no console para depuração
+                    print(f"[LOGIN ERRO] Status: {response.status_code} | Resposta: {response.content}")
+
+                    view_instance.progress_ring.visible = False
+                    dialog = CustonDialog(
+                        self.page,
+                        title="Serviço indisponível",
+                        content="Não foi possível realizar o login no momento. Tente novamente mais tarde.",
+                        actions=[ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())]
+                    )
+                    self.page.show_dialog(dialog)
+                    self.page.update()
+
+            except Exception as ex:
+                # Log técnico apenas no console
+                print(f"[LOGIN ERRO] Exceção: {ex}")
+
+                view_instance.progress_ring.visible = False
+                dialog = CustonDialog(
+                    self.page,
+                    title="Erro de conexão",
+                    content="Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+                    actions=[ft.TextButton('OK', on_click=lambda e: self.page.pop_dialog())]
+                )
+                self.page.show_dialog(dialog)
+                self.page.update()
 
 
     async def handler_forgot_password(self, e, view_instance):    

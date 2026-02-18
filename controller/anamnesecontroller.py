@@ -8,6 +8,7 @@ from model.dto import AnamneseDTO
 import time
 import os
 from datetime import datetime
+import json
 
 
 class AnamneseController:
@@ -15,6 +16,7 @@ class AnamneseController:
         self.page = page
         self.instance = instance
         self.model = AnamneseModel()
+        self.init_time = time.time()
 
     def validate_birth_date(self, date_str):
         """Valida se a data está em formato válido e é uma data válida, e normaliza para DD/MM/YYYY"""
@@ -138,7 +140,11 @@ class AnamneseController:
                         'control': self.instance.medicamentos_input, 
                         'msg': "Informe o medicamento", 
                         'check_if': self.instance.medicamento_switch.value
-                    },                   
+                    },
+                    {
+                        'control': self.instance.profissional_dropdown, 
+                        'msg': "Selecione o profissional"
+                    },
                 ]
         
         for item in validation_map:
@@ -166,14 +172,34 @@ class AnamneseController:
             self.page.show_dialog(ft.SnackBar(ft.Text(date_error)))
             self.page.update()
             return False
+
+        # Honeypot Check
+        if self.instance.honeypot.value:
+            # Silently fail or generic error.
+            print("Bot detected: Honeypot filled")
+            return False
+
+        # Time Check (Minimum 5 seconds)
+        if time.time() - self.init_time < 5:
+            self.page.show_dialog(ft.SnackBar(ft.Text("Por favor, preencha o formulário com calma."))) 
+            self.page.update()
+            return False
         
         return True
 
 
     async def get_data(self):
-        self.instance.token   = await ft.SharedPreferences().get("token"  )
-        self.instance.r_token = await ft.SharedPreferences().get("r_token")  
-
+        response = await self.model.list_profissionais(self.instance.tel)
+        if response.status_code == 200:
+            self.instance.profissional_options.clear()
+            data = json.loads(response.content)
+            for item in data:
+                self.instance.profissional_options.append(
+                    ft.dropdown.Option(key=item['id'], text=item['nome'])
+                )   
+            self.instance.profissional_dropdown.options = self.instance.profissional_options
+            self.instance.profissional_dropdown.update()
+                 
 
     async def create_anamnese(self, e):
 
@@ -224,15 +250,11 @@ class AnamneseController:
             telefone              = self.instance.telefone_input.value,
             data_nascimento       = self.instance.nascimento_input.value,
             telefone_estudio      = self.instance.tel,
-            nome_estudio          = self.instance.name
+            nome_estudio          = self.instance.name,
+            id_profissional       = self.instance.profissional_dropdown.value
         )
  
-        response = await ProtectedApiCall(
-            self.page,
-            self.instance,
-            self.model.CreateAnamnese,
-            dados=dto
-        ).call_api_refresh_token()
+        response = await self.model.CreateAnamnese(dto)
 
         if response.status_code == 200:
             self.page.go("/anamneseresponse")

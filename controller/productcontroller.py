@@ -45,11 +45,11 @@ class ProductController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-            await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
+            self.page.session.store.set("token", json.loads(response.content)["token"])
+            self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await ft.SharedPreferences().get("token")
-            self.instance.r_token = await ft.SharedPreferences().get("r_token")          
+            self.instance.token = self.page.session.store.get("token")
+            self.instance.r_token = self.page.session.store.get("r_token")          
 
             if response.status_code != 200:
                 self.page.go("/")
@@ -96,11 +96,11 @@ class ProductController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-            await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
+            self.page.session.store.set("token", json.loads(response.content)["token"])
+            self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await ft.SharedPreferences().get("token")
-            self.instance.r_token = await ft.SharedPreferences().get("r_token")
+            self.instance.token = self.page.session.store.get("token")
+            self.instance.r_token = self.page.session.store.get("r_token")
 
             if response.status_code != 200:
                 self.page.go("/")
@@ -139,11 +139,11 @@ class ProductController:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
-                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])   
+                self.page.session.store.set("token", json.loads(response.content)["token"])
+                self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
 
-                self.instance.token = await ft.SharedPreferences().get("token")
-                self.instance.r_token = await ft.SharedPreferences().get("r_token")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
 
                 await self.model.deleteProductData(id_prof, self.instance.token)
             else:
@@ -173,11 +173,11 @@ class ProductController:
 
             if response.status_code == 200:
 
-                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
+                self.page.session.store.set("token", json.loads(response.content)["token"])
+                self.page.session.store.set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await ft.SharedPreferences().get("token")
-                self.instance.r_token = await ft.SharedPreferences().get("r_token")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
 
                 response = await self.model.getProductData(self.instance.id_loja, self.instance.token)
 
@@ -234,11 +234,11 @@ class ProductController:
 
             if response.status_code == 200:
 
-                await ft.SharedPreferences().set("token", json.loads(response.content)["token"])
-                await ft.SharedPreferences().set("r_token", json.load(response.content)["r_token"])
+                self.page.session.store.set("token", json.loads(response.content)["token"])
+                self.page.session.store.set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await ft.SharedPreferences().get("token")
-                self.instance.r_token = await ft.SharedPreferences().get("r_token")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
 
                 response = await self.model.DetailProductData(id=id, token=self.instance.token)
             else:    

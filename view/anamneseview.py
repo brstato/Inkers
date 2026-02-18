@@ -509,6 +509,57 @@ class AnamneseView(ft.View):
             ),
         )  
 
+        self.profissional_options = []
+        self.profissional_dropdown = ft.Dropdown(
+            label="Selecione seu profissional",
+            label_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            elevation=5,
+            editable=True,
+            enable_filter=True,
+            expand=True,
+            enable_search=True,
+            menu_height=100,
+            text_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            border=ft.InputBorder.UNDERLINE,
+            border_color=AppColors.ORANGE_DARK,
+            focused_border_color=AppColors.ORANGE_DARK,                         
+            options=self.profissional_options,
+            border_radius=10,
+            visible=True,
+        )        
+
+        self.area_profissional = ft.Container(
+            border_radius=ft.border_radius.all(10),
+            border=ft.border.all(color=AppColors.GRAY_LIGHT4, width=0.1),
+            padding=ft.padding.all(10),
+            gradient=ft.LinearGradient(
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BACKGROUND_DARK,   # Cor final
+                ],                
+            ),
+            content=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls = [ft.Text(value="Selecione o profissional que irá atendê-lo", color=AppColors.GRAY_LIGHT3)]
+                    ),
+                    self.profissional_dropdown,
+                ]
+            ),
+            shadow=ft.BoxShadow(
+                color=AppColors.BLACK,
+                blur_radius=20,
+                offset=ft.Offset(0, 10)
+            ),  
+        )
+
+
         self.signature_pad = SignaturePad(self, page, visible=False)
 
         self.area_signature = ft.Container(
@@ -593,6 +644,15 @@ class AnamneseView(ft.View):
             ],
         )
 
+        self.honeypot = ft.TextField(
+            label="Phone verification", # Deceptive label for bots
+            visible=True, 
+            width=0, 
+            height=0, 
+            opacity=0,
+            read_only=False
+        )
+
         self.list = ft.ListView(
             controls=[
             self.area_title,
@@ -606,8 +666,10 @@ class AnamneseView(ft.View):
             self.area_estilo,
             self.area_habitos,
             self.area_saude,
+            self.area_profissional,
             self.termo_texto_widget,
             self.termo_check,
+            self.honeypot, # Hidden field
             #self.area_signature,
             #self.area_btn_salvar
             ]
@@ -624,6 +686,9 @@ class AnamneseView(ft.View):
 
 
     def did_mount(self):
-        pass
-        #self.controller.get_data()
+        self.page.run_task(self.aux)
 
+
+    async def aux(self):
+        await self.controller.get_data()
+        

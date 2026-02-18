@@ -11,14 +11,19 @@ class AccountView(ft.View):
         super().__init__(
             route="/account",
             bgcolor=AppColors.BACKGROUND_DARK,
-            padding=0 
+            padding=ft.padding.all(20),
+            scroll=ft.ScrollMode.AUTO
         )
 
         #page = page
 
+        self.id:str = ""
+        self.token:str = ""
+        self.r_token:str = ""
+
         self.progressRing = CustonProgressRing(page.height)             
 
-        self.controller = AccountController(page)    
+        self.controller = AccountController(page, self)    
 
         self.txt_username = CustomTextField("Estudio ou tatuador") 
         self.txt_telefone = CustomTextField("Telefone", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER) 
@@ -32,6 +37,7 @@ class AccountView(ft.View):
         ]
 
         self.schedule_controls = []
+
         for day_id, day_name in self.days_map:
             item = ScheduleItem(day_id, day_name)
             self.schedule_controls.append(item)
@@ -39,7 +45,7 @@ class AccountView(ft.View):
         self.schedule_container = ft.Column(
             controls=[
                 ft.Text("Horário de Funcionamento", size=16, weight=ft.FontWeight.BOLD, color=AppColors.ORANGE_BURNT),
-                ft.Column(controls=self.schedule_controls, spacing=5)
+                ft.Column(controls=self.schedule_controls, spacing=2)
             ]
         )            
 
@@ -57,7 +63,7 @@ class AccountView(ft.View):
                     bgcolor=AppColors.ORANGE_BURNT,
                     color=AppColors.GRAY_LIGHT,
 
-                    on_click=lambda e:asyncio.run(self.controller.handle_save(e, self))
+                    on_click=self._on_click_save
                 )
             ],
         )
@@ -79,49 +85,40 @@ class AccountView(ft.View):
             ],
         )        
 
-        main_container = ft.Container(
-            padding=ft.Padding.all(20),
-            bgcolor=AppColors.BACKGROUND_DARK,
-            content=ft.Column(
-                controls=[
-                    self.txt_username,
-                    self.txt_telefone,
-                    self.txt_email,
-                    self.txt_password,
-                    self.txt_conf_password,
-                    ft.Divider(color=AppColors.GRAY_DARK), # Separador visual
-                    self.schedule_container,                    
-                    ft.Container(height=20),
-                    self.btn_save,
-                    self.btn_return 
-                ],
-            ),
+        main_container = ft.Column(
+            controls=[
+                self.txt_username,
+                self.txt_telefone,
+                self.txt_email,
+                self.txt_password,
+                self.txt_conf_password,
+                ft.Divider(color=AppColors.GRAY_DARK), 
+                self.schedule_container,                    
+                ft.Container(height=20),
+                self.btn_save,
+                self.btn_return 
+            ],            
+            expand=True,
+            spacing=15
         )
 
         self.controls = [
             ft.Stack(
                 controls=[
-                    ft.Container(
-                        content=main_container,
-                        alignment=ft.Alignment.CENTER,
-                        expand=True,
-                    ),
+                    main_container,
                     self.progressRing
                 ],
+                expand=True
             ),
         ]
 
 
     def did_mount(self):
-       self.page.run_task(self._getAccountData)
+       self.page.run_task(self._getAccountData)      
 
 
-    def get_schedule_json_data(self):
-        import json
-        data = {}
-        for item in self.schedule_controls:
-            data[item.day_id] = item.get_data()
-        return data       
+    async def _on_click_save(self, e):
+        await self.controller.handle_save(e, self)
 
 
     def load_schedule_data(self, json_data):
@@ -135,8 +132,8 @@ class AccountView(ft.View):
 
 
     async def _getAccountData(self):
-        self.id      = await ft.SharedPreferences().get("id")
-        self.token   = await ft.SharedPreferences().get("token")
-        self.r_token = await ft.SharedPreferences().get("r_token") 
+        self.id      = self.page.session.store.get("id")
+        self.token   = self.page.session.store.get("token")
+        self.r_token = self.page.session.store.get("r_token") 
 
         await self.controller.getAccountData(self)          

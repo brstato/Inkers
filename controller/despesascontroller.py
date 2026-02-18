@@ -133,8 +133,8 @@ class DespesasController:
 
 
     async def get_data(self):
-        self.instance.id_loja = await ft.SharedPreferences().get("id"   )
-        self.instance.token   = await ft.SharedPreferences().get("token")
+        self.instance.id_loja = self.page.session.store.get("id"   )
+        self.instance.token   = self.page.session.store.get("token")
 
 
     async def listar_despesas_resumo(self):

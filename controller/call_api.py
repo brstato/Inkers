@@ -31,8 +31,8 @@ class ProtectedApiCall:
                     if 'token' in self.kwargs:
                         self.kwargs['token'] = self.instance.token
 
-                    await self.page.client_storage.set_async("token", self.instance.token)
-                    await self.page.client_storage.set_async("r_token", self.instance.r_token)
+                    self.page.session.store.set("token", self.instance.token)
+                    self.page.session.store.set("r_token", self.instance.r_token)
                 
                     response = await self.function(**self.kwargs)
 
