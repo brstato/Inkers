@@ -26,6 +26,8 @@ class Config:
     CONF_AGENDA_ZAP          = f"{BASE_API_URL}/agenda/send_confirmation"  
     CHECK_DIAS_FUNCIONAMENTO = f"{BASE_API_URL}/public/agenda/check"
     LIST_CLIENT_TEL          = f"{BASE_API_URL}/public/agenda/list_client_tel"
+    LIST_PROFISSIONAL_ID     = f"{BASE_API_URL}/public/agenda/list_profissional_id"
+    LIST_TURNOS_AGENDA       = f"{BASE_API_URL}/public/agenda/turnos"
     
 
     CREATE_ANAMENESE_URL   = f"{BASE_API_URL}/anamnese/create"

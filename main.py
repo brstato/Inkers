@@ -58,7 +58,7 @@ async def main(page: ft.Page):
             elif troute.match("/despesas"):
                 page.views.append(DespesasView(page))    
             elif troute.match("/agenda/:name/:tel"):
-                page.views.append(AgendaTurnosView(page, troute.name, troute.tel))  
+                page.views.append(AgendaTurnosView(page))  
 
             page.update()
 
