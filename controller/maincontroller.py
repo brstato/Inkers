@@ -34,10 +34,9 @@ class MainController:
 
 
     async def create_link_agenda_turnos(self, e):
-        account_name = quote(self.instance.account_name)
         parsed_url = urlparse(self.page.url)
         base_domain = f"https://{parsed_url.netloc}"
-        base_url = f"{base_domain}/agenda/{account_name}/{self.instance.account_tel}"
+        base_url = f"{base_domain}/agendaturnos"
         await ft.Clipboard().set(base_url)
         await self.page.close_drawer()
         self.page.show_dialog(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))

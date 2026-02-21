@@ -86,7 +86,7 @@ class AnamneseController:
         error_found:bool = False
             
         if self.instance.signature_pad.is_empty():
-            self.page.open(ft.SnackBar(ft.Text("Você deve assinar o documento para prosseguir.")))
+            self.page.show_dialog(ft.SnackBar(ft.Text("Você deve assinar o documento para prosseguir.")))
             self.page.update()
             return False
 

@@ -30,8 +30,30 @@ class AgendaTurnosView(ft.View):
         # Elementos de UI
         self.month_label = ft.Text("", size=14, color=AppColors.GRAY_LIGHT2, weight="bold")
         self.date_controls_row = ft.Row(scroll=ft.ScrollMode.ALWAYS, spacing=20)
+        self.area_date_controls = ft.Container(
+            padding=ft.Padding.all(10),
+            content=self.date_controls_row,
+            gradient=ft.LinearGradient(
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BLACK,   # Cor final
+                ],                
+            ),   
+            border_radius=ft.border_radius.all(10)         
+        )
+
         self.progress_ring = CustonProgressRing()
         self.shifts_row = ft.Row(alignment=ft.MainAxisAlignment.SPACE_EVENLY, controls=[])
+
+        self.title_app_bar = ft.Text("Agenda", color=AppColors.GRAY_LIGHT2)
+        self.appbar = ft.AppBar(
+            title=self.title_app_bar,
+            bgcolor=AppColors.BACKGROUND_DARK,
+            elevation=0,
+            leading=None
+        )
 
         self.phone_input = CustomTextField(
             label="Informe seu telefone",
@@ -41,7 +63,7 @@ class AgendaTurnosView(ft.View):
         )
 
         self.name_input = CustomTextField(
-            label="Nome",
+            label="Cliente",
             readOnly=True,
         )
         
@@ -66,7 +88,7 @@ class AgendaTurnosView(ft.View):
                     controls=[
                         ft.Text("Confirmar Agendamento", size=20, weight="bold"),
                         ft.Divider(color="transparent", height=10),
-                        self.phone_input,
+                        #self.phone_input,
                         ft.Divider(color="transparent", height=20),
                         ft.ElevatedButton(
                             "Confirmar", 
@@ -112,16 +134,8 @@ class AgendaTurnosView(ft.View):
 
     # =========================================================================
     # MÉTODOS DE MANIPULAÇÃO DA UI (Chamados pelo Controller)
-    # =========================================================================
+    # ========================================================================
 
-    def setup_appbar(self):
-        self.appbar = ft.AppBar(
-            title=ft.Text("Agenda", color=AppColors.GRAY_LIGHT2),
-            bgcolor=AppColors.BACKGROUND_DARK,
-            elevation=0,
-            leading=None
-        )
-        self.page.update()
 
     def clear_lists(self):
         self.date_controls_row.controls.clear()
@@ -155,8 +169,8 @@ class AgendaTurnosView(ft.View):
 
             # Estilos condicionais
             if not loja_aberta:
-                day_color = ft.Colors.GREY_800
-                weekday_color = ft.Colors.GREY_900
+                day_color = ft.Colors.GREY_200
+                weekday_color = ft.Colors.GREY_300
                 weight_day = "normal"
                 on_click_action = None
                 opacity = 0.3
@@ -182,7 +196,15 @@ class AgendaTurnosView(ft.View):
                             ft.Text(dias_pt[dt.weekday()], size=12, color=weekday_color),
                             ft.Text(str(dt.day), size=(22 if is_selected else 18), color=day_color, weight=weight_day),
                         ]
-                    )
+                    ),
+                    gradient=ft.LinearGradient(
+                        begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                        end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
+                        colors=[
+                            AppColors.BLACK,    # Cor inicial
+                            AppColors.GRAY_DARK,   # Cor final
+                        ],                
+                    ),                    
                 )
             )
         
