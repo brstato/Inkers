@@ -14,6 +14,62 @@ class AgendaTurnosController:
         self.agenda_profissional = []
 
 
+    async def confirmar_agendamento(self):
+        telefone        = self.instance.phone_input.value
+        cliente_nome    = self.instance.name_input.value
+        id_prof         = self.instance.id_profissional
+        turno_escolhido = self.instance.selected_shift
+        cliente_id      = self.instance.cliente_id
+        
+        if not turno_escolhido or not telefone:
+            return
+
+        dt       = self.instance.dates_data[self.instance.selected_date_index]
+        data_iso = dt.strftime("%Y-%m-%d")
+
+        horarios = {
+            "Manhã": {"ini": "08:00", "fim": "12:00"},
+            "Tarde": {"ini": "13:00", "fim": "18:00"},
+            "Noite": {"ini": "18:00", "fim": "22:00"}
+        }
+        
+        hora_ini = horarios[turno_escolhido]["ini"]
+        hora_fim = horarios[turno_escolhido]["fim"]
+
+        payload = {
+            "uuid": self.instance.uuid,
+            "cliente_id": cliente_id,
+            "id_profissional": id_prof,
+            "cliente": cliente_nome,
+            "telefone": telefone,
+            "data": data_iso,
+            "hora_ini": hora_ini,
+            "hora_fim": hora_fim
+        }
+
+        print("\n--- JSON PRONTO PARA ENVIO ---")
+        print(json.dumps(payload, indent=2, ensure_ascii=False))
+        print("------------------------------\n")
+
+        self.instance.set_loading(True)
+        try:
+            response = await self.model.solicitar_agendamento(payload)
+            
+            if response.status_code == 200 or response.status_code == 201:                
+                self.instance.selected_shift = None
+                await self._get_client_data(None)
+            else:
+                self.instance.show_message_dialog(f"Erro {response.status_code}", f"Falha ao solicitar agendamento {response.text}")
+                
+        except Exception as ex:
+            print(f"Erro ao confirmar agendamento: {ex}")
+            self.instance.show_message_dialog("Erro", "Falha de comunicação com o servidor.")
+            
+        finally:
+            self.instance.set_loading(False)
+            self.page.update()
+
+
     async def ProcessarCalendario(self):
         self.availability_map.clear()
 
@@ -137,12 +193,15 @@ class AgendaTurnosController:
             if response.status_code == 200:
                 dados = json.loads(response.content)
 
-                self.instance.name_input.value = dados.get("cliente", {}).get("nome", "")
-                self.instance.id_profissional = dados.get("profissional", {}).get("id", 0)
+                self.instance.name_input.value = dados.get("cliente",      {}).get("nome",      "")
+                self.instance.uuid             = dados.get("loja",         {}).get("uuid",      "")
+                self.instance.cliente_id       = dados.get("cliente",      {}).get("cliente_id", 0)     
+                self.instance.id_profissional  = dados.get("profissional", {}).get("id",         0)
                 
                 self.agenda_profissional = dados.get("agenda", [])
                 
                 config_str = dados.get("loja", {}).get("config_horario", "{}")
+                
                 try:
                     self.config_loja = json.loads(config_str)
                 except:

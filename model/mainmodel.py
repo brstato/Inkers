@@ -13,7 +13,7 @@ class mainModel:
     get_insumos_url:str         = Config.GET_ITENS_INSUMO
     update_insumo_url:str       = Config.UPDATE_INSUMO
     update_nota_cliente_url:str = Config.UPDATE_NOTA_CLIENTE
-    
+    notify_pendentes_url:str    = Config.NOTIFY_PENDENTES_URL
 
     async def _post_request(self, url:str, payload:dict, token: str) -> httpx.Response:
         header = {
@@ -27,6 +27,14 @@ class mainModel:
                 headers=header
             )
             return response
+
+
+    async def notify_pendentes_agenda(self, id_loja:str, token:str):
+        payload = {
+            "id_loja": id_loja
+        }
+
+        return await self._post_request(self.notify_pendentes_url, payload, token)
 
 
     async def UpdateNotaCliente(self, id_cliente:int, nota:str, token:str):

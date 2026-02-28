@@ -26,14 +26,10 @@ gbak -b -user ${DB_USER} -password ${DB_PASS} -service ${SERVICE_STRING} ${REMOT
 if [ $? -eq 0 ]; then
     echo "   Backup concluído com sucesso!"
     
-    echo "2. Gerando SQL de Diferenças..."
-    # Atenção: Verifique se o seu python precisa ler ESSE backup específico.
-    # Se ele precisar, teremos que criar um link simbólico ou passar o nome como parâmetro.
-    python3 sync_full_inkers.py
-    
-    echo "3. Aplicando Atualizações..."
-    isql -user SYSDBA -password masterkey localhost:base -i update_full_structure.sql
-    
+    echo "2. Gerando SQL de Diferenças e Aplicando no PROD..."
+    # O script Python compara DEV x PROD, gera o SQL e aplica automaticamente no banco de produção
+    python3 sync_full_inkers.py --auto
+
     echo "Processo finalizado."
 else
     echo "ERRO CRÍTICO no backup. O processo de sincronização foi abortado para segurança."

@@ -7,6 +7,7 @@ class AgendaTurnosModel:
         self.list_client_tel_url          = Config.LIST_CLIENT_TEL
         self.list_profissional_id_url     = Config.LIST_PROFISSIONAL_ID
         self.list_turnos_agenda_url       = Config.LIST_TURNOS_AGENDA
+        self.solicitar_agendamento_url    = Config.SOLICITAR_AGENDAMENTO
 
     async def _post_request(self, url:str, payload:dict) -> httpx.Response:
         header = {
@@ -73,4 +74,12 @@ class AgendaTurnosModel:
             )
             return response             
 
+
+    async def solicitar_agendamento(self, payload: dict):
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                url=self.solicitar_agendamento_url,
+                json=payload,
+            )
+            return response             
 

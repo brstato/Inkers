@@ -18,6 +18,8 @@ class AgendaTurnosView(ft.View):
         self.name:str = ''
         self.tel:str = ''
         self.id_profissional: int = 0
+        self.cliente_id: int = 0
+        self.uuid:str = ''
         
         self.controller = AgendaTurnosController(page, self)
 
@@ -45,7 +47,24 @@ class AgendaTurnosView(ft.View):
         )
 
         self.progress_ring = CustonProgressRing()
-        self.shifts_row = ft.Row(alignment=ft.MainAxisAlignment.SPACE_EVENLY, controls=[])
+        self.shifts_row = ft.Row(
+            alignment=ft.MainAxisAlignment.SPACE_EVENLY, 
+            controls=[],
+        )
+
+        self.area_shift_row = ft.Container(
+            content=self.shifts_row,
+            padding=ft.Padding.all(10),
+            gradient=ft.LinearGradient(
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BLACK,   # Cor final
+                ],                
+            ),   
+            border_radius=ft.border_radius.all(10)         
+        )
 
         self.title_app_bar = ft.Text("Agenda", color=AppColors.GRAY_LIGHT2)
         self.appbar = ft.AppBar(
@@ -87,44 +106,44 @@ class AgendaTurnosView(ft.View):
                     tight=True,
                     controls=[
                         ft.Text("Confirmar Agendamento", size=20, weight="bold"),
-                        ft.Divider(color="transparent", height=10),
-                        #self.phone_input,
-                        ft.Divider(color="transparent", height=20),
                         ft.ElevatedButton(
                             "Confirmar", 
                             style=ft.ButtonStyle(
-                                bgcolor=AppColors.ORANGE_DARK,
-                                color=AppColors.GRAY_LIGHT2,
+                                bgcolor=AppColors.ORANGE_BURNT,
+                                color=AppColors.WHITE,
                                 shape=ft.RoundedRectangleBorder(radius=10)
                             ),
                             width=300,
                             height=50,
                             on_click=self.confirm_booking
-                        )
+                        ),                        
+                        ft.Divider(color="transparent", height=30),
                     ]
                 )
             )
         )
 
         self.controls = [
-            ft.Container(height=10),
             self.client_area,
             ft.Container(
                 padding=ft.padding.symmetric(horizontal=20),
                 content=ft.Column(
                     spacing=10,
-                    controls=[self.month_label, ft.Container(height=10), self.date_controls_row]
+                    controls=[ 
+                        ft.Container(height=10), 
+                        self.area_date_controls
+                    ]
                 )
             ),
             ft.Divider(color="transparent", height=30),
             ft.Container(
                 padding=ft.padding.symmetric(horizontal=20),
-                content=ft.Text("Turnos Disponíveis", size=18, weight="bold")
+                content=ft.Text("Horarios Disponíveis", size=18, weight="bold")
             ),
             ft.Container(height=10),
             ft.Container(
                 padding=ft.padding.symmetric(horizontal=20),
-                content=self.shifts_row
+                content=self.area_shift_row
             ),
             ft.Container(height=50)
         ]
@@ -160,6 +179,7 @@ class AgendaTurnosView(ft.View):
     def render_calendar(self, availability_map: dict):
         self.date_controls_row.controls.clear()
         dias_pt = ["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"]
+        meses_pt = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"]
 
         for i, dt in enumerate(self.dates_data):
             data_br = dt.strftime("%d/%m/%Y")
@@ -195,6 +215,7 @@ class AgendaTurnosView(ft.View):
                         controls=[
                             ft.Text(dias_pt[dt.weekday()], size=12, color=weekday_color),
                             ft.Text(str(dt.day), size=(22 if is_selected else 18), color=day_color, weight=weight_day),
+                            ft.Text(meses_pt[dt.month - 1], size=10, color=weekday_color),
                         ]
                     ),
                     gradient=ft.LinearGradient(
@@ -215,6 +236,7 @@ class AgendaTurnosView(ft.View):
         
         self.page.update()
 
+
     def render_shifts(self, turnos_disponiveis: list):
         self.shifts_row.controls.clear()
         
@@ -232,37 +254,61 @@ class AgendaTurnosView(ft.View):
             for nome_turno in turnos_disponiveis:
                 dados = info_turnos.get(nome_turno)
                 if dados:
-                    # Criação explícita do controle (Append)
+                    is_selected = (nome_turno == self.selected_shift)
                     self.shifts_row.controls.append(
                         ft.Container(
                             expand=True,
                             bgcolor=AppColors.BACKGROUND_DARK,
                             border_radius=15,
                             padding=ft.Padding.all(15),
-                            on_click=lambda e, t=nome_turno: self.open_shift_modal(t),
+                            #on_click=lambda e, t=nome_turno: self.open_shift_modal(t),
                             content=ft.Column(
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 controls=[
                                     ft.Icon(dados["icon"], color=AppColors.ORANGE_DARK, size=30),
                                     ft.Text(nome_turno, weight="bold", size=16),
-                                    ft.Text(dados["horario"], size=12, color=AppColors.GRAY_LIGHT2)
+                                    #ft.Text(dados["horario"], size=12, color=AppColors.GRAY_LIGHT2)
                                 ]
-                            )
+                            ),
+                            gradient=ft.LinearGradient(
+                                begin=ft.Alignment.BOTTOM_CENTER,
+                                end=ft.Alignment.TOP_CENTER,
+                                colors=[
+                                    AppColors.GRAY_DARK, 
+                                    AppColors.BLACK
+                                ],                
+                            ), 
+                            border=ft.border.all(1, AppColors.ORANGE_DARK) if is_selected else None,
+                            on_click=lambda e, t=nome_turno: self.open_shift_modal(t),                            
                         )
                     )
         
         self.page.update()
 
+
     def open_shift_modal(self, shift_name):
         self.selected_shift = shift_name
+        data_selecionada = self.dates_data[self.selected_date_index].strftime("%d/%m/%Y")
+        turnos_hoje = self.controller.availability_map.get(data_selecionada, [])
+        self.render_shifts(turnos_hoje)
         self.page.show_dialog(self.bottom_sheet)
+        self.page.update()    
 
-    def confirm_booking(self, e):
+
+    async def confirm_booking(self, e):
+        await self.controller.confirmar_agendamento()
         self.page.pop_dialog()
+        self.phone_input.value = ''
+        self.name_input.value  = ''
         self.page.show_dialog(
             ft.SnackBar(
-                ft.Text(f"Agendado para {self.selected_shift}, aguardando aprovação!"), 
-                bgcolor=AppColors.ORANGE_DARK
+                ft.Text(
+                    f"Agendamento solicitado, aguardando aprovação!",
+                    color=AppColors.WHITE,
+                    weight=ft.FontWeight.BOLD,
+                ), 
+                bgcolor=AppColors.ORANGE_BURNT
             )
-        ) 
-        self.page.update()
+        )
+        self.clear_lists() 
+        #self.page.update()

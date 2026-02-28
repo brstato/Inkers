@@ -29,6 +29,50 @@ class MainController:
         self.zap_model = ZapModel()
 
 
+    async def notify_agenda_pendentes(self):
+        response = await ProtectedApiCall(
+            self.page, 
+            self.instance, 
+            self.model.notify_pendentes_agenda,
+            id_loja=self.instance.id_loja,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        if response.status_code == 200:
+            resposta = json.loads(response.content)
+            pendentes = resposta.get("count", 0)
+
+            if pendentes > 0:
+                self.page.session.store.set("is_pendent", True)
+                self.page.run_task(self.animar_notificacao, True)
+            else:
+                self.page.session.store.set("is_pendent", False)
+                self.page.run_task(self.animar_notificacao, False)
+
+        
+    async def animar_notificacao(self, ativar: bool):
+        if ativar:
+            # Se já estiver visível e animando, não faz nada para evitar duplo loop
+            if self.instance.icon_notification.visible:
+                return
+                
+            self.instance.icon_notification.visible = True
+            self.instance.icon_notification.scale = 1.0
+            self.page.update()
+            
+            # Loop de animação (Batimento)
+            while self.instance.icon_notification.visible:
+                # Alterna o tamanho entre o normal (1.0) e maior (1.3)
+                self.instance.icon_notification.scale = 1.3 if self.instance.icon_notification.scale == 1.0 else 1.0
+                self.page.update()
+                await asyncio.sleep(0.5) # Aguarda a transição terminar antes de inverter
+        else:
+            # Desliga a notificação e reseta o tamanho
+            self.instance.icon_notification.visible = False
+            self.instance.icon_notification.scale = 1.0
+            self.page.update()        
+
+
     async def show_drawer(self):
         await self.page.show_drawer()
 
@@ -259,6 +303,7 @@ class MainController:
             await self.listItens()
             await self.listClientes()
             await self.get_connection_zap()
+            await self.notify_agenda_pendentes()
 
             self.instance.progressRing.visible = False
             self.page.update()
@@ -836,6 +881,11 @@ class MainController:
         self.page.session.store.set("r_token",      '')
         self.page.session.store.set("id",           '')
         self.page.session.store.set("status_caixa", '')
+
+        # Remove tokens persistidos para desabilitar o auto-login
+        for key in ("r_token", "id", "google_refresh_token", "login_method"):
+            await ft.SharedPreferences().remove(key)
+
         await self.page.push_route("/")    
     
 

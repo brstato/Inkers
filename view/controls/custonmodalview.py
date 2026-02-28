@@ -12,10 +12,16 @@ class CustonModalView(ft.AlertDialog):
             controls:list=[], 
             height:int=300, 
             width:int=300,
-            text_button_1:str = 'Salvar'
+            text_button_1:str = 'Salvar',
+            content_padding=ft.Padding.all(3),
+            padding=ft.Padding.all(3),
+            margin=ft.Margin.all(5)
         ):
         super().__init__()
         self.text_button_1 = text_button_1
+        self.content_padding = content_padding
+        self.padding = padding
+        self.margin = margin
         page = page
         self.width = width
         self.height = height

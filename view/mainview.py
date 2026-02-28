@@ -605,17 +605,51 @@ class MainView(ft.View):
             on_click=self.controller.limpar_venda
         )
 
-        self.btn_agenda = ft.FloatingActionButton(
-            icon=ft.Icons.EVENT,
+        self.icon_notification = ft.Container(
+            width=10, 
+            height=10, 
             bgcolor=AppColors.ORANGE_BURNT,
+            border_radius=5, 
+            right=8, 
+            top=8, 
+            visible=False,
+            border=ft.border.all(1, AppColors.GRAY_DARK),
+            animate_scale=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
+            scale=1,           
+        )
+
+        self.btn_agenda = ft.FloatingActionButton(
+            #icon=ft.Icons.EVENT,
+            bgcolor=AppColors.GRAY_DARK,
             shape=ft.CircleBorder(),
             tooltip="Agenda",
             on_click=lambda e: page.go("/agenda"),
             visible=True,
+            content=ft.Stack(
+                controls=[
+                    ft.Icon(
+                        icon=ft.Icons.EVENT,
+                        color=AppColors.GRAY_LIGHT2,
+                        size=30,
+                        left=12,
+                        top=12,
+                    ),
+                    self.icon_notification 
+                ],
+                height=55,
+                width=55,
+            ),
+            # ft.Icon(
+            #     icon=ft.Icons.NOTIFICATIONS,
+            #     color=AppColors.WHITE,
+            #     size=20,
+            # ),
         )
 
         self.floating_action_button = self.btn_agenda
         self.floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED
+
+
 
         self.bottom_appbar = ft.BottomAppBar(
             shape=ft.CircularRectangleNotchShape(),   

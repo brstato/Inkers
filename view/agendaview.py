@@ -12,7 +12,7 @@ from view.controls.custonlist import CustonList
 
 
 class AgendaView(ft.View):
-    def __init__(self, page:ft.Page):
+    def __init__(self, page:ft.Page, is_pendent:bool = False):
         super().__init__(
             route="/agenda", 
             scroll="auto",
@@ -40,6 +40,59 @@ class AgendaView(ft.View):
         self.controller = AgendaController(page, self)
 
         self.month_row = CustonRowCalendar(page, self)
+
+# --- MODAL E LISTA DE PENDENTES ---
+        self.lista_cards_pendentes = CustonList(page, self)
+
+        self.modal_pendentes = ft.BottomSheet(
+            bgcolor=AppColors.BLACK,
+            content=ft.Container(
+                padding=ft.padding.all(20),
+                content=ft.Column(
+                    controls=[
+                        self.lista_cards_pendentes,
+                    ],
+                ),
+            ),
+        )
+        
+        # self.modal_pendentes = CustonModalView(
+        #     page,
+        #     callback=None, # Não tem botão de ação global, a ação é nos cards
+        #     callback2=lambda e: [page.pop_dialog(), page.update()],
+        #     controls=[
+        #         ft.Text("Solicitações Pendentes", size=15, color=AppColors.GRAY_LIGHT2, weight="bold"),
+        #         self.lista_cards_pendentes
+        #     ],
+        #     height=500,
+        #     text_button_1="Fechar",
+        # )
+
+        # --- SININHO DE NOTIFICAÇÕES ---
+        self.notification_badge = ft.Container(
+            width=10, 
+            height=10, 
+            bgcolor=ft.Colors.RED_700,
+            border_radius=5, 
+            right=8, 
+            top=8, 
+            #visible=False,
+            border=ft.border.all(1, AppColors.GRAY_DARK)
+        )
+        
+        self.btn_notificacoes = ft.IconButton(
+            icon=ft.Icons.NOTIFICATIONS,
+            icon_color=AppColors.GRAY_LIGHT2,
+            on_click=self.controller.abrir_lista_pendentes,
+        )
+        
+        self.area_notificacoes = ft.Stack(
+            visible=False,
+            controls=[
+                self.btn_notificacoes, 
+                self.notification_badge
+            ]
+        )        
 
         self.month_container = ft.Container(
             gradient=ft.LinearGradient(
@@ -154,6 +207,19 @@ class AgendaView(ft.View):
             ]
         )
 
+        self.edt_edt_valor = CustomTextField(
+            label='Valor',
+            keyboard_type=ft.KeyboardType.NUMBER,
+            regex=r"^[0-9,]*$"
+        )
+
+        self.edt_edt_sinal = CustomTextField(
+            label='Sinal',
+            keyboard_type=ft.KeyboardType.NUMBER,
+            regex=r"^[0-9,]*$"
+        )
+
+
         self.modal_create_agenda = CustonModalView(
             page,
             callback=self.controller.confirm_agendamento,
@@ -163,10 +229,13 @@ class AgendaView(ft.View):
                 self.edt_client_telefone,
                 self.date_area,
                 self.area_ini,
-                self.area_fim
+                self.area_fim,
+                self.edt_edt_valor,
+                self.edt_edt_sinal,                
             ],
-            height=380,
-        )
+            height=550,
+        )        
+
 
         self.calendario = CustonRowDays(page, self)
 
@@ -209,6 +278,7 @@ class AgendaView(ft.View):
                     ft.Container(
                         expand=True,
                     ),
+                    self.area_notificacoes,
                     ft.IconButton(
                         icon=ft.Icons.ADD,
                         icon_color=AppColors.ORANGE_BURNT,

@@ -15,6 +15,7 @@ class AgendaModel:
         self.detail_agenda_url     = Config.DETAIL_AGENDA_URL
         self.update_agenda_url     = Config.UPDATE_AGENDA_URL
         self.enviar_confirmacao_url= Config.CONF_AGENDA_ZAP   
+        self.list_pendentes_url    = Config.LIST_PENDENTES_URL
 
 
     async def _post_request(self, url:str, payload:dict, token: str) -> httpx.Response:
@@ -78,9 +79,9 @@ class AgendaModel:
         return await self._post_request(self.create_event_calendar_url, payload, token)
     
 
-    async def UpadateAgendaData(self, id_agenda: int, id_prof:int, telefone:int, id_client:int, 
+    async def UpadateAgendaData(self, id_agenda: int, id_prof:int, telefone:str, id_client:int, 
                                 date:str, hora_ini:str, hora_fim:str,
-                                 name_client:str, event_id:str, token:str):
+                                 name_client:str, event_id:str, token:str, sinal:str, valor:str):
         payload = {
             "id":id_agenda,
             "id_prof": id_prof,
@@ -90,7 +91,9 @@ class AgendaModel:
             "id_client":id_client,
             "client":name_client,
             "telefone":telefone,
-            "event_id":event_id
+            "event_id":event_id,
+            "sinal":sinal,
+            "valor":valor
         }    
 
 
@@ -133,7 +136,8 @@ class AgendaModel:
 
     async def CreateAgendamento(self, id_prof:int, telefone:int, id_client:int, 
                                 date:str, hora_ini:str, hora_fim:str,
-                                 name_client:str, event_id:str, token:str):
+                                 name_client:str, event_id:str, token:str,
+                                 valor='', sinal='', id_loja:str=''):
         payload = {
             "id_prof": id_prof,
             "date":date,
@@ -142,7 +146,18 @@ class AgendaModel:
             "id_client":id_client,
             "client_name":name_client,
             "telefone":telefone,
-            "event_id":event_id
+            "event_id":event_id,
+            "valor":valor,
+            "sinal":sinal,
+            "id_loja":id_loja
         }
 
         await self._post_request(self.create_agenda_url, payload, token)
+
+
+    async def list_pendentes(self, id_profissional: int, token: str):
+        payload = {
+            "id_profissional": id_profissional
+        }    
+
+        return await self._post_request(self.list_pendentes_url, payload, token)

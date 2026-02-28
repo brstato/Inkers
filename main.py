@@ -16,6 +16,7 @@ from view.agendaturnosview import AgendaTurnosView
 from view.anamneseview import AnamneseView
 from view.anamnese_response import AnamneseResponse
 from view.despesasview import DespesasView
+from view.estudioview import EstudioView
 import asyncio
 
 async def main(page: ft.Page):
@@ -59,6 +60,8 @@ async def main(page: ft.Page):
                 page.views.append(DespesasView(page))    
             elif troute.match("/agendaturnos"):
                 page.views.append(AgendaTurnosView(page))  
+            elif troute.match("/estudio"):
+                page.views.append(EstudioView(page))                 
 
             page.update()
 

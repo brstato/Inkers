@@ -28,6 +28,9 @@ class Config:
     LIST_CLIENT_TEL          = f"{BASE_API_URL}/public/agenda/list_client_tel"
     LIST_PROFISSIONAL_ID     = f"{BASE_API_URL}/public/agenda/list_profissional_id"
     LIST_TURNOS_AGENDA       = f"{BASE_API_URL}/public/agenda/turnos"
+    SOLICITAR_AGENDAMENTO    = f"{BASE_API_URL}/public/agenda/solicitar"
+    LIST_PENDENTES_URL       = f"{BASE_API_URL}/agenda/pendentes"
+    NOTIFY_PENDENTES_URL     = f"{BASE_API_URL}/agenda/notifica"
     
 
     CREATE_ANAMENESE_URL   = f"{BASE_API_URL}/anamnese/create"

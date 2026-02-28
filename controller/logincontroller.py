@@ -60,8 +60,6 @@ class LoginController:
         self.page.session.store.set("google_access_token", token_obj.access_token)
         self.page.session.store.set("google_refresh_token", token_obj.refresh_token)
 
-        refresh = token_obj.refresh_token
-
         g_user = self.page.auth.user
         
         g_mail = g_user["email"]
@@ -75,9 +73,19 @@ class LoginController:
 
           if response.status_code == 200:
             data = json.loads(response.content)
-            self.page.session.store.set("r_token", data["r_token"])
+            r_token = data["r_token"]
+            user_id = data["message"]["id"]
+
+            # Sessão (volátil)
+            self.page.session.store.set("r_token", r_token)
             self.page.session.store.set("token",   data["token"  ])
-            self.page.session.store.set("id",      data["message"]["id"])
+            self.page.session.store.set("id",      user_id)
+
+            # Persistente: salva para auto-login na próxima sessão
+            await ft.SharedPreferences().set("r_token",              r_token)
+            await ft.SharedPreferences().set("id",                   str(user_id))
+            await ft.SharedPreferences().set("google_refresh_token", token_obj.refresh_token or "")
+            await ft.SharedPreferences().set("login_method",         "google")
 
             self.page.update()
             self.page.go("/main")
@@ -135,9 +143,9 @@ class LoginController:
 
 
     async def refresh_token(self, view_instance):
-
-        r_token:str = self.page.session.store.get("r_token")
-        id:str      = self.page.session.store.get("id")
+        # Lê r_token e id do SharedPreferences (persistente entre sessões)
+        r_token: str = await ft.SharedPreferences().get("r_token")
+        user_id: str = await ft.SharedPreferences().get("id")
 
         if r_token:
             view_instance.progress_ring.visible = True
@@ -145,18 +153,42 @@ class LoginController:
 
             response = await self.LoginModel.refresh_token(
                 r_token,
-                id
+                user_id
             )
 
             if response.status_code == 200:
-                self.page.session.store.set("token", json.loads(response.content)["token"]) 
-                self.page.session.store.set("r_token", json.loads(response.content)["r_token"]) 
-               
+                data = json.loads(response.content)
+                new_token   = data["token"]
+                new_r_token = data["r_token"]
+
+                # SharedPreferences: atualiza persistência para a próxima sessão
+                await ft.SharedPreferences().set("r_token", new_r_token)
+                await ft.SharedPreferences().set("id",      user_id)
+
+                # session.store: necessário para o MainView e demais views lerem nesta sessão
+                self.page.session.store.set("token",   new_token)
+                self.page.session.store.set("r_token", new_r_token)
+                self.page.session.store.set("id",      user_id)
+
+                # Busca o google_refresh_token e coloca na sessão também
+                g_refresh = await ft.SharedPreferences().get("google_refresh_token")
+                if g_refresh:
+                    self.page.session.store.set("google_refresh_token", g_refresh)
+
                 self.page.update()
                 await self.page.push_route("/main")
+            else:
+                # Token inválido/expirado: limpa persistência para forçar novo login
+                await self.clear_persistent_tokens()
 
             view_instance.progress_ring.visible = False
             self.page.update()
+
+
+    async def clear_persistent_tokens(self):
+        """Remove tokens persistidos do client_storage (usado no logout ou token inválido)."""
+        for key in ("r_token", "id", "google_refresh_token", "login_method"):
+            await ft.SharedPreferences().remove(key)
 
 
     async def handle_login(self, e, view_instance):

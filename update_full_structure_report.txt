@@ -1,0 +1,32 @@
+Relatório de Sincronização — 2026-02-25 20:58:18
+============================================================
+
+══ TABELAS ══
+
+══ COLUNAS ══
+  [+] AGENDA.SINAL  (NUMERIC(15,2))
+  [-] AGENDA.COD_CLIENTE existe em PROD mas não em DEV (não removido — manual)
+  [-] AGENDA.FUNCIONARIO existe em PROD mas não em DEV (não removido — manual)
+  [-] AGENDA.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
+  [-] DESPESAS.ID_CAIXA existe em PROD mas não em DEV (não removido — manual)
+  [-] DESPESAS.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
+  [-] DESPESAS.PAGO existe em PROD mas não em DEV (não removido — manual)
+  [-] DESPESAS.PROFISSIONAL existe em PROD mas não em DEV (não removido — manual)
+  [!] DESPESAS.VALOR: DEV=NUMERIC(15,2)  PROD=FLOAT  → INCOMPATÍVEL (manual)
+
+══ CONSTRAINTS ══
+
+══ ÍNDICES ══
+
+══ STORED PROCEDURES / FUNCTIONS ══
+  [≠] PROCEDURE alterada: REGISTRAR_VENDA_LOTE
+  [≠] PROCEDURE alterada: SP_BUSCA_DADOS_CLIENTE
+  [≠] PROCEDURE alterada: SP_DESPESAS
+  [≠] PROCEDURE alterada: SP_LISTAR_DESPESAS_MES
+  [≠] PROCEDURE alterada: SP_RESUMO_FINANCEIRO
+
+══ TRIGGERS ══
+
+══ APLICANDO NO BANCO DE PRODUÇÃO ══
+
+  ✅ Todos os 6 statement(s) aplicados com sucesso!
