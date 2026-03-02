@@ -18,12 +18,14 @@ from view.anamnese_response import AnamneseResponse
 from view.despesasview import DespesasView
 from view.estudioview import EstudioView
 import asyncio
+from urllib.parse import urlparse
 
 async def main(page: ft.Page):
     page.title = "App.Inkers"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
-    page.wasm = True
+    page.wasm = True    
+    page.pwa = True
     #page.platform_brightness()
 
     def view_pop(view):
@@ -35,33 +37,47 @@ async def main(page: ft.Page):
     async def route_change(e=None):
         page.views.clear()
         troute = ft.TemplateRoute(page.route)
+
+        url = page.url
+
+        parsed_url = urlparse(url)
+
+        DominioCompleto = parsed_url.netloc.split(":")[0]
+
+        SubDominio = ""
+
+        if DominioCompleto and ".inkers.com.br" in DominioCompleto:
+            SubDominio = DominioCompleto.split(".")[0]
+
         try:
-            if troute.match("/"):
-                page.views.append(LoginView(page))
-            elif troute.match("/account"):
-                page.views.append(AccountView(page)) 
-            elif troute.match("/main"):
-                page.views.append(MainView(page))     
-            elif troute.match("/professional"):   
-                page.views.append(ProfessionalView(page)) 
-            elif troute.match("/product"):   
-                page.views.append(ProductView(page))    
-            elif troute.match("/services"):   
-                page.views.append(ServiceView(page))   
-            elif troute.match("/clients"):
-                page.views.append(ClientView(page))
-            elif troute.match("/agenda"):
-                page.views.append(AgendaView(page))               
-            elif troute.match("/anamnese/:name/:tel"):
-                page.views.append(AnamneseView(page, troute.name, troute.tel))         
-            elif troute.match("/anamneseresponse"):                                  
-                page.views.append(AnamneseResponse())
-            elif troute.match("/despesas"):
-                page.views.append(DespesasView(page))    
-            elif troute.match("/agendaturnos"):
-                page.views.append(AgendaTurnosView(page))  
-            elif troute.match("/estudio"):
-                page.views.append(EstudioView(page))                 
+            if SubDominio == 'app' or SubDominio == 'devs' or SubDominio == 'dev':
+                if troute.match("/"):
+                    page.views.append(LoginView(page))
+                elif troute.match("/account"):
+                    page.views.append(AccountView(page)) 
+                elif troute.match("/main"):
+                    page.views.append(MainView(page))     
+                elif troute.match("/professional"):   
+                    page.views.append(ProfessionalView(page)) 
+                elif troute.match("/product"):   
+                    page.views.append(ProductView(page))    
+                elif troute.match("/services"):   
+                    page.views.append(ServiceView(page))   
+                elif troute.match("/clients"):
+                    page.views.append(ClientView(page))
+                elif troute.match("/agenda"):
+                    page.views.append(AgendaView(page))               
+                elif troute.match("/anamnese/:name/:tel"):
+                    page.views.append(AnamneseView(page, troute.name, troute.tel))         
+                elif troute.match("/anamneseresponse"):                                  
+                    page.views.append(AnamneseResponse())
+                elif troute.match("/despesas"):
+                    page.views.append(DespesasView(page))    
+                elif troute.match("/agendaturnos"):
+                    page.views.append(AgendaTurnosView(page))  
+                           
+            else:
+                page.views.append(EstudioView(page=page, name=SubDominio))
 
             page.update()
 

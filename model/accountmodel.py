@@ -7,10 +7,10 @@ class AccountModel:
     registerURL:str          = Config.ACCOUNT_REGISTER_URL
     getaccountdataURL:str    = Config.GET_ACCOUNT_DATA_URL
     updateaccountdataURL:str = Config.UPDATE_ACCOUNT_URL
-
+    getslugurl:str           = Config.GET_SLUG_URL
 
     async def updateAccountData(self, id:str, nome:str, telefone:str, email:str,
-            senha:str, token,horarios) -> httpx.Response:
+            senha:str, token, horarios, slug) -> httpx.Response:
         
         payload = {
             "nome": nome,
@@ -18,7 +18,8 @@ class AccountModel:
             "email": email,
             "senha": senha,
             "id": id,
-            "horario": horarios
+            "horario": horarios,
+            "slug": slug
         }
         header = {
             "Authorization": f"Bearer {token}",
@@ -56,12 +57,20 @@ class AccountModel:
             return response
 
 
-    async def register(self, username:str, telefone: str, email:str, password: str, horario) -> httpx.Response:
+    async def register(self, 
+                        username:str, 
+                        telefone: str, 
+                        email:str, 
+                        password: str, 
+                        slug:str,
+                        horario
+    ) -> httpx.Response:
         payload = {
             "nome": username,
             "telefone": telefone,
             "email": email,
             "senha":password,
+            "slug": slug,
             "horario": horario
         }
         header = {
@@ -72,6 +81,25 @@ class AccountModel:
 
             response = await client.post(
                 self.registerURL, 
+                json=payload,
+                headers=header
+            )
+
+            return response
+
+
+    async def get_slug(self, slug:str) -> httpx.Response:
+        payload = {
+            "slug": slug,
+        }
+        header = {
+            'Content-Type': 'application/json'
+        }
+
+        async with httpx.AsyncClient() as client:
+
+            response = await client.post(
+                self.getslugurl, 
                 json=payload,
                 headers=header
             )

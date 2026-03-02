@@ -1,15 +1,32 @@
 import flet as ft
 from view.controls.colors import AppColors
+from view.controls.custonprogressring import CustonProgressRing
+from controller.studiocontroller import StudioController
 
 class EstudioView(ft.View):
     def __init__(self, page: ft.Page, name: str = ""):
         super().__init__(
             route=f"/estudio",
-            bgcolor=AppColors.BACKGROUND_DARK,
+            bgcolor=AppColors.BLACK,
             scroll=ft.ScrollMode.AUTO,
             padding=0,
         )
-        
+        self.name = name
+        self.progress_ring = CustonProgressRing()
+        self.controller = StudioController(page, self)
+
+        self.txt_name_studio = ft.Text("Estúdio", size=20, weight=ft.FontWeight.BOLD, color=AppColors.WHITE)
+
+        top_bar = ft.Container(
+            content=ft.Row(
+                controls=[
+                    self.txt_name_studio,
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+            ),
+            padding=ft.padding.symmetric(vertical=20, horizontal=20),
+            bgcolor=AppColors.GRAY_DARK,
+        )
         # --- Hero Section ---
         hero_content = ft.Container(
             content=ft.Column(
@@ -155,17 +172,22 @@ class EstudioView(ft.View):
         )
 
         self.controls = [
-            ft.Column(
+            ft.Stack(
                 controls=[
-                    hero_content,
-                    styles_content,
-                    steps_content,
-                    guarantee_content,
-                    footer_content,
-                ],
-                #spacing=0,
-                scroll=ft.ScrollMode.AUTO,
-            )
+                    ft.Column(
+                        controls=[
+                            top_bar,
+                            hero_content,
+                            styles_content,
+                            steps_content,
+                            guarantee_content,
+                            footer_content,
+                        ],
+                        scroll=ft.ScrollMode.AUTO,
+                    ),
+                    self.progress_ring,
+                ]
+            ),
         ]
 
     def _create_style_card(self, title, description, icon):
@@ -209,3 +231,12 @@ class EstudioView(ft.View):
 
     def go_to_home(self, e):
         self.page.go("/main")
+
+
+    def did_mount(self):
+        self.page.run_task(self.aux)    
+        
+
+    async def aux(self):
+        await self.controller.get_info_studio(self.name)    
+        

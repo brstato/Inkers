@@ -26,6 +26,7 @@ class AccountView(ft.View):
         self.controller = AccountController(page, self)    
 
         self.txt_username = CustomTextField("Estudio ou tatuador") 
+        self.txt_slug     = CustomTextField(label="Apelido", on_blur=self.controller.get_slug)
         self.txt_telefone = CustomTextField("Telefone", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER) 
         self.txt_email    = CustomTextField("e-mail", keyboard_type=ft.KeyboardType.EMAIL) 
         self.txt_password = CustomTextField("Senha", password=True, can_reveal_password=True) 
@@ -88,6 +89,7 @@ class AccountView(ft.View):
         main_container = ft.Column(
             controls=[
                 self.txt_username,
+                self.txt_slug,
                 self.txt_telefone,
                 self.txt_email,
                 self.txt_password,

@@ -15,6 +15,33 @@ class AccountController:
         self.instance = instance
 
 
+    async def get_slug(self):
+        self.instance.progressRing.visible = True
+        self.page.update()
+        slug = self.instance.txt_slug.value
+        response = await self.model.get_slug(slug)
+        if response.status_code == 200:
+            data = json.loads(response.content)
+            slug_bool:bool = bool(data.get("slug", False))
+            id_loja:str    = data.get("id_loja", "")
+            if (slug_bool == True and id_loja != self.instance.id) or (slug_bool == True and self.instance.id == ""):
+                dialog = CustonDialog(
+                    self.page,
+                    title="Atenção",
+                    content="Este apelido já está em uso!",
+                    actions=[
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
+                    ]
+                )
+                self.page.show_dialog(dialog)    
+
+                self.instance.txt_slug.border = ft.InputBorder.OUTLINE 
+            else:        
+                self.instance.txt_slug.border = ft.InputBorder.UNDERLINE
+        self.instance.progressRing.visible = False
+        self.page.update()
+                
+
     async def get_schedule_json_data(self, view_instance):
         import json
         data = {}
@@ -24,9 +51,9 @@ class AccountController:
 
 
     async def getAccountData(self, view_instance):
-        id: str = self.page.session.store.get("id")
-        token: str = self.page.session.store.get("token")
-        r_token: str = self.page.session.store.get("r_token")
+        id:str      = self.page.session.store.get("id"     )
+        token:str   = self.page.session.store.get("token"  )
+        r_token:str = self.page.session.store.get("r_token")
 
         if id and r_token:
 
@@ -38,17 +65,20 @@ class AccountController:
             if response.status_code == 401:
                 response = await LoginModel().refresh_token(r_token, id)
                 if response.status_code == 200:
-                    self.page.session.store.set("token", json.loads(response.content)["token"])
-                    self.page.session.store.set("r_token", json.load(response.content)["r_token"])
+                    self.page.session.store.set("token",   json.loads(response.content)["token"  ])
+                    self.page.session.store.set("r_token", json.loads(response.content)["r_token"])
 
                     token: str = self.page.session.store.get("token")
                     r_token: str = self.page.session.store.get("r_token")
 
                     response = await self.model.getAccountData(id, token)
 
-                    view_instance.txt_username.value = json.loads(response.content)["nome"]
-                    view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
-                    view_instance.txt_email.value = json.loads(response.content)["email"]
+                    data = json.loads(response.content)
+
+                    view_instance.txt_username.value = data.get("nome",     "")
+                    view_instance.txt_telefone.value = data.get("telefone", "")                
+                    view_instance.txt_email.value    = data.get("email",    "")
+                    view_instance.txt_slug.value     = data.get("slug",     "")
 
                     self.page.update()
                 else:    
@@ -56,9 +86,10 @@ class AccountController:
 
             elif response.status_code == 200:
                 data = json.loads(response.content)
-                view_instance.txt_username.value = data.get("nome", "")
+                view_instance.txt_username.value = data.get("nome",     "")
                 view_instance.txt_telefone.value = data.get("telefone", "")
-                view_instance.txt_email.value    = data.get("email", "")
+                view_instance.txt_email.value    = data.get("email",    "")
+                view_instance.txt_slug.value     = data.get("slug",     "")
 
                 horario_data = data.get("horario", {})
 
@@ -102,6 +133,7 @@ class AccountController:
         self.email    = view_instance.txt_email.value
         self.password = view_instance.txt_password.value
         self.conf_pass= view_instance.txt_conf_password.value
+        self.slug     = view_instance.txt_slug.value
 
         self.id:str      = view_instance.id
         self.token:str   = view_instance.token
@@ -109,7 +141,7 @@ class AccountController:
 
         if not self.r_token:
 
-            if not all([self.username, self.telefone, self.email, self.password, self.conf_pass]):
+            if not all([self.username, self.telefone, self.email, self.password, self.conf_pass, self.slug]):
                 self.dialog = CustonDialog(
                     self.page,
                     title="Atenção",
@@ -142,7 +174,9 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
-                self.password
+                self.password,
+                self.slug,
+                horario_funcionamento
             )    
 
             view_instance.progressRing.visible = False         
@@ -208,7 +242,8 @@ class AccountController:
                 self.email,
                 self.password,
                 self.token, 
-                horario_funcionamento   
+                horario_funcionamento,
+                self.slug   
             )    
 
             view_instance.progressRing.visible = False     
@@ -232,11 +267,12 @@ class AccountController:
                 response = await LoginModel().refresh_token(r_token, id)
                 
                 if response.status_code == 200:
-                    self.page.session.store.set("token", json.loads(response.content)["token"])
-                    self.page.session.store.set("r_token", json.load(response.content)["r_token"])
+                    data = json.loads(response.content)
+                    self.page.session.store.set("token",   data["token"  ])
+                    self.page.session.store.set("r_token", data["r_token"])
 
-                    token: str = json.loads(response.content)["token"]
-                    r_token: str = json.load(response.content)["r_token"]
+                    token:str   = data["token"  ]
+                    r_token:str = data["r_token"]
 
                     view_instance.token  = token
                     view_instance.r_token = r_token
@@ -248,7 +284,8 @@ class AccountController:
                         self.email,
                         self.password,
                         token,
-                        horario_funcionamento   
+                        horario_funcionamento,
+                        self.slug   
                     )    
 
                     if response.status_code == 200:
