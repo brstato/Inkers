@@ -53,7 +53,7 @@ class CustonCardItensAgenda(ft.Card):
         self.selected:bool = False
         self.tap = tap
         self.instance = instance
-        self.height = 135
+        self.height = 145
         self.telefone = telefone
         self.delete = delete
         self.event_id = event_id
@@ -65,7 +65,7 @@ class CustonCardItensAgenda(ft.Card):
 
         self.edtValor = CustomTextField(
             label="Valor de venda:", 
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         )
 

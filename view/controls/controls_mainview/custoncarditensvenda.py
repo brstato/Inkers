@@ -53,7 +53,7 @@ class CustonCardItensVenda(ft.Card):
 
         self.edtValVenda = CustomTextField(
             label="Valor de venda:", 
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         )
 

@@ -210,13 +210,13 @@ class AgendaView(ft.View):
         self.edt_edt_valor = CustomTextField(
             label='Valor',
             keyboard_type=ft.KeyboardType.NUMBER,
-            regex=r"^[0-9,]*$"
+            #regex=r"^[0-9,]*$"
         )
 
         self.edt_edt_sinal = CustomTextField(
             label='Sinal',
             keyboard_type=ft.KeyboardType.NUMBER,
-            regex=r"^[0-9,]*$"
+            #regex=r"^[0-9,]*$"
         )
 
 

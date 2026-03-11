@@ -12,15 +12,28 @@ class EstudioView(ft.View):
             padding=0,
         )
         self.name = name
+        self.telefone:str = ''
         self.progress_ring = CustonProgressRing()
         self.controller = StudioController(page, self)
+        self.whatsapp_url = ''
 
         self.txt_name_studio = ft.Text("Estúdio", size=20, weight=ft.FontWeight.BOLD, color=AppColors.WHITE)
+        self.btn_whatsapp = ft.IconButton(
+            icon=ft.Icons.PHONE,
+            icon_color=AppColors.WHITE,
+            icon_size=30,
+            url=self.whatsapp_url,
+            on_click=lambda e: print(self.whatsapp_url)
+            #on_click=self.controller.open_whatsapp,
+        )
+
 
         top_bar = ft.Container(
             content=ft.Row(
                 controls=[
                     self.txt_name_studio,
+                    ft.Container(expand=True),
+                    self.btn_whatsapp,
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
             ),
@@ -28,23 +41,26 @@ class EstudioView(ft.View):
             bgcolor=AppColors.GRAY_DARK,
         )
         # --- Hero Section ---
+
+        self.titulo = ft.Text(
+            "Transforme sua ideia em arte.",
+            size=48,
+            weight=ft.FontWeight.W_900,
+            color=AppColors.WHITE,
+            text_align=ft.TextAlign.CENTER,
+        )
+        self.subtitulo = ft.Text(
+            "Tatuagens exclusivas e autorais feitas sob medida para você.\nEstúdio focado em biossegurança e resultados premium.",
+            size=18,
+            color=AppColors.GRAY_LIGHT2,
+            text_align=ft.TextAlign.CENTER,
+            #spacing=10,
+        )
         hero_content = ft.Container(
             content=ft.Column(
                 controls=[
-                    ft.Text(
-                        "Transforme sua ideia em arte.",
-                        size=48,
-                        weight=ft.FontWeight.W_900,
-                        color=AppColors.WHITE,
-                        text_align=ft.TextAlign.CENTER,
-                    ),
-                    ft.Text(
-                        "Tatuagens exclusivas e autorais feitas sob medida para você.\nEstúdio focado em biossegurança e resultados premium.",
-                        size=18,
-                        color=AppColors.GRAY_LIGHT2,
-                        text_align=ft.TextAlign.CENTER,
-                        #spacing=10,
-                    ),
+                    self.titulo,
+                    self.subtitulo,
                     ft.Container(height=30),
                     ft.ElevatedButton(
                         content="AGENDAR MEU ORÇAMENTO",
@@ -143,21 +159,24 @@ class EstudioView(ft.View):
         )
 
         # --- Footer / Final CTA ---
+        self.btn_whatsapp_footer = ft.ElevatedButton(
+            content="FALAR NO WHATSAPP",
+            icon=ft.Icons.CHAT,
+            bgcolor=ft.Colors.GREEN_700,
+            color=AppColors.WHITE,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=8),
+                padding=ft.padding.all(20),
+            ),
+            url=self.whatsapp_url,
+        )
+
         footer_content = ft.Container(
             content=ft.Column(
                 controls=[
                     ft.Text("Pronto para começar?", size=36, weight=ft.FontWeight.BOLD, color=AppColors.WHITE),
                     ft.Container(height=20),
-                    ft.ElevatedButton(
-                        content="FALAR NO WHATSAPP",
-                        icon=ft.Icons.CHAT,
-                        bgcolor=ft.Colors.GREEN_700,
-                        color=AppColors.WHITE,
-                        style=ft.ButtonStyle(
-                            shape=ft.RoundedRectangleBorder(radius=8),
-                            padding=ft.padding.all(20),
-                        ),
-                    ),
+                    self.btn_whatsapp_footer,
                     ft.Container(height=40),
                     ft.Text("© 2026 Inkers App - Studio System. Todos os direitos reservados.", size=12, color=AppColors.GRAY_MED)
                 ],
@@ -234,9 +253,8 @@ class EstudioView(ft.View):
 
 
     def did_mount(self):
-        self.page.run_task(self.aux)    
+        self.page.run_task(self.controller.get_info_studio, self.name)    
         
 
-    async def aux(self):
-        await self.controller.get_info_studio(self.name)    
+ 
         

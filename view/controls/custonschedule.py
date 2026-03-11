@@ -25,7 +25,12 @@ class ScheduleItem(ft.Container):
             # border_color=AppColors.GRAY_DARK,
             # disabled=False
         # )
-        self.hour_options = [ft.dropdown.Option(f"{i:02d}:00") for i in range(24)]
+        self.hour_options = [
+            ft.dropdown.Option(
+                text=f"{i:02d}:00",
+                content=ft.Text(f"{i:02d}:00", color=AppColors.GRAY_LIGHT)
+            ) for i in range(24)
+        ]
         self.txt_start = ft.Dropdown(
             options=self.hour_options,
             value="09:00", # Valor padrão
@@ -85,7 +90,7 @@ class ScheduleItem(ft.Container):
     def set_data(self, data):
         # Preenche os dados vindos do banco
         if data:
-            self.cb_active.value = data.get("aberto", False)
+            self.cb_active.value = data.get("aberto",   False)
             self.txt_start.value = data.get("inicio", "09:00")
-            self.txt_end.value = data.get("fim", "18:00")
+            self.txt_end.value   = data.get("fim",    "18:00")
             self.toggle_inputs(None) # Atualiza visualmente

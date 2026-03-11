@@ -105,7 +105,7 @@ class AgendaTurnosView(ft.View):
                 content=ft.Column(
                     tight=True,
                     controls=[
-                        ft.Text("Confirmar Agendamento", size=20, weight="bold"),
+                        ft.Text("Confirmar agendamento", size=20, weight="bold", color=AppColors.GRAY_LIGHT2),
                         ft.ElevatedButton(
                             "Confirmar", 
                             style=ft.ButtonStyle(
@@ -138,7 +138,7 @@ class AgendaTurnosView(ft.View):
             ft.Divider(color="transparent", height=30),
             ft.Container(
                 padding=ft.padding.symmetric(horizontal=20),
-                content=ft.Text("Horarios Disponíveis", size=18, weight="bold")
+                content=ft.Text("Horarios Disponíveis", size=18, weight="bold", color=AppColors.GRAY_LIGHT2)
             ),
             ft.Container(height=10),
             ft.Container(
@@ -266,7 +266,7 @@ class AgendaTurnosView(ft.View):
                                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                                 controls=[
                                     ft.Icon(dados["icon"], color=AppColors.ORANGE_DARK, size=30),
-                                    ft.Text(nome_turno, weight="bold", size=16),
+                                    ft.Text(nome_turno, weight="bold", size=16, color=AppColors.GRAY_LIGHT2),
                                     #ft.Text(dados["horario"], size=12, color=AppColors.GRAY_LIGHT2)
                                 ]
                             ),

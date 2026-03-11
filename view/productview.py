@@ -28,11 +28,11 @@ class ProductView(ft.View):
 
         self.edtNome     = CustomTextField(label="Nome do produto:")    
 
-        self.edtValcusto = CustomTextField(label="Valor de custo:",  chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtValVenda = CustomTextField(label="Valor de venda:",  chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValcusto = CustomTextField(label="Valor de custo:",  regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValVenda = CustomTextField(label="Valor de venda:",  regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
-        self.edtEstoque  = CustomTextField(label="Estoque:",         chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtMEstoque = CustomTextField(label="Estoque mínimo:",  chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtEstoque  = CustomTextField(label="Estoque:",         regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtMEstoque = CustomTextField(label="Estoque mínimo:",  regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
         self.insumo = ft.Switch(
             label="Insumo",

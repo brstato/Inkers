@@ -18,6 +18,11 @@ class AccountController:
     async def get_slug(self):
         self.instance.progressRing.visible = True
         self.page.update()
+        
+        # Remove espaços antes de consultar
+        self.instance.txt_slug.value = self.instance.txt_slug.value.strip().replace(" ", "")
+        self.instance.txt_slug.update()
+        
         slug = self.instance.txt_slug.value
         response = await self.model.get_slug(slug)
         if response.status_code == 200:
@@ -41,6 +46,15 @@ class AccountController:
         self.instance.progressRing.visible = False
         self.page.update()
                 
+
+    def clean_slug(self, e):
+        # Remove espaços enquanto digita
+        if " " in e.control.value:
+            e.control.value = e.control.value.replace(" ", "")
+        if "." in e.control.value:
+            e.control.value = e.control.value.replace(".", "")    
+        e.control.update()
+
 
     async def get_schedule_json_data(self, view_instance):
         import json

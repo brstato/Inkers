@@ -138,7 +138,7 @@ class ProfessionalController:
     async def listProfessionalData(self):
 
         if not self.instance.token or not self.instance.id_loja:    
-            self.page.push_route("/")
+            await self.page.push_route("/")
             self.page.update()
             return
 

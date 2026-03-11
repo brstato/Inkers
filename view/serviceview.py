@@ -27,9 +27,9 @@ class ServiceView(ft.View):
         self.controller  = ServiceController(page, self)
 
         self.edtNome     = CustomTextField(label="Nome do produto:")    
-        self.edtValcusto = CustomTextField(label="Valor de custo:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtValVenda = CustomTextField(label="Valor de venda:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtComissao = CustomTextField(label="Comissão do serviço em %:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValcusto = CustomTextField(label="Valor de custo:", regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValVenda = CustomTextField(label="Valor de venda:", regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtComissao = CustomTextField(label="Comissão do serviço em %:", regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
         self.Comissionado  = ft.Switch(
             label="Comissionado",            

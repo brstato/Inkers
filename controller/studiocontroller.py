@@ -13,8 +13,14 @@ class StudioController:
         if response.status_code == 200:
             data = json.loads(response.content)
             nome = data.get("nome")
+            self.instance.telefone = data.get("telefone")
+            self.instance.whatsapp_url = f"https://wa.me/55{self.instance.telefone}"
+            self.instance.btn_whatsapp.url = self.instance.whatsapp_url
+            self.instance.btn_whatsapp_footer.url = self.instance.whatsapp_url
             self.instance.txt_name_studio.value = nome
-            self.instance.update()
+            self.instance.titulo.value = data.get("titulo")
+            self.instance.subtitulo.value = data.get("subtitulo")
+            self.page.update()
 
                         
 

@@ -17,6 +17,7 @@ from view.anamneseview import AnamneseView
 from view.anamnese_response import AnamneseResponse
 from view.despesasview import DespesasView
 from view.estudioview import EstudioView
+from view.siteview import SiteView
 import asyncio
 from urllib.parse import urlparse
 
@@ -75,6 +76,8 @@ async def main(page: ft.Page):
                     page.views.append(DespesasView(page))    
                 elif troute.match("/agendaturnos"):
                     page.views.append(AgendaTurnosView(page))  
+                elif troute.match("/site"):
+                    page.views.append(SiteView(page))
                            
             else:
                 page.views.append(EstudioView(page=page, name=SubDominio))
@@ -91,7 +94,8 @@ async def main(page: ft.Page):
     #page.go("/")
     await route_change("/")        
 
-# if __name__ == "__main__":
-#     ft.run(main=main, assets_dir="assets", port=8087)
-app = ft.app(target=main, assets_dir="assets", export_asgi_app=True)
+if __name__ == "__main__":
+    ft.app(target=main, assets_dir="assets", port=8087, view=ft.AppView.WEB_BROWSER)
+else:
+    app = ft.app(target=main, assets_dir="assets", export_asgi_app=True)
 

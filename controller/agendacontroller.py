@@ -606,7 +606,7 @@ class AgendaController:
             options.append(
                 ft.DropdownOption(
                     style=ft.ButtonStyle(
-                        color=AppColors.GRAY_DARK,                    
+                        color=AppColors.GRAY_LIGHT2,                    
                     ),
                     text=nome,
                     key=json_key
@@ -732,10 +732,8 @@ class AgendaController:
             descricao=f"Atendimento agendado para o cliente {self.instance.client_name}, valor: {self.instance.edt_edt_valor.value}, sinal: {self.instance.edt_edt_sinal.value}."
         )
 
-        # Só envia confirmação com link se o link existir (ou envia sem)
-        # O método enviar_confirmacao agora deve lidar com link_google sendo '' ou None se necessário
         await self.enviar_confirmacao(
-            self.instance.client_telefone,
+            self.instance.edt_client_telefone.value,
             self.instance.client_name,
             data_str,
             hora_ini_str,

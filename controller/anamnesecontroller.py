@@ -219,39 +219,42 @@ class AnamneseController:
         def sim_nao(valor):
             return "Sim" if valor else "Não"
 
+        def v(val):
+            return val if val is not None else ''
+
         dto = AnamneseDTO(
-            profissao             = self.instance.profissao_input.value,
-            como_conheceu         = self.instance.origem_dropdown.value,
-            consumo               = self.instance.experiencia_radio.value,
+            profissao             = v(self.instance.profissao_input.value),
+            como_conheceu         = v(self.instance.origem_dropdown.value),
+            consumo               = v(self.instance.experiencia_radio.value),
             
             pratica_esporte       = sim_nao(self.instance.esporte_switch.value), 
-            qual_esporte          = self.instance.esporte_input.value,
+            qual_esporte          = v(self.instance.esporte_input.value),
             diabetico             = sim_nao(self.instance.diabetes_switch.value),
             hipertenso            = sim_nao(self.instance.hipertenso_switch.value),
             hemofilico            = sim_nao(self.instance.hemofilico_switch.value),
             problema_de_pele      = sim_nao(self.instance.problema_pele_switch.value),
-            qual_problema_de_pele = self.instance.problema_pele_input.value,
+            qual_problema_de_pele = v(self.instance.problema_pele_input.value),
             gestante_amamentando  = sim_nao(self.instance.gestante_switch.value),
             alcool_drogas         = sim_nao(self.instance.drogas_switch.value),
             doenca_transmissivel  = sim_nao(self.instance.doenca_transmissivel_switch.value),       
-            qual_doenca           = self.instance.doenca_transmissivel_input.value,
+            qual_doenca           = v(self.instance.doenca_transmissivel_input.value),
             alergia               = sim_nao(self.instance.alergia_switch.value),
-            qual_alergia          = self.instance.alergias_input.value,
+            qual_alergia          = v(self.instance.alergias_input.value),
             medicamento           = sim_nao(self.instance.medicamento_switch.value),
-            qual_medicamento      = self.instance.medicamentos_input.value,
+            qual_medicamento      = v(self.instance.medicamentos_input.value),
             concorda_com_termos   = sim_nao(self.instance.termo_check.value),
             gosto_piercing        = sim_nao(self.instance.piercings_switch.value),
             gosto_tatuagem        = sim_nao(self.instance.tatuagem_switch.value),
             
-            estilo_tatuagem       = self.instance.estilo_tatuagem_dropdown.value,
-            nome                  = self.instance.nome_input.value,
-            insta                 = self.instance.instagram_input.value,
+            estilo_tatuagem       = v(self.instance.estilo_tatuagem_dropdown.value),
+            nome                  = v(self.instance.nome_input.value),
+            insta                 = v(self.instance.instagram_input.value),
             assinatura            = assinatura_base64,
-            telefone              = self.instance.telefone_input.value,
-            data_nascimento       = self.instance.nascimento_input.value,
-            telefone_estudio      = self.instance.tel,
-            nome_estudio          = self.instance.name,
-            id_profissional       = self.instance.profissional_dropdown.value
+            telefone              = v(self.instance.telefone_input.value),
+            data_nascimento       = v(self.instance.nascimento_input.value),
+            telefone_estudio      = v(self.instance.tel),
+            nome_estudio          = v(self.instance.name),
+            id_profissional       = v(self.instance.profissional_dropdown.value)
         )
  
         response = await self.model.CreateAnamnese(dto)

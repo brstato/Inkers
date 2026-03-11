@@ -178,38 +178,38 @@ class MainView(ft.View):
 
         self.edt_troco_inicial = CustomTextField(
             label="Troco inicial",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=self.controller.calculo_troco
         ) 
 
         self.edt_troco_fechamento = CustomTextField(
             label="Troco de fechamento",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         ) 
 
         self.edt_dinheiro_fechamento = CustomTextField(
             label="Total de entrada em dinheiro",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         ) 
 
         self.edt_pix_fechamento = CustomTextField(
             label="Total de entrada em pix",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         )    
 
         self.edt_debito_fechamento = CustomTextField(
             label="Total de entrada em debito",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         )              
 
         self.edt_credito_fechamento = CustomTextField(
             label="Total de entrada em credito",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         ) 
 
@@ -259,7 +259,7 @@ class MainView(ft.View):
 
         self.edt_dinheiro = CustomTextField(
             label="Dinheiro",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             on_change=self.controller.calculo_troco,
             keyboard_type=ft.KeyboardType.NUMBER,
         )
@@ -278,7 +278,7 @@ class MainView(ft.View):
 
         self.edt_pix = CustomTextField(
             label="Pix",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             on_change=self.controller.calculo_troco,
             keyboard_type=ft.KeyboardType.NUMBER,
         )        
@@ -297,7 +297,7 @@ class MainView(ft.View):
 
         self.edt_debito = CustomTextField(
             label="Debito",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             on_change=self.controller.calculo_troco,
             keyboard_type=ft.KeyboardType.NUMBER,
         )    
@@ -316,7 +316,7 @@ class MainView(ft.View):
 
         self.edt_credito = CustomTextField(
             label="Credito",
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             on_change=self.controller.calculo_troco,
             keyboard_type=ft.KeyboardType.NUMBER,
         )          
@@ -492,7 +492,13 @@ class MainView(ft.View):
             elevation=5,
             expand=True,
             color=AppColors.GRAY_LIGHT2,
-            on_click=self.controller.create_instance_zap
+            on_click=self.controller.create_instance_zap,
+            bgcolor=AppColors.GRAY_DARK,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=8),
+                side=ft.BorderSide(1, AppColors.GRAY_MED3),
+                color=AppColors.GRAY_LIGHT,
+            ),
         )
 
         self.span_whatsapp = ft.TextSpan(
@@ -570,12 +576,13 @@ class MainView(ft.View):
                             ),                            
 
                             self.area_whatsapp,
-                            CustonButton(page, "Minha conta", "/account"),
-                            CustonButton(page, "Profissionais", "/professional"),
-                            CustonButton(page, "Produtos", "/product"),  
-                            CustonButton(page, "Serviços", "/services"),  
-                            CustonButton(page, "Clientes", "/clients"),    
-                            CustonButton(page, "Despesas", "/despesas"),                                                
+                            CustonButton(page, "Minha conta",     "/account"),
+                            CustonButton(page, "Profissionais",   "/professional"),
+                            CustonButton(page, "Produtos",        "/product"),  
+                            CustonButton(page, "Serviços",        "/services"),  
+                            CustonButton(page, "Clientes",        "/clients"),    
+                            CustonButton(page, "Despesas",        "/despesas"),  
+                            CustonButton(page, "Site",            "/site"),                                              
                                                
                             ft.Button(
                                 content="Sair",

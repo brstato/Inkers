@@ -26,8 +26,8 @@ class ProfessionalView(ft.View):
         self.id_prof = None
         self.controller = ProfessionalController(page, self)
         self.edtName     = CustomTextField(label="Nome do profissional:")    
-        self.edtTelefone = CustomTextField(label="Telefone:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtComissao = CustomTextField(label="Comissão, %:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtTelefone = CustomTextField(label="Telefone:", regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtComissao = CustomTextField(label="Comissão, %:", regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
 
         self.modalviewCreateProfessional = CustonModalView(

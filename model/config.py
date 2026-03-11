@@ -95,5 +95,7 @@ class Config:
 
     GET_INFO_STUDIO_URL      = f"{BASE_API_URL}/public/studio"
 
+    UPDATE_SITE_URL          = f"{BASE_API_URL}/site/update"
+
     CREATE_EVENT_CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
     G_REFRESH_TOKEN_URL       = "https://oauth2.googleapis.com/token"
