@@ -118,7 +118,7 @@ class MainController:
             qr_code = resposta.get('qrcode', {})
             par_code = qr_code.get('pairingCode', '')
 
-            self.page.clipboard(par_code)
+            await ft.Clipboard().set(par_code)
 
             zap_dialog = CustonDialog(
                 page=self.page,

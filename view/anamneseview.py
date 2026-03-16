@@ -92,7 +92,7 @@ class AnamneseView(ft.View):
 
         self.instagram_input = CustomTextField(
             label="Instagram (Opcional)", 
-            prefix_text="@"
+            #prefix_text="@"
         )
 
         self.area_dados_pessoais = ft.Container(

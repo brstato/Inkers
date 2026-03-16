@@ -10,13 +10,13 @@ class AccountModel:
     getslugurl:str           = Config.GET_SLUG_URL
 
     async def updateAccountData(self, id:str, nome:str, telefone:str, email:str,
-            senha:str, token, horarios, slug) -> httpx.Response:
+            token, horarios, slug) -> httpx.Response:
         
         payload = {
             "nome": nome,
             "telefone": telefone,
             "email": email,
-            "senha": senha,
+            #"senha": senha,
             "id": id,
             "horario": horarios,
             "slug": slug
@@ -61,7 +61,7 @@ class AccountModel:
                         username:str, 
                         telefone: str, 
                         email:str, 
-                        password: str, 
+                        #password: str, 
                         slug:str,
                         horario
     ) -> httpx.Response:
@@ -69,7 +69,7 @@ class AccountModel:
             "nome": username,
             "telefone": telefone,
             "email": email,
-            "senha":password,
+            #"senha":password,
             "slug": slug,
             "horario": horario
         }

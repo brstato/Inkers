@@ -22,7 +22,7 @@ class LoginView(ft.View):
 
         self.logo = ft.Image(
             width=300,
-            src=f"logo.png", 
+            src=f"inkers_logo.png", 
         )
 
 
@@ -34,8 +34,8 @@ class LoginView(ft.View):
             expand=True,
             controls=[
                 ft.Button(
-                    content=ft.Text("Entrar usando google"),
-                    bgcolor=AppColors.ORANGE_BURNT,
+                    content=ft.Text("Entrar"),
+                    bgcolor=AppColors.ORANGE_DARK,
                     color=AppColors.WHITE,
                     elevation=5,
                     style=ft.ButtonStyle(
@@ -123,23 +123,32 @@ class LoginView(ft.View):
             ],
         )
 
+        self.infor = ft.Row(
+            expand=True,
+            controls=[
+                ft.TextButton(content='inkers.com.br', expand=True, url='inkers.com.br')
+            ]
+        )
+        
+
         main_container = ft.Container(
             expand=True,
             content=ft.Column(
-                expand=True,
+                #expand=True,
                 controls=[
                     self.logo,
-                    self.txt_username,
-                    self.txt_password,
-                    ft.Container(height=20), # Espaçamento
-                    self.btn_login,
+                    #self.txt_username,
+                    #self.txt_password,
+                    #ft.Container(height=20), # Espaçamento
+                    #self.btn_login,
                     self.btn_login_google,
-                    self.btn_create_account,
-                    self.btn_forgot_password,
-                    self.btn_support
+                    #self.btn_create_account,
+                    #self.btn_forgot_password,
+                    self.btn_support,
+                    self.infor
                 ],
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=15,
+                #horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                #spacing=15,
             ),
 
             padding=40,

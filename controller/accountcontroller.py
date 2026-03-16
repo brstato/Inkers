@@ -145,8 +145,8 @@ class AccountController:
         self.username = view_instance.txt_username.value
         self.telefone = view_instance.txt_telefone.value
         self.email    = view_instance.txt_email.value
-        self.password = view_instance.txt_password.value
-        self.conf_pass= view_instance.txt_conf_password.value
+        #self.password = view_instance.txt_password.value
+        #self.conf_pass= view_instance.txt_conf_password.value
         self.slug     = view_instance.txt_slug.value
 
         self.id:str      = view_instance.id
@@ -155,7 +155,7 @@ class AccountController:
 
         if not self.r_token:
 
-            if not all([self.username, self.telefone, self.email, self.password, self.conf_pass, self.slug]):
+            if not all([self.username, self.telefone, self.email, self.slug]):#self.password, self.conf_pass, self.slug]):
                 self.dialog = CustonDialog(
                     self.page,
                     title="Atenção",
@@ -188,7 +188,7 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
-                self.password,
+                #self.password,
                 self.slug,
                 horario_funcionamento
             )    
@@ -233,18 +233,18 @@ class AccountController:
                 self.page.update()
                 return
 
-            if self.password != self.conf_pass:
-                self.dialog = CustonDialog(
-                    self.page,
-                    title="Atenção",
-                    content="As senhas não coincidem!",
-                    actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
-                    ]
-                )
-                self.page.show_dialog(self.dialog)          
-                self.page.update()
-                return                
+            # if self.password != self.conf_pass:
+            #     self.dialog = CustonDialog(
+            #         self.page,
+            #         title="Atenção",
+            #         content="As senhas não coincidem!",
+            #         actions=[
+            #             ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
+            #         ]
+            #     )
+            #     self.page.show_dialog(self.dialog)          
+            #     self.page.update()
+            #     return                
 
             view_instance.progressRing.visible = True
             self.page.update()
@@ -254,7 +254,7 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
-                self.password,
+                #self.password,
                 self.token, 
                 horario_funcionamento,
                 self.slug   
@@ -296,7 +296,7 @@ class AccountController:
                         self.username,
                         self.telefone,
                         self.email,
-                        self.password,
+                        #self.password,
                         token,
                         horario_funcionamento,
                         self.slug   
