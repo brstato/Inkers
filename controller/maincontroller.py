@@ -29,6 +29,12 @@ class MainController:
         self.zap_model = ZapModel()
 
 
+    async def init_onesignal(self):
+        js_login = f"javascript:window.OneSignalDeferred?.push(function(OS) {{ OS.login('{self.instance.account_tel}'); }});"
+        await self.page.launch_url(js_login)
+
+
+
     async def notify_agenda_pendentes(self):
         response = await ProtectedApiCall(
             self.page, 
@@ -304,6 +310,7 @@ class MainController:
             await self.listClientes()
             await self.get_connection_zap()
             await self.notify_agenda_pendentes()
+            await self.init_onesignal()
 
             self.instance.progressRing.visible = False
             self.page.update()

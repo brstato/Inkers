@@ -3,6 +3,7 @@ from model.professionalmodel import ProfessionlModel
 from model.clientmodel import ClientModel
 from utils.formatcurr import formatar_moeda_brasileira, _parse_currency
 import json
+import os
 from controller.call_api import ProtectedApiCall
 from view.controls.controls_mainview.custoncardprofessional import CustonCardProfessional
 from model.agendamodel import AgendaModel
@@ -145,8 +146,8 @@ class AgendaController:
             if not self.instance.g_r_token:
                 return False
 
-            client_id = '184100860737-52caf580q16d4ht8hgkl7ak8p7dr92js.apps.googleusercontent.com'
-            client_secret = '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'
+            client_id = os.getenv('CLIENT_ID')
+            client_secret = os.getenv('SECRET_ID')
 
             try:
                 # Import requests se não tiver no topo: import requests
@@ -168,6 +169,7 @@ class AgendaController:
                     
                     return True
                 else:
+                    print(f"Falha ao renovar o token do Google: {response.status_code} - {response.text}")
                     return False
             except Exception as e:
                 print(f"Erro na renovação: {e}")

@@ -15,6 +15,41 @@ class AccountController:
         self.instance = instance
 
 
+    async def get_endereco(self):
+        self.instance.progressRing.visible = True   
+        self.page.update()
+
+        endereco = self.instance.txt_endereco.value
+
+        response = await self.model.get_endereco(endereco)
+
+        if response.status_code == 200:
+            data = json.loads(response.content)
+            self.instance.txt_endereco.value = data["logradouro"] + ", " + data["numero"] + ", "+ data["bairro"] + ", " + data["cidade"] + " - " + data["uf"] + ", "+ data["cep"]
+        elif response.status_code == 400:
+            dialog = CustonDialog(
+                self.page,
+                'Atenção',
+                'Informe o CEP.',
+                [
+                    ft.TextButton(
+                        'OK', 
+                        on_click=lambda e: 
+                        [
+                            self.page.pop_dialog(), 
+                            self.page.update()
+                        ]
+                    )
+                ]
+            )
+            self.page.show_dialog(dialog)
+        self.instance.progressRing.visible = False
+        self.page.update()
+        
+
+            
+
+
     async def get_slug(self):
         self.instance.progressRing.visible = True
         self.page.update()

@@ -53,6 +53,7 @@ class Config:
     GET_ACCOUNT_DATA_URL  = f"{BASE_API_URL}/account/get_data"
     ACCOUNT_REGISTER_URL  = f"{BASE_API_URL}/account/register"
     GET_SLUG_URL          = f"{BASE_API_URL}/account/get_slug"
+    GET_ENDERECO_URL      = f"{BASE_API_URL}/public/endereco"
       
     # Client URLs
     CREATE_CLIENT_URL     = f"{BASE_API_URL}/client/create"

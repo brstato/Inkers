@@ -21,12 +21,32 @@ from view.siteview import SiteView
 import asyncio
 from urllib.parse import urlparse
 
+APP_ID_ONESIGNAL = "77e0ed01-8f73-4091-8870-6561dd849c44"
+
 async def main(page: ft.Page):
     page.title = "App.Inkers"
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.wasm = True    
     page.pwa = True
+    js_inicializacao = f"""
+    javascript:(function(){{
+        if(!document.getElementById('os-script')){{
+            var s=document.createElement('script');
+            s.id='os-script';
+            s.src='https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+            s.defer=true;
+            document.head.appendChild(s);
+            
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
+            window.OneSignalDeferred.push(async function(OS) {{
+                await OS.init({{ appId: '{APP_ID_ONESIGNAL}' }});
+                OS.Slidedown.promptPush();
+            }});
+        }}
+    }})();
+    """
+    await page.launch_url(js_inicializacao.strip())
     #page.platform_brightness()
 
     def view_pop(view):

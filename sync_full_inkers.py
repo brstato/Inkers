@@ -86,6 +86,8 @@ def fb_type_str(field_type, char_len, field_sub_type, field_precision, field_sca
         if field_scale and field_scale < 0:
             return f"NUMERIC({field_precision or 18},{abs(field_scale)})"
         return "BIGINT"
+    if ft == 23:
+        return "BOOLEAN"
     if ft == 27:
         return "DOUBLE PRECISION"
     if ft == 35:
@@ -345,15 +347,28 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
     new_tables     = dev_tables - prod_tables
     removed_tables = prod_tables - dev_tables
 
+    dev_cols  = fetch_columns(cur_dev)
+    prod_cols = fetch_columns(cur_prod)
+
     for t in sorted(new_tables):
         log(f"  [+] Tabela nova: {t}")
+        t_cols = [(col, info) for ((tab, col), info) in dev_cols.items() if tab == t]
+        t_cols.sort(key=lambda x: x[1]["pos"])
+        cols_def = []
+        for col, info in t_cols:
+            dtype  = info["type_str"]
+            nn     = " NOT NULL" if info["not_null"] else ""
+            dflt   = f" {info['default_src']}" if info["default_src"] else ""
+            cols_def.append(f'"{col}" {dtype}{dflt}{nn}')
+        
+        cols_str = ",\n    ".join(cols_def)
+        emit(f'CREATE TABLE "{t}" (\n    {cols_str}\n)')
+
     for t in sorted(removed_tables):
         log(f"  [-] Tabela removida em DEV (não aplicado): {t}")
 
     # ─── COLUNAS ─────────────────────────────────────────────────────────────
     log("\n══ COLUNAS ══")
-    dev_cols  = fetch_columns(cur_dev)
-    prod_cols = fetch_columns(cur_prod)
 
     new_cols     = set(dev_cols.keys()) - set(prod_cols.keys())
     removed_cols = set(prod_cols.keys()) - set(dev_cols.keys())
@@ -361,12 +376,14 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
 
     # Colunas novas → ADD
     for (tab, col) in sorted(new_cols):
+        if tab in new_tables:
+            continue
         info   = dev_cols[(tab, col)]
         dtype  = info["type_str"]
         nn     = " NOT NULL" if info["not_null"] else ""
         dflt   = f" {info['default_src']}" if info["default_src"] else ""
         log(f"  [+] {tab}.{col}  ({dtype}{nn}{dflt})")
-        emit(f"ALTER TABLE {tab} ADD {col} {dtype}{dflt}{nn}")
+        emit(f'ALTER TABLE "{tab}" ADD "{col}" {dtype}{dflt}{nn}')
 
     # Colunas removidas → apenas aviso (não remove automaticamente por segurança)
     for (tab, col) in sorted(removed_cols):
@@ -404,17 +421,17 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
         if dev_type != prod_type:
             if _compatible_alter(dev_type, prod_type):
                 log(f"  [≠] {tab}.{col}: DEV={dev_type}  PROD={prod_type}  → alterando")
-                emit(f"ALTER TABLE {tab} ALTER COLUMN {col} TYPE {dev_type}")
+                emit(f'ALTER TABLE "{tab}" ALTER COLUMN "{col}" TYPE {dev_type}')
             else:
                 log(f"  [!] {tab}.{col}: DEV={dev_type}  PROD={prod_type}  → INCOMPATÍVEL (manual)")
                 sql_file.write(
                     f"-- !! ATENÇÃO: {tab}.{col} mudou de {prod_type} para {dev_type}\n"
                     f"-- Conversão direta não suportada pelo Firebird.\n"
                     f"-- Procedimento manual:\n"
-                    f"--   1. ALTER TABLE {tab} ADD {col}_NEW {dev_type} ^\n"
-                    f"--   2. UPDATE {tab} SET {col}_NEW = {col} ^\n"
-                    f"--   3. ALTER TABLE {tab} DROP {col} ^\n"
-                    f"--   4. ALTER TABLE {tab} ALTER {col}_NEW TO {col} ^\n\n"
+                    f'--   1. ALTER TABLE "{tab}" ADD "{col}_NEW" {dev_type} ^\n'
+                    f'--   2. UPDATE "{tab}" SET "{col}_NEW" = "{col}" ^\n'
+                    f'--   3. ALTER TABLE "{tab}" DROP "{col}" ^\n'
+                    f'--   4. ALTER TABLE "{tab}" ALTER "{col}_NEW" TO "{col}" ^\n\n'
                 )
 
     # ─── CONSTRAINTS (UNIQUE & FK) ────────────────────────────────────────────
@@ -432,18 +449,21 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
 
         if tipo == "UNIQUE":
             cols = get_idx_cols(cur_dev, idx)
+            cols_q = [f'"{c}"' for c in cols]
             log(f"  [+] UNIQUE {name} em {tabela} ({', '.join(cols)})")
-            emit(f"ALTER TABLE {tabela} ADD CONSTRAINT {name} UNIQUE ({', '.join(cols)})")
+            emit(f'ALTER TABLE "{tabela}" ADD CONSTRAINT "{name}" UNIQUE ({", ".join(cols_q)})')
 
         elif tipo == "PRIMARY KEY":
             cols = get_idx_cols(cur_dev, idx)
+            cols_q = [f'"{c}"' for c in cols]
             log(f"  [+] PRIMARY KEY {name} em {tabela} ({', '.join(cols)})")
-            emit(f"ALTER TABLE {tabela} ADD CONSTRAINT {name} PRIMARY KEY ({', '.join(cols)})")
+            emit(f'ALTER TABLE "{tabela}" ADD CONSTRAINT "{name}" PRIMARY KEY ({", ".join(cols_q)})')
 
         elif tipo == "FOREIGN KEY":
             fk = dev_fk.get(name)
             if fk:
                 cols = get_idx_cols(cur_dev, idx)
+                cols_q = [f'"{c}"' for c in cols]
                 # Descobrir tabela referenciada
                 # Descobrir tabela referenciada e o índice usado na constraint correspondente
                 cur_dev.execute(
@@ -455,6 +475,7 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
                     ref_table = ref_res[0]
                     ref_idx = ref_res[1]
                     ref_cols = get_idx_cols(cur_dev, ref_idx)
+                    ref_cols_q = [f'"{c}"' for c in ref_cols]
                     
                     # strip() corrige espaços extras retornados pelo Firebird nos metadados
                     on_del = (fk["on_delete"] or "").strip()
@@ -466,9 +487,9 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
                     log(f"  [+] FK {name}: {tabela} ({', '.join(cols)}) → {ref_table} ({', '.join(ref_cols)})")
                     
                     emit(
-                        f"ALTER TABLE {tabela} ADD CONSTRAINT {name} "
-                        f"FOREIGN KEY ({', '.join(cols)}) REFERENCES {ref_table} ({', '.join(ref_cols)})"
-                        f"{cascade_del}{cascade_upd}"
+                        f'ALTER TABLE "{tabela}" ADD CONSTRAINT "{name}" '
+                        f'FOREIGN KEY ({", ".join(cols_q)}) REFERENCES "{ref_table}" ({", ".join(ref_cols_q)})'
+                        f'{cascade_del}{cascade_upd}'
                     )
 
     # ─── ÍNDICES SIMPLES ─────────────────────────────────────────────────────
@@ -484,22 +505,24 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
         if idx_name in constraint_idx_dev:
             continue  # já tratado como constraint
         if idx_name not in prod_idxs:
-            cols    = ", ".join(info["cols"])
+            cols_join = ", ".join(info["cols"])
+            cols_q  = ", ".join([f'"{c}"' for c in info["cols"]])
             unique  = "UNIQUE " if info["unique"] else ""
             tabela  = info["tabela"]
             if info["unique"]:
-                log(f"  [+] INDEX UNIQUE {idx_name} em {tabela} ({cols})  ⚠ exige dados sem duplicatas!")
+                log(f"  [+] INDEX UNIQUE {idx_name} em {tabela} ({cols_join})  ⚠ exige dados sem duplicatas!")
             else:
-                log(f"  [+] INDEX {idx_name} em {tabela} ({cols})")
-            emit(f"CREATE {unique}INDEX {idx_name} ON {tabela} ({cols})")
+                log(f"  [+] INDEX {idx_name} em {tabela} ({cols_join})")
+            emit(f'CREATE {unique}INDEX "{idx_name}" ON "{tabela}" ({cols_q})')
         else:
             # Verifica se colunas ou unique mudaram
             pi = prod_idxs[idx_name]
             if info["cols"] != pi["cols"] or info["unique"] != pi["unique"]:
                 log(f"  [≠] INDEX {idx_name} mudou — recriando")
-                emit(f"DROP INDEX {idx_name}")
+                emit(f'DROP INDEX "{idx_name}"')
                 unique = "UNIQUE " if info["unique"] else ""
-                emit(f"CREATE {unique}INDEX {idx_name} ON {info['tabela']} ({', '.join(info['cols'])})")
+                cols_q = ", ".join([f'"{c}"' for c in info["cols"]])
+                emit(f'CREATE {unique}INDEX "{idx_name}" ON "{info["tabela"]}" ({cols_q})')
 
     # ─── STORED PROCEDURES ───────────────────────────────────────────────────
     log("\n══ STORED PROCEDURES / FUNCTIONS ══")
@@ -555,8 +578,8 @@ def compare_and_generate(dev_conn, prod_conn, sql_file, report):
             log(f"  [≠] TRIGGER alterada: {trig_name}")
 
         emit(
-            f"CREATE OR ALTER TRIGGER {trig_name} FOR {tabela}\n"
-            f"{status} {t_str} POSITION {seq}\nAS\n{source}"
+            f'CREATE OR ALTER TRIGGER "{trig_name}" FOR "{tabela}"\n'
+            f'{status} {t_str} POSITION {seq}\nAS\n{source}'
         )
 
     return sql_statements

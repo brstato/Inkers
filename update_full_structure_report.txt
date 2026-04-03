@@ -1,10 +1,14 @@
-Relatório de Sincronização — 2026-02-25 20:58:18
+Relatório de Sincronização — 2026-03-29 18:08:47
 ============================================================
 
 ══ TABELAS ══
+  [+] Tabela nova: CONTATOS_STATUS
+  [+] Tabela nova: SITE
 
 ══ COLUNAS ══
-  [+] AGENDA.SINAL  (NUMERIC(15,2))
+  [+] LOJA.ASSISTENTE_IA  (BOOLEAN)
+  [+] LOJA.SUPERVISIONADO  (BOOLEAN)
+  [+] MESAGES.DATE  (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
   [-] AGENDA.COD_CLIENTE existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.FUNCIONARIO existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
@@ -12,11 +16,18 @@ Relatório de Sincronização — 2026-02-25 20:58:18
   [-] DESPESAS.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
   [-] DESPESAS.PAGO existe em PROD mas não em DEV (não removido — manual)
   [-] DESPESAS.PROFISSIONAL existe em PROD mas não em DEV (não removido — manual)
+  [-] LOJA.SENHA existe em PROD mas não em DEV (não removido — manual)
+  [-] LOJA.SENHA_TEMP existe em PROD mas não em DEV (não removido — manual)
+  [-] MESAGES.ID_LOJA_EX existe em PROD mas não em DEV (não removido — manual)
   [!] DESPESAS.VALOR: DEV=NUMERIC(15,2)  PROD=FLOAT  → INCOMPATÍVEL (manual)
 
 ══ CONSTRAINTS ══
+  [+] PRIMARY KEY CONTATOS_STATUS_PK em CONTATOS_STATUS (INSTANCE_ID, WHATSAPP_ID)
+  [+] FK SITE_LOJA_FK: SITE (ID_LOJA_EX) → LOJA (UUID)
+  [+] PRIMARY KEY SITE_PK em SITE (ID)
 
 ══ ÍNDICES ══
+  [+] INDEX MESAGES_DATE_IDX em MESAGES (DATE)
 
 ══ STORED PROCEDURES / FUNCTIONS ══
   [≠] PROCEDURE alterada: REGISTRAR_VENDA_LOTE
@@ -29,4 +40,4 @@ Relatório de Sincronização — 2026-02-25 20:58:18
 
 ══ APLICANDO NO BANCO DE PRODUÇÃO ══
 
-  ✅ Todos os 6 statement(s) aplicados com sucesso!
+  ✅ Todos os 14 statement(s) aplicados com sucesso!

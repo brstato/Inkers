@@ -34,6 +34,12 @@ class AccountView(ft.View):
         self.txt_telefone = CustomTextField("Telefone", regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER) 
         self.txt_email    = CustomTextField("e-mail", keyboard_type=ft.KeyboardType.EMAIL) 
         self.txt_password = CustomTextField("Senha", password=True, can_reveal_password=True) 
+        self.txt_endereco = CustomTextField(
+            "Informe o endereço e o CEP", 
+            multiline=True, 
+            max_length=1000,
+            on_blur=self.controller.get_endereco
+        )
         self.txt_conf_password = CustomTextField("Confirme a senha", password=True, can_reveal_password=True)
 
         self.days_map = [
@@ -96,6 +102,7 @@ class AccountView(ft.View):
                 self.txt_slug,
                 self.txt_telefone,
                 self.txt_email,
+                self.txt_endereco,
                 #self.txt_password,
                 #self.txt_conf_password,
                 ft.Divider(color=AppColors.GRAY_DARK), 

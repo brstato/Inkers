@@ -8,6 +8,25 @@ class AccountModel:
     getaccountdataURL:str    = Config.GET_ACCOUNT_DATA_URL
     updateaccountdataURL:str = Config.UPDATE_ACCOUNT_URL
     getslugurl:str           = Config.GET_SLUG_URL
+    getenderecoURL:str       = Config.GET_ENDERECO_URL
+
+    async def get_endereco(self, endereco:str) -> httpx.Response:
+        payload = {
+            "endereco": endereco,
+        }
+        header = {
+            'Content-Type': 'application/json'
+        }
+
+        async with httpx.AsyncClient(timeout=60) as client:
+
+            response = await client.post(
+                self.getenderecoURL, 
+                json=payload,
+                headers=header
+            )
+
+            return response
 
     async def updateAccountData(self, id:str, nome:str, telefone:str, email:str,
             token, horarios, slug) -> httpx.Response:
