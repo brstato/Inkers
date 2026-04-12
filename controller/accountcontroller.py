@@ -16,21 +16,17 @@ class AccountController:
 
 
     async def get_endereco(self):
-        self.instance.progressRing.visible = True   
-        self.page.update()
+        cep = self.instance.txt_cep.value
+        if not cep:
+            return
 
-        endereco = self.instance.txt_endereco.value
+        cep = "".join(filter(str.isdigit, cep))       
 
-        response = await self.model.get_endereco(endereco)
-
-        if response.status_code == 200:
-            data = json.loads(response.content)
-            self.instance.txt_endereco.value = data["logradouro"] + ", " + data["numero"] + ", "+ data["bairro"] + ", " + data["cidade"] + " - " + data["uf"] + ", "+ data["cep"]
-        elif response.status_code == 400:
-            dialog = CustonDialog(
+        if len(cep) != 8:     
+            return CustonDialog(
                 self.page,
-                'Atenção',
-                'Informe o CEP.',
+                'Atenção!',
+                'Informe um CEP válido.',
                 [
                     ft.TextButton(
                         'OK', 
@@ -42,19 +38,37 @@ class AccountController:
                     )
                 ]
             )
-            self.page.show_dialog(dialog)
+
+        self.instance.progressRing.visible = True   
+        self.page.update()
+
+        response = await self.model.get_endereco(cep)
+
+        if response.status_code == 200:
+            data = response.json()
+            
+            self.instance.txt_endereco.value = data.get("street",       "")
+            self.instance.txt_bairro.value   = data.get("neighborhood", "")
+            self.instance.txt_cidade.value   = data.get("city",         "")
+            self.instance.txt_estado.value   = data.get("state",        "")
+
+            self.instance.txt_numero.focus()
+
+        else:
+            self.instance.txt_endereco.readOnly = False
+            self.instance.txt_bairro.readOnly   = False
+            self.instance.txt_cidade.readOnly   = False
+            self.instance.txt_estado.readOnly   = False
+
+
         self.instance.progressRing.visible = False
         self.page.update()
         
-
-            
-
 
     async def get_slug(self):
         self.instance.progressRing.visible = True
         self.page.update()
         
-        # Remove espaços antes de consultar
         self.instance.txt_slug.value = self.instance.txt_slug.value.strip().replace(" ", "")
         self.instance.txt_slug.update()
         
@@ -129,6 +143,14 @@ class AccountController:
                     view_instance.txt_email.value    = data.get("email",    "")
                     view_instance.txt_slug.value     = data.get("slug",     "")
 
+                    view_instance.txt_cep.value        = data.get("cep",        "")
+                    view_instance.txt_endereco.value   = data.get("endereco",   "")
+                    view_instance.txt_bairro.value     = data.get("bairro",     "")
+                    view_instance.txt_cidade.value     = data.get("cidade",     "")
+                    view_instance.txt_estado.value     = data.get("estado",     "")
+                    view_instance.txt_numero.value     = data.get("numero",     "")
+                    view_instance.txt_complemento.value= data.get("complemento","")
+
                     self.page.update()
                 else:    
                     self.page.go("/")
@@ -139,6 +161,14 @@ class AccountController:
                 view_instance.txt_telefone.value = data.get("telefone", "")
                 view_instance.txt_email.value    = data.get("email",    "")
                 view_instance.txt_slug.value     = data.get("slug",     "")
+
+                view_instance.txt_cep.value        = data.get("cep",        "")
+                view_instance.txt_endereco.value   = data.get("endereco",   "")
+                view_instance.txt_bairro.value     = data.get("bairro",     "")
+                view_instance.txt_cidade.value     = data.get("cidade",     "")
+                view_instance.txt_estado.value     = data.get("estado",     "")
+                view_instance.txt_numero.value     = data.get("numero",     "")
+                view_instance.txt_complemento.value= data.get("complemento","")
 
                 horario_data = data.get("horario", {})
 
@@ -184,13 +214,35 @@ class AccountController:
         #self.conf_pass= view_instance.txt_conf_password.value
         self.slug     = view_instance.txt_slug.value
 
+        self.cep = view_instance.txt_cep.value
+        self.endereco = view_instance.txt_endereco.value
+        self.bairro = view_instance.txt_bairro.value
+        self.cidade = view_instance.txt_cidade.value
+        self.estado = view_instance.txt_estado.value
+        self.numero = view_instance.txt_numero.value
+        self.complemento = view_instance.txt_complemento.value
+
         self.id:str      = view_instance.id
         self.token:str   = view_instance.token
         self.r_token = view_instance.r_token
 
         if not self.r_token:
 
-            if not all([self.username, self.telefone, self.email, self.slug]):#self.password, self.conf_pass, self.slug]):
+            if not all(
+                [
+                    self.username, 
+                    self.telefone, 
+                    self.email, 
+                    self.slug,
+                    self.cep,
+                    self.endereco,
+                    self.bairro,
+                    self.cidade,
+                    self.estado,
+                    self.numero,
+                    self.complemento
+                ]
+            ):#self.password, self.conf_pass, self.slug]):
                 self.dialog = CustonDialog(
                     self.page,
                     title="Atenção",
@@ -225,6 +277,13 @@ class AccountController:
                 self.email,
                 #self.password,
                 self.slug,
+                self.cep,
+                self.endereco,
+                self.bairro,
+                self.cidade,
+                self.estado,
+                self.numero,
+                self.complemento,
                 horario_funcionamento
             )    
 
@@ -255,7 +314,20 @@ class AccountController:
                 return                  
                     
         else:
-            if not all([self.username, self.telefone, self.email]):
+            if not all(
+                [
+                    self.username, 
+                    self.telefone, 
+                    self.email,
+                    self.cep,
+                    self.endereco,
+                    self.bairro,
+                    self.cidade,
+                    self.estado,
+                    self.numero,
+                    self.complemento
+                ]
+            ):
                 self.dialog = CustonDialog(
                     self.page,
                     title="Atenção",
@@ -289,6 +361,13 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
+                self.cep,
+                self.endereco,
+                self.bairro,
+                self.cidade,
+                self.estado,
+                self.numero,
+                self.complemento,
                 #self.password,
                 self.token, 
                 horario_funcionamento,
@@ -331,6 +410,13 @@ class AccountController:
                         self.username,
                         self.telefone,
                         self.email,
+                        self.cep,
+                        self.endereco,
+                        self.bairro,
+                        self.cidade,
+                        self.estado,
+                        self.numero,
+                        self.complemento,
                         #self.password,
                         token,
                         horario_funcionamento,

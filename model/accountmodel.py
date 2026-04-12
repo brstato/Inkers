@@ -10,31 +10,41 @@ class AccountModel:
     getslugurl:str           = Config.GET_SLUG_URL
     getenderecoURL:str       = Config.GET_ENDERECO_URL
 
-    async def get_endereco(self, endereco:str) -> httpx.Response:
-        payload = {
-            "endereco": endereco,
-        }
-        header = {
-            'Content-Type': 'application/json'
-        }
-
+    async def get_endereco(self, cep:str) -> httpx.Response:
         async with httpx.AsyncClient(timeout=60) as client:
-
-            response = await client.post(
-                self.getenderecoURL, 
-                json=payload,
-                headers=header
-            )
-
+            response = await client.get(f"https://brasilapi.com.br/api/cep/v1/{cep}")
             return response
 
-    async def updateAccountData(self, id:str, nome:str, telefone:str, email:str,
-            token, horarios, slug) -> httpx.Response:
+
+    async def updateAccountData(
+        self, 
+        id:str, 
+        nome:str, 
+        telefone:str, 
+        email:str,
+        cep:str,
+        endereco:str,
+        bairro:str,
+        cidade:str,
+        estado:str,
+        numero:str,
+        complemento:str,
+        token, 
+        horarios, 
+        slug
+    ) -> httpx.Response:
         
         payload = {
             "nome": nome,
             "telefone": telefone,
             "email": email,
+            "cep": cep,
+            "endereco": endereco,
+            "bairro": bairro,
+            "cidade": cidade,
+            "estado": estado,
+            "numero": numero,
+            "complemento": complemento,
             #"senha": senha,
             "id": id,
             "horario": horarios,
@@ -80,6 +90,13 @@ class AccountModel:
                         username:str, 
                         telefone: str, 
                         email:str, 
+                        cep:str,
+                        endereco:str,
+                        bairro:str,
+                        cidade:str,
+                        estado:str,
+                        numero:str,
+                        complemento:str,
                         #password: str, 
                         slug:str,
                         horario
@@ -88,6 +105,13 @@ class AccountModel:
             "nome": username,
             "telefone": telefone,
             "email": email,
+            "cep": cep,
+            "endereco": endereco,
+            "bairro": bairro,
+            "cidade": cidade,
+            "estado": estado,
+            "numero": numero,
+            "complemento": complemento,
             #"senha":password,
             "slug": slug,
             "horario": horario

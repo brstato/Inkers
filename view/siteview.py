@@ -4,10 +4,10 @@ from view.controls.custonprogressring import CustonProgressRing
 from view.controls.custontextfield import CustomTextField
 from controller.sitecontroller import SiteController
 
-class SiteView(ft.View):
+class PortfolioView(ft.View):
     def __init__(self, page: ft.Page):
         super().__init__(
-            route="/site",
+            route="/portfolio",
             bgcolor=AppColors.BLACK,
             padding=ft.padding.all(20),
             scroll=ft.ScrollMode.AUTO

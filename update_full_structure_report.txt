@@ -1,14 +1,10 @@
-Relatório de Sincronização — 2026-03-29 18:08:47
+Relatório de Sincronização — 2026-04-03 19:21:19
 ============================================================
 
 ══ TABELAS ══
-  [+] Tabela nova: CONTATOS_STATUS
-  [+] Tabela nova: SITE
+  [+] Tabela nova: SITE_GALERIA
 
 ══ COLUNAS ══
-  [+] LOJA.ASSISTENTE_IA  (BOOLEAN)
-  [+] LOJA.SUPERVISIONADO  (BOOLEAN)
-  [+] MESAGES.DATE  (TIMESTAMP DEFAULT CURRENT_TIMESTAMP)
   [-] AGENDA.COD_CLIENTE existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.FUNCIONARIO existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
@@ -19,15 +15,21 @@ Relatório de Sincronização — 2026-03-29 18:08:47
   [-] LOJA.SENHA existe em PROD mas não em DEV (não removido — manual)
   [-] LOJA.SENHA_TEMP existe em PROD mas não em DEV (não removido — manual)
   [-] MESAGES.ID_LOJA_EX existe em PROD mas não em DEV (não removido — manual)
+  [-] SITE.FOTO_1 existe em PROD mas não em DEV (não removido — manual)
+  [-] SITE.FOTO_2 existe em PROD mas não em DEV (não removido — manual)
+  [-] SITE.FOTO_3 existe em PROD mas não em DEV (não removido — manual)
+  [-] SITE.FOTO_4 existe em PROD mas não em DEV (não removido — manual)
+  [-] SITE.FOTO_5 existe em PROD mas não em DEV (não removido — manual)
   [!] DESPESAS.VALOR: DEV=NUMERIC(15,2)  PROD=FLOAT  → INCOMPATÍVEL (manual)
 
 ══ CONSTRAINTS ══
-  [+] PRIMARY KEY CONTATOS_STATUS_PK em CONTATOS_STATUS (INSTANCE_ID, WHATSAPP_ID)
-  [+] FK SITE_LOJA_FK: SITE (ID_LOJA_EX) → LOJA (UUID)
-  [+] PRIMARY KEY SITE_PK em SITE (ID)
+  [+] FK FK_GALERIA_SITE: SITE_GALERIA (ID_SITE) → SITE (ID)
+  [+] FK FK_SITE_LOJA: SITE (ID_LOJA_EX) → LOJA (UUID)
+  [+] PRIMARY KEY SITE_GALERIA_PK em SITE_GALERIA (ID)
 
 ══ ÍNDICES ══
-  [+] INDEX MESAGES_DATE_IDX em MESAGES (DATE)
+  [+] INDEX IDX_GALERIA_SITE em SITE_GALERIA (ID_SITE)
+  [+] INDEX IDX_SITE_LOJA em SITE (ID_LOJA_EX)
 
 ══ STORED PROCEDURES / FUNCTIONS ══
   [≠] PROCEDURE alterada: REGISTRAR_VENDA_LOTE
@@ -40,4 +42,4 @@ Relatório de Sincronização — 2026-03-29 18:08:47
 
 ══ APLICANDO NO BANCO DE PRODUÇÃO ══
 
-  ✅ Todos os 14 statement(s) aplicados com sucesso!
+  ✅ Todos os 11 statement(s) aplicados com sucesso!
