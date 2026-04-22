@@ -96,7 +96,10 @@ class Config:
 
     GET_INFO_STUDIO_URL      = f"{BASE_API_URL}/public/studio"
 
-    UPDATE_SITE_URL          = f"{BASE_API_URL}/site/update"
+    UPDATE_PORTFOLIO_URL     = f"{BASE_API_URL}/portfolio/update"
+    GET_PORTFOLIO_DATA_URL   = f"{BASE_API_URL}/portfolio/info"
+    REMOVE_FOTO_URL          = f"{BASE_API_URL}/portfolio/remove"
+    UPLOAD_FOTO_URL          = f"{BASE_API_URL}/portfolio/upload"
 
     CREATE_EVENT_CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
     G_REFRESH_TOKEN_URL       = "https://oauth2.googleapis.com/token"

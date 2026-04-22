@@ -17,7 +17,7 @@ from view.anamneseview import AnamneseView
 from view.anamnese_response import AnamneseResponse
 from view.despesasview import DespesasView
 from view.estudioview import EstudioView
-from view.siteview import SiteView
+from view.portfolioview import PortfolioView
 import asyncio
 from urllib.parse import urlparse
 
@@ -96,12 +96,9 @@ async def main(page: ft.Page):
                     page.views.append(DespesasView(page))    
                 elif troute.match("/agendaturnos"):
                     page.views.append(AgendaTurnosView(page))  
-                elif troute.match("/site"):
-                    page.views.append(SiteView(page))
+                elif troute.match("/portfolio"):
+                    page.views.append(PortfolioView(page))
                            
-            else:
-                page.views.append(EstudioView(page=page, name=SubDominio))
-
             page.update()
 
         except Exception as e:  
@@ -115,7 +112,7 @@ async def main(page: ft.Page):
     await route_change("/")        
 
 if __name__ == "__main__":
-    ft.app(target=main, assets_dir="assets", port=8087, view=ft.AppView.WEB_BROWSER)
+    ft.app(target=main, assets_dir="assets", upload_dir="uploads")
 else:
-    app = ft.app(target=main, assets_dir="assets", export_asgi_app=True)
+    app = ft.app(target=main, assets_dir="assets", upload_dir="uploads", export_asgi_app=True)
 

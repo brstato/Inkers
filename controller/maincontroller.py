@@ -210,8 +210,10 @@ class MainController:
             self.instance.account_name = data["nome"        ]
             self.instance.account_tel  = data["telefone"    ]
             self.instance.zap_instance = data["zap_instance"]
+            self.instance.slug         = data["slug"        ]
 
             self.page.session.store.set("zap_instance", self.instance.zap_instance)
+            self.page.session.store.set("slug",         self.instance.slug        )
 
             if not self.instance.account_tel:
                 await self.page.push_route("/account")
@@ -888,6 +890,7 @@ class MainController:
         self.page.session.store.set("r_token",      '')
         self.page.session.store.set("id",           '')
         self.page.session.store.set("status_caixa", '')
+        self.page.session.store.set("slug",         '')
 
         # Remove tokens persistidos para desabilitar o auto-login
         for key in ("r_token", "id", "google_refresh_token", "login_method"):

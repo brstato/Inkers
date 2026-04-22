@@ -25,14 +25,15 @@ class MainView(ft.View):
 
         self.controller = MainController(page, self)
 
-        self.id_loja:str = ''
-        self.token:str   = ''
-        self.r_token:str = ''
+        self.id_loja:     str = ''
+        self.token:       str = ''
+        self.r_token:     str = ''
         self.account_name:str = ''
-        self.account_tel:str=''
-        self.client:str = ''
-        self.zap_instance:str=''
-        self.zap_status:str=''
+        self.account_tel: str = ''
+        self.client:      str = ''
+        self.zap_instance:str = ''
+        self.zap_status:  str = ''
+        self.slug:        str = ''
 
         self.ident_serv:int = 0
 
@@ -582,7 +583,7 @@ class MainView(ft.View):
                             CustonButton(page, "Serviços",        "/services"),  
                             CustonButton(page, "Clientes",        "/clients"),    
                             CustonButton(page, "Despesas",        "/despesas"),  
-                            CustonButton(page, "Site",            "/site"),                                              
+                            CustonButton(page, "Portfólio",       "/portfolio"),                                              
                                                
                             ft.Button(
                                 content="Sair",

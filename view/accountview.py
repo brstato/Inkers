@@ -49,6 +49,8 @@ class AccountView(ft.View):
         self.txt_estado = CustomTextField("Estado", readOnly=True)
         self.txt_bairro = CustomTextField("Bairro", readOnly=True)
         self.txt_numero = CustomTextField("Número")
+        self.txt_m_pixel= CustomTextField("Meta Pixel", max_length=50)
+        self.txt_g_id   = CustomTextField("Google Analytics ID", max_length=50)
         self.txt_complemento = CustomTextField("Complemento")
         self.txt_conf_password = CustomTextField("Confirme a senha", password=True, can_reveal_password=True)
 
@@ -119,8 +121,8 @@ class AccountView(ft.View):
                 self.txt_estado,
                 self.txt_numero,
                 self.txt_complemento,
-                #self.txt_password,
-                #self.txt_conf_password,
+                self.txt_m_pixel,
+                self.txt_g_id,
                 ft.Divider(color=AppColors.GRAY_DARK), 
                 self.schedule_container,                    
                 ft.Container(height=20),

@@ -150,6 +150,8 @@ class AccountController:
                     view_instance.txt_estado.value     = data.get("estado",     "")
                     view_instance.txt_numero.value     = data.get("numero",     "")
                     view_instance.txt_complemento.value= data.get("complemento","")
+                    view_instance.txt_m_pixel.value    = data.get("meta_pixel", "")
+                    view_instance.txt_g_id.value       = data.get("g_tag",      "")
 
                     self.page.update()
                 else:    
@@ -157,11 +159,10 @@ class AccountController:
 
             elif response.status_code == 200:
                 data = json.loads(response.content)
-                view_instance.txt_username.value = data.get("nome",     "")
-                view_instance.txt_telefone.value = data.get("telefone", "")
-                view_instance.txt_email.value    = data.get("email",    "")
-                view_instance.txt_slug.value     = data.get("slug",     "")
-
+                view_instance.txt_username.value   = data.get("nome",     "")
+                view_instance.txt_telefone.value   = data.get("telefone", "")
+                view_instance.txt_email.value      = data.get("email",    "")
+                view_instance.txt_slug.value       = data.get("slug",     "")
                 view_instance.txt_cep.value        = data.get("cep",        "")
                 view_instance.txt_endereco.value   = data.get("endereco",   "")
                 view_instance.txt_bairro.value     = data.get("bairro",     "")
@@ -169,6 +170,8 @@ class AccountController:
                 view_instance.txt_estado.value     = data.get("estado",     "")
                 view_instance.txt_numero.value     = data.get("numero",     "")
                 view_instance.txt_complemento.value= data.get("complemento","")
+                view_instance.txt_m_pixel.value    = data.get("meta_pixel", "")
+                view_instance.txt_g_id.value       = data.get("g_tag",      "")                
 
                 horario_data = data.get("horario", {})
 
@@ -207,24 +210,23 @@ class AccountController:
 
         horario_funcionamento = await self.get_schedule_json_data(view_instance)    
 
-        self.username = view_instance.txt_username.value
-        self.telefone = view_instance.txt_telefone.value
-        self.email    = view_instance.txt_email.value
-        #self.password = view_instance.txt_password.value
-        #self.conf_pass= view_instance.txt_conf_password.value
-        self.slug     = view_instance.txt_slug.value
-
-        self.cep = view_instance.txt_cep.value
-        self.endereco = view_instance.txt_endereco.value
-        self.bairro = view_instance.txt_bairro.value
-        self.cidade = view_instance.txt_cidade.value
-        self.estado = view_instance.txt_estado.value
-        self.numero = view_instance.txt_numero.value
+        self.username    = view_instance.txt_username.value
+        self.telefone    = view_instance.txt_telefone.value
+        self.email       = view_instance.txt_email.value
+        self.slug        = view_instance.txt_slug.value
+        self.cep         = view_instance.txt_cep.value
+        self.endereco    = view_instance.txt_endereco.value
+        self.bairro      = view_instance.txt_bairro.value
+        self.cidade      = view_instance.txt_cidade.value
+        self.estado      = view_instance.txt_estado.value
+        self.numero      = view_instance.txt_numero.value
         self.complemento = view_instance.txt_complemento.value
+        self.m_pixel     = view_instance.txt_m_pixel.value
+        self.g_tag       = view_instance.txt_g_id.value
 
         self.id:str      = view_instance.id
         self.token:str   = view_instance.token
-        self.r_token = view_instance.r_token
+        self.r_token     = view_instance.r_token
 
         if not self.r_token:
 
@@ -275,7 +277,6 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
-                #self.password,
                 self.slug,
                 self.cep,
                 self.endereco,
@@ -284,6 +285,8 @@ class AccountController:
                 self.estado,
                 self.numero,
                 self.complemento,
+                self.m_pixel,
+                self.g_tag,
                 horario_funcionamento
             )    
 
@@ -338,20 +341,7 @@ class AccountController:
                 )
                 self.page.show_dialog(self.dialog)          
                 self.page.update()
-                return
-
-            # if self.password != self.conf_pass:
-            #     self.dialog = CustonDialog(
-            #         self.page,
-            #         title="Atenção",
-            #         content="As senhas não coincidem!",
-            #         actions=[
-            #             ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
-            #         ]
-            #     )
-            #     self.page.show_dialog(self.dialog)          
-            #     self.page.update()
-            #     return                
+                return              
 
             view_instance.progressRing.visible = True
             self.page.update()
@@ -368,7 +358,8 @@ class AccountController:
                 self.estado,
                 self.numero,
                 self.complemento,
-                #self.password,
+                self.m_pixel,
+                self.g_tag,
                 self.token, 
                 horario_funcionamento,
                 self.slug   
@@ -417,7 +408,8 @@ class AccountController:
                         self.estado,
                         self.numero,
                         self.complemento,
-                        #self.password,
+                        self.m_pixel,
+                        self.g_tag,
                         token,
                         horario_funcionamento,
                         self.slug   

@@ -29,6 +29,8 @@ class AccountModel:
         estado:str,
         numero:str,
         complemento:str,
+        m_pixel:str,
+        g_id:str,
         token, 
         horarios, 
         slug
@@ -48,7 +50,9 @@ class AccountModel:
             #"senha": senha,
             "id": id,
             "horario": horarios,
-            "slug": slug
+            "slug": slug,
+            "meta_pixel": m_pixel,
+            "g_analytics_id": g_id,
         }
         header = {
             "Authorization": f"Bearer {token}",
@@ -99,6 +103,8 @@ class AccountModel:
                         complemento:str,
                         #password: str, 
                         slug:str,
+                        m_pixel:str,
+                        g_id:str,
                         horario
     ) -> httpx.Response:
         payload = {
@@ -112,8 +118,9 @@ class AccountModel:
             "estado": estado,
             "numero": numero,
             "complemento": complemento,
-            #"senha":password,
             "slug": slug,
+            "meta_pixel": m_pixel,
+            "g_analytics_id": g_id,
             "horario": horario
         }
         header = {
