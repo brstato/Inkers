@@ -7,6 +7,10 @@ from model.portfoliomodel import PortfolioModel
 from controller.call_api import ProtectedApiCall
 from view.controls.custongaleriaitens import GaleriaItem
 from view.controls.colors import AppColors
+from view.controls.custondialog import CustonDialog
+from utils.image_utils import pick_file_base64
+
+os.environ["FLET_SECRET_KEY"] = os.getenv("FLET_SECRET_KEY")
 
 class PortfolioController:
     def __init__(self, page: ft.Page, instance):
@@ -15,98 +19,180 @@ class PortfolioController:
         self.instance = instance
 
 
-    async def pick_and_upload_foto(self, e):
-        # Abre a caixa de diálogo e aguarda o usuário selecionar
-        files = await ft.FilePicker().pick_files(
-            allow_multiple=False, 
-            file_type=ft.FilePickerFileType.CUSTOM,
-            allowed_extensions=["png", "jpg", "jpeg", "webp"]    
-        )
-
-        # Se o usuário fechar a janela sem escolher nada
-        if not files:
-            return
-
-        self.instance.loading.visible = True
-        self.page.update()
-
+    async def get_galeria(self):
         try:
-            # Em apps web Flet recentes, '.bytes' não está disponível. 
-            # Devemos fazer o upload interno para obter o arquivo base64.
-            file = files[0]
-            upload_url = self.page.get_upload_url(file.name, 60)
-            
-            upload_done = asyncio.Event()
+            response = await ProtectedApiCall(
+                page        = self.page,
+                instance    = self.instance,
+                function    = self.model.get_galeria,
+                id_portfolio= self.instance.id_site,
+                token       = self.instance.token               
+            ).call_api_refresh_token()
 
-            async def on_upload_local(e: ft.FilePickerUploadEvent):
-                if e.file_name == file.name and getattr(e, 'progress', 0) == 1.0:
-                    upload_done.set()
-                elif getattr(e, 'error', None):
-                    print("Upload local error:", e.error)
-                    upload_done.set()
+            if response.status_code == 200:
+                data = response.json()
+                data_galeria = data.get('response', [])
+                new_controls = []
+                for item in data_galeria:
+                    url_limpa = PortfolioModel.clean_url(item['url_foto'])
+                    new_controls.append(
+                        GaleriaItem(
+                            id=item['id_foto'],
+                            image=f"https://{self.instance.slug}.inkers.com.br{url_limpa}",
+                            delete_click=self.delete_click
+                        )
+                    )
+                self.instance.update_gallery(new_controls)
 
-            self.instance.file_picker.on_upload = on_upload_local
-            
-            await self.instance.file_picker.upload([
-                ft.FilePickerUploadFile(file.name, upload_url=upload_url)
-            ])
-            await upload_done.wait()
-            
-            # Carrega-o da pasta uploads
-            file_path = os.path.join("uploads", file.name)
-            if not os.path.exists(file_path):
-                print("Arquivo não salvo pelo Flet.")
-                self.instance.loading.visible = False
-                self.page.update()
+        except Exception as ex:
+            print(f"Erro em get_galeria: {ex}")
+
+
+    async def update_portfolio(self):
+        self.instance.show_loading(True)
+
+        form_data = self.instance.get_form_data()
+        
+        # Limpa o dominio e barras extras
+        form_data['avatar'] = PortfolioModel.clean_url(form_data['avatar'])
+        form_data['foto_bio'] = PortfolioModel.clean_url(form_data['foto_bio'])
+
+        payload = {
+            "id_loja"  : form_data['id_loja'],
+            "titulo"   : form_data['titulo'],
+            "subtitulo": form_data['subtitulo'],
+            "avatar"   : form_data['avatar'],
+            "foto_bio" : form_data['foto_bio'],
+            "bio"      : form_data['bio'],
+            "id_site"  : form_data['id_site']
+        }
+
+        response = await ProtectedApiCall(
+            page    =self.page,
+            instance=self.instance,
+            function=self.model.update_portfolio,
+            payload =payload,
+            token   =self.instance.token
+        ).call_api_refresh_token()
+
+        if response.status_code == 200:
+            self.page.show_dialog(
+                CustonDialog(
+                    page=self.page,
+                    title="Sucesso",
+                    content="Portfolio atualizado com sucesso!",
+                    actions=[
+                        ft.TextButton(
+                            content="OK", 
+                            on_click=lambda e: self.page.pop_dialog()
+                        )
+                    ]
+                )
+            )
+
+            data = response.json()
+            self.instance.id_portfolio = data.get('id_portfolio')
+            await self.get_data()
+        else:
+            self.page.show_dialog(
+                CustonDialog(
+                    page=self.page,
+                    title="Erro",
+                    content="Erro ao atualizar portfolio!",
+                    actions=[
+                        ft.TextButton(
+                            content="OK", 
+                            on_click=lambda e: self.page.pop_dialog()
+                        )
+                    ]
+                )
+            )
+
+        self.instance.show_loading(False)
+
+
+    async def _pick_and_upload_generic(self, upload_function, success_message):
+        try:
+            base64_string, file_name = await pick_file_base64(self.page)
+
+            if not base64_string or not file_name:
+                if file_name:
+                    self.page.show_dialog(
+                        ft.SnackBar(
+                            content=ft.Text("Erro: Falha ao processar imagem local."),
+                            bgcolor=ft.Colors.RED,
+                            open=True
+                        )
+                    )
                 return
 
-            with open(file_path, "rb") as f:
-                base64_string = base64.b64encode(f.read()).decode('utf-8')
-            os.remove(file_path)
+            self.instance.show_loading(True)
 
-            # O id_loja será pego via JWT no servidor
             payload = {
-                "nome_arquivo": file.name,
-                "imagem_base64": base64_string
+                "nome_arquivo": file_name,
+                "imagem_base64": base64_string,
+                "id_site": self.instance.id_site
             }
 
             response = await ProtectedApiCall(
                 page    =self.page,
                 instance=self.instance,
-                function=self.model.upload_foto,
+                function=upload_function,
                 payload =payload,
                 token   =self.instance.token
             ).call_api_refresh_token()
 
             if response.status_code == 200:
-                await self.get_data() 
+                self.page.show_dialog(
+                    ft.SnackBar(
+                        content=ft.Text(success_message, color=AppColors.GRAY_LIGHT),
+                        bgcolor=AppColors.GRAY_MED3,
+                        open=True
+                    )
+                )
+                await self.get_data() # Refresh all data to update image URLs
             else:
-                print(f"Erro no upload: {response.content}")
+                print(f"Erro no upload: {response.content}")     
 
         except Exception as ex:
-            print(f"Erro em pick_and_upload_foto: {ex}")
+            print(f"Erro em upload genérico: {ex}")
         finally:
-            self.instance.loading.visible = False
-            self.page.update()
+            self.instance.show_loading(False)
+
+
+    async def pick_and_upload_avatar(self, e):
+        await self._pick_and_upload_generic(
+            self.model.upload_avatar, 
+            "Avatar atualizado com sucesso!"
+        )
+
+
+    async def pick_and_upload_bio_foto(self, e):
+        await self._pick_and_upload_generic(
+            self.model.upload_bio_foto, 
+            "Foto da bio atualizada com sucesso!"
+        )
+
+
+    async def pick_and_upload_foto(self, e):
+        await self._pick_and_upload_generic(
+            self.model.upload_foto, 
+            "Foto adicionada com sucesso!"
+        )
 
 
     async def delete_click(self, id):
         try:
             response = await ProtectedApiCall(
-                page = self.page,
+                page     = self.page,
                 instance = self.instance,
                 function = self.model.remove_foto,
-                token = self.instance.token,
-                id_foto = id
+                token    = self.instance.token,
+                id_foto  = id
             ).call_api_refresh_token()
 
             if response.status_code == 200:            
-                for control in self.instance.galeria.controls:
-                    if isinstance(control, GaleriaItem):
-                        if control.id == id:
-                            self.instance.galeria.controls.remove(control)
-                            self.page.update()
-                            break
+                await self.get_galeria()
                             
         except Exception as e:    
             print(f"Erro em delete_click: {e}")
@@ -129,8 +215,7 @@ class PortfolioController:
                 self.page.update()
                 return             
             
-            self.instance.loading.visible = True
-
+            self.instance.show_loading(True)
 
             response = await ProtectedApiCall(
                 page    =self.page,
@@ -140,48 +225,46 @@ class PortfolioController:
                 id_loja =self.instance.id_loja
             ).call_api_refresh_token()
 
-            try:
-                data = json.loads(response.content)
-            except json.JSONDecodeError:
-                print(f"Failed to decode JSON. Status: {response.status_code}, Content: {response.content}")
-                self.instance.loading.visible = False
-                self.page.update()
-                return
+            if response.status_code == 200:    
+                data = response.json()
+                
+                # Clean paths
+                avatar_path = PortfolioModel.clean_url(data.get("avatar", ""))
+                bio_foto_path = PortfolioModel.clean_url(data.get("foto_bio", ""))
 
-            titulo    = data.get("titulo",    "")
-            subtitulo = data.get("subtitulo", "")
-            bio       = data.get("bio",       "")
-            avatar    = f"https://{self.instance.slug}.inkers.com.br/{data.get("avatar",    "")}"
-            bio_foto  = f"https://{self.instance.slug}.inkers.com.br/{data.get("foto_bio",  "")}"
-            itens     = data.get("itens",     [])    
+                # Prepare data for view
+                view_data = {
+                    "id_site": data.get("id_site", ""),
+                    "titulo": data.get("titulo", ""),
+                    "subtitulo": data.get("subtitulo", ""),
+                    "bio": data.get("bio", ""),
+                    "avatar": f"https://{self.instance.slug}.inkers.com.br{avatar_path}" if avatar_path else "",
+                    "foto_bio": f"https://{self.instance.slug}.inkers.com.br{bio_foto_path}" if bio_foto_path else ""
+                }
+                
+                self.instance.fill_form(view_data)
 
-            self.instance.edt_titulo.value    = titulo
-            self.instance.edt_subtitulo.value = subtitulo
-            self.instance.edt_bio.value       = bio
-            self.instance.img_avatar.src      = avatar
-            self.instance.bio_image.src       = bio_foto
-
-            for item in itens:
-                self.instance.galeria.controls.append(
-                    GaleriaItem(
-                        image=f"https://{self.instance.slug}.inkers.com.br/{item["url_foto"]}",
-                        id   =item["id_foto"],
-                        delete_click=self.delete_click
+                # Update gallery
+                itens = data.get("itens", [])    
+                new_controls = []
+                for item in itens:
+                    url_limpa = PortfolioModel.clean_url(item['url_foto'])
+                    new_controls.append(
+                        GaleriaItem(
+                            image=f"https://{self.instance.slug}.inkers.com.br{url_limpa}",
+                            id   =item["id_foto"],
+                            delete_click=self.delete_click
+                        )
                     )
-                )
-            
-            self.instance.loading.visible = False
+                self.instance.update_gallery(new_controls)
 
-            self.page.update()
+            elif response.status_code == 404:
+                ...            
         except Exception as e:
             print(f"Erro em get_data: {e}")
+        finally:
+            self.instance.show_loading(False)
 
 
-    async def update_portfolio(self):
-        payload = {
-            "titulo":self.instance.edt_titulo.value,
-            "subtitulo":self.instance.edt_subtitulo.value,
-            "id_loja":self.instance.id_loja
-        }
 
-        return await self.model.update_portfolio(payload, self.instance.token)
+        

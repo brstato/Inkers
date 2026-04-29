@@ -52,6 +52,7 @@ class AccountView(ft.View):
         self.txt_m_pixel= CustomTextField("Meta Pixel", max_length=50)
         self.txt_g_id   = CustomTextField("Google Analytics ID", max_length=50)
         self.txt_complemento = CustomTextField("Complemento")
+        self.txt_instagram = CustomTextField("Instagram")
         self.txt_conf_password = CustomTextField("Confirme a senha", password=True, can_reveal_password=True)
 
         self.days_map = [
@@ -121,6 +122,7 @@ class AccountView(ft.View):
                 self.txt_estado,
                 self.txt_numero,
                 self.txt_complemento,
+                self.txt_instagram,
                 self.txt_m_pixel,
                 self.txt_g_id,
                 ft.Divider(color=AppColors.GRAY_DARK), 

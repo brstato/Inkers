@@ -150,6 +150,7 @@ class AccountController:
                     view_instance.txt_estado.value     = data.get("estado",     "")
                     view_instance.txt_numero.value     = data.get("numero",     "")
                     view_instance.txt_complemento.value= data.get("complemento","")
+                    view_instance.txt_instagram.value  = data.get("insta",      "")
                     view_instance.txt_m_pixel.value    = data.get("meta_pixel", "")
                     view_instance.txt_g_id.value       = data.get("g_tag",      "")
 
@@ -170,6 +171,7 @@ class AccountController:
                 view_instance.txt_estado.value     = data.get("estado",     "")
                 view_instance.txt_numero.value     = data.get("numero",     "")
                 view_instance.txt_complemento.value= data.get("complemento","")
+                view_instance.txt_instagram.value  = data.get("insta",      "")
                 view_instance.txt_m_pixel.value    = data.get("meta_pixel", "")
                 view_instance.txt_g_id.value       = data.get("g_tag",      "")                
 
@@ -221,6 +223,7 @@ class AccountController:
         self.estado      = view_instance.txt_estado.value
         self.numero      = view_instance.txt_numero.value
         self.complemento = view_instance.txt_complemento.value
+        self.instagram   = view_instance.txt_instagram.value
         self.m_pixel     = view_instance.txt_m_pixel.value
         self.g_tag       = view_instance.txt_g_id.value
 
@@ -285,6 +288,7 @@ class AccountController:
                 self.estado,
                 self.numero,
                 self.complemento,
+                self.instagram,
                 self.m_pixel,
                 self.g_tag,
                 horario_funcionamento
@@ -358,6 +362,7 @@ class AccountController:
                 self.estado,
                 self.numero,
                 self.complemento,
+                self.instagram,
                 self.m_pixel,
                 self.g_tag,
                 self.token, 
@@ -408,6 +413,7 @@ class AccountController:
                         self.estado,
                         self.numero,
                         self.complemento,
+                        self.instagram,
                         self.m_pixel,
                         self.g_tag,
                         token,

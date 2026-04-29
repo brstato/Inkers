@@ -1,10 +1,18 @@
-Relatório de Sincronização — 2026-04-03 19:21:19
+Relatório de Sincronização — 2026-04-29 07:52:07
 ============================================================
 
 ══ TABELAS ══
-  [+] Tabela nova: SITE_GALERIA
 
 ══ COLUNAS ══
+  [+] LOJA.BAIRRO  (VARCHAR(100) CHARACTER SET UTF8)
+  [+] LOJA.CEP  (VARCHAR(20) CHARACTER SET UTF8)
+  [+] LOJA.CIDADE  (VARCHAR(100) CHARACTER SET UTF8)
+  [+] LOJA.COMPLEMENTO  (VARCHAR(100) CHARACTER SET UTF8)
+  [+] LOJA.GOOGLE_ANALYTICS_ID  (VARCHAR(50) CHARACTER SET UTF8)
+  [+] LOJA.INSTA  (VARCHAR(1000) CHARACTER SET UTF8)
+  [+] LOJA.META_PIXEL_ID  (VARCHAR(50) CHARACTER SET UTF8)
+  [+] LOJA.NUMERO  (VARCHAR(20) CHARACTER SET UTF8 DEFAULT 'S/N')
+  [+] LOJA.UF  (VARCHAR(2) CHARACTER SET UTF8)
   [-] AGENDA.COD_CLIENTE existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.FUNCIONARIO existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
@@ -12,6 +20,8 @@ Relatório de Sincronização — 2026-04-03 19:21:19
   [-] DESPESAS.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
   [-] DESPESAS.PAGO existe em PROD mas não em DEV (não removido — manual)
   [-] DESPESAS.PROFISSIONAL existe em PROD mas não em DEV (não removido — manual)
+  [-] LOJA.COORDENADAS existe em PROD mas não em DEV (não removido — manual)
+  [-] LOJA.ENDERECO existe em PROD mas não em DEV (não removido — manual)
   [-] LOJA.SENHA existe em PROD mas não em DEV (não removido — manual)
   [-] LOJA.SENHA_TEMP existe em PROD mas não em DEV (não removido — manual)
   [-] MESAGES.ID_LOJA_EX existe em PROD mas não em DEV (não removido — manual)
@@ -23,13 +33,8 @@ Relatório de Sincronização — 2026-04-03 19:21:19
   [!] DESPESAS.VALOR: DEV=NUMERIC(15,2)  PROD=FLOAT  → INCOMPATÍVEL (manual)
 
 ══ CONSTRAINTS ══
-  [+] FK FK_GALERIA_SITE: SITE_GALERIA (ID_SITE) → SITE (ID)
-  [+] FK FK_SITE_LOJA: SITE (ID_LOJA_EX) → LOJA (UUID)
-  [+] PRIMARY KEY SITE_GALERIA_PK em SITE_GALERIA (ID)
 
 ══ ÍNDICES ══
-  [+] INDEX IDX_GALERIA_SITE em SITE_GALERIA (ID_SITE)
-  [+] INDEX IDX_SITE_LOJA em SITE (ID_LOJA_EX)
 
 ══ STORED PROCEDURES / FUNCTIONS ══
   [≠] PROCEDURE alterada: REGISTRAR_VENDA_LOTE
@@ -42,4 +47,4 @@ Relatório de Sincronização — 2026-04-03 19:21:19
 
 ══ APLICANDO NO BANCO DE PRODUÇÃO ══
 
-  ✅ Todos os 11 statement(s) aplicados com sucesso!
+  ✅ Todos os 14 statement(s) aplicados com sucesso!

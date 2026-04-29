@@ -100,6 +100,9 @@ class Config:
     GET_PORTFOLIO_DATA_URL   = f"{BASE_API_URL}/portfolio/info"
     REMOVE_FOTO_URL          = f"{BASE_API_URL}/portfolio/remove"
     UPLOAD_FOTO_URL          = f"{BASE_API_URL}/portfolio/upload"
+    GET_GALERIA_URL          = f"{BASE_API_URL}/portfolio/galeria"
+    UPLOAD_AVATAR_URL        = f"{BASE_API_URL}/portfolio/avatar"
+    UPLOAD_FOTO_BIO_URL      = f"{BASE_API_URL}/portfolio/foto-bio"
 
     CREATE_EVENT_CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
     G_REFRESH_TOKEN_URL       = "https://oauth2.googleapis.com/token"
