@@ -57,8 +57,7 @@ class LoginController:
             - Adiciona `?access_type=offline&prompt=consent` ao endpoint de
               autorização para garantir a entrega do refresh_token do Google.
         """
-        #self.client_id = '184100860737-52caf580q16d4ht8hgkl7ak8p7dr92js.apps.googleusercontent.com'
-        #self.id_secreto = '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'
+
         self.client_id = os.getenv('CLIENT_ID')
         self.id_secreto = os.getenv('SECRET_ID')
         self.page = page
@@ -78,7 +77,9 @@ class LoginController:
             [
                 "https://www.googleapis.com/auth/userinfo.email",
                 "https://www.googleapis.com/auth/userinfo.profile",
-                "https://www.googleapis.com/auth/calendar.events"
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/adwords",
+                "https://www.googleapis.com/auth/analytics.readonly"
             ]
         )
 

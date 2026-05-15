@@ -1,7 +1,9 @@
 import flet as ft
 import asyncio
 import os
+import io
 import base64
+from PIL import Image
 
 async def pick_file_base64(page: ft.Page, allowed_extensions=["png", "jpg", "jpeg", "webp"]):
     """
@@ -58,10 +60,21 @@ async def pick_file_base64(page: ft.Page, allowed_extensions=["png", "jpg", "jpe
         file_path = os.path.join("uploads", file.name)
         
         if os.path.exists(file_path):
-            with open(file_path, "rb") as f:
-                file_info["base64"] = base64.b64encode(f.read()).decode('utf-8')
+            with Image.open(file_path) as img:
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                img.thumbnail((1024, 1024))
+                buffer = io.BytesIO()
+                img.save(buffer, format="JPEG", quality=85)
+                file_info["base64"] = base64.b64encode(buffer.getvalue()).decode("utf-8")
             os.remove(file_path)
-            
+
+            if '.' in file_info["name"]:
+                nome_sem_extensao = file_info["name"].rsplit('.', 1)[0]
+                file_info["name"] = f"{nome_sem_extensao}.jpg"
+            else:
+                file_info["name"] = f"{file_info['name']}.jpg"                
+
         return file_info["base64"], file_info["name"]
 
     except Exception as ex:

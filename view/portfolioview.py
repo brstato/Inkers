@@ -28,7 +28,7 @@ class PortfolioView(ft.View):
         self.loading = CustonProgressRing()
 
         self.img_avatar = ft.Image(
-            src='https://brunotattoo.inkers.com.br/imagens/eu.JPG?v=1',
+            src=None,
             fit=ft.BoxFit.COVER,
             repeat=ft.ImageRepeat.NO_REPEAT,
             height=100,
@@ -100,7 +100,8 @@ class PortfolioView(ft.View):
         )
 
         self.bio_image = ft.Image(
-            src='https://brunotattoo.inkers.com.br/imagens/bio.JPG?v=1',
+            #src='https://brunotattoo.inkers.com.br/imagens/bio.JPG?v=1',
+            src=None,
             fit=ft.BoxFit.COVER,
             repeat=ft.ImageRepeat.NO_REPEAT,
             width=100,
@@ -290,4 +291,4 @@ class PortfolioView(ft.View):
     def update_gallery(self, controls: list):
         self.galeria.controls.clear()
         self.galeria.controls = controls
-        self.update()
+        self.page.update()

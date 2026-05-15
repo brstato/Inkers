@@ -55,6 +55,42 @@ class AccountView(ft.View):
         self.txt_instagram = CustomTextField("Instagram")
         self.txt_conf_password = CustomTextField("Confirme a senha", password=True, can_reveal_password=True)
 
+        self.area_m_pixel = ft.Stack(
+            controls=[
+                ft.Row(
+                    controls=[self.txt_m_pixel]
+                ),
+                ft.TextButton(
+                    content=ft.Text(
+                        "?", 
+                        size=16, 
+                        weight=ft.FontWeight.BOLD, 
+                        color=AppColors.GRAY_LIGHT
+                    ), 
+                    url="https://business.facebook.com/events_manager2/",
+                    right=10,
+                )
+            ]
+        )
+
+        self.area_g_id = ft.Stack(
+            controls=[
+                ft.Row(
+                    controls=[self.txt_g_id]
+                ),
+                ft.TextButton(
+                    content=ft.Text(
+                        "?", 
+                        size=16, 
+                        weight=ft.FontWeight.BOLD, 
+                        color=AppColors.GRAY_LIGHT
+                    ), 
+                    url="https://analytics.google.com/",
+                    right=10,
+                )
+            ]
+        )
+
         self.days_map = [
             ("2", "Seg"), ("3", "Ter"), ("4", "Qua"), 
             ("5", "Qui"), ("6", "Sex"), ("7", "Sáb"), ("1", "Dom")
@@ -123,8 +159,8 @@ class AccountView(ft.View):
                 self.txt_numero,
                 self.txt_complemento,
                 self.txt_instagram,
-                self.txt_m_pixel,
-                self.txt_g_id,
+                self.area_g_id,           
+                self.area_m_pixel,
                 ft.Divider(color=AppColors.GRAY_DARK), 
                 self.schedule_container,                    
                 ft.Container(height=20),

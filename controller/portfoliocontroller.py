@@ -3,6 +3,8 @@ import json
 import base64
 import asyncio
 import os
+import urllib.parse
+import time
 from model.portfoliomodel import PortfolioModel
 from controller.call_api import ProtectedApiCall
 from view.controls.custongaleriaitens import GaleriaItem
@@ -31,14 +33,14 @@ class PortfolioController:
 
             if response.status_code == 200:
                 data = response.json()
-                data_galeria = data.get('response', [])
+                data_galeria = data.get('itens', [])
                 new_controls = []
                 for item in data_galeria:
                     url_limpa = PortfolioModel.clean_url(item['url_foto'])
                     new_controls.append(
                         GaleriaItem(
                             id=item['id_foto'],
-                            image=f"https://{self.instance.slug}.inkers.com.br{url_limpa}",
+                            image=f"https://app.inkers.com.br{url_limpa}",
                             delete_click=self.delete_click
                         )
                     )
@@ -233,13 +235,15 @@ class PortfolioController:
                 bio_foto_path = PortfolioModel.clean_url(data.get("foto_bio", ""))
 
                 # Prepare data for view
+                ts = int(time.time())
+
                 view_data = {
                     "id_site": data.get("id_site", ""),
                     "titulo": data.get("titulo", ""),
                     "subtitulo": data.get("subtitulo", ""),
                     "bio": data.get("bio", ""),
-                    "avatar": f"https://{self.instance.slug}.inkers.com.br{avatar_path}" if avatar_path else "",
-                    "foto_bio": f"https://{self.instance.slug}.inkers.com.br{bio_foto_path}" if bio_foto_path else ""
+                    "avatar": f"https://app.inkers.com.br{avatar_path}?v={ts}" if avatar_path else "",
+                    "foto_bio": f"https://app.inkers.com.br{bio_foto_path}?v={ts}" if bio_foto_path else ""
                 }
                 
                 self.instance.fill_form(view_data)
@@ -251,7 +255,7 @@ class PortfolioController:
                     url_limpa = PortfolioModel.clean_url(item['url_foto'])
                     new_controls.append(
                         GaleriaItem(
-                            image=f"https://{self.instance.slug}.inkers.com.br{url_limpa}",
+                            image=f"https://app.inkers.com.br{url_limpa}",
                             id   =item["id_foto"],
                             delete_click=self.delete_click
                         )

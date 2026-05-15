@@ -544,6 +544,53 @@ class MainView(ft.View):
             expand=True,          
         )
 
+        self.btn_login_meta = ft.Button(
+            content=ft.Text(
+                "Login Meta",
+                size=12,
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            elevation=5,
+            expand=True,
+            color=AppColors.GRAY_LIGHT2,
+            #on_click=self.controller.create_instance_zap,
+            bgcolor=AppColors.GRAY_DARK,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=8),
+                side=ft.BorderSide(1, AppColors.GRAY_MED3),
+                color=AppColors.GRAY_LIGHT,
+            ),
+        )
+
+        self.area_meta = ft.Container(
+            padding=ft.Padding.all(10),
+            #margin=ft.margin.all(10),
+            border_radius=ft.BorderRadius.all(10),
+            shadow=ft.BoxShadow(
+                color=AppColors.BLACK, 
+                blur_radius=10,
+                offset=ft.Offset(x=0, y=-0.5),
+            ),
+            #height=120,
+            gradient=ft.LinearGradient(
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
+                colors=[
+                    AppColors.GRAY_DARK,    # Cor inicial
+                    AppColors.BACKGROUND_DARK,   # Cor final
+                ],  
+            ),                
+            content=ft.Column(
+                controls=[
+                    ft.Row(
+                        controls=[
+                            self.btn_login_meta
+                        ]
+                    )
+                ]
+            )
+        )
+
         self.drawer = ft.NavigationDrawer(
             bgcolor=AppColors.GRAY_DARK,
             elevation=10,
@@ -577,6 +624,7 @@ class MainView(ft.View):
                             ),                            
 
                             self.area_whatsapp,
+                            self.area_meta,
                             CustonButton(page, "Minha conta",     "/account"),
                             CustonButton(page, "Profissionais",   "/professional"),
                             CustonButton(page, "Produtos",        "/product"),  
