@@ -13,7 +13,7 @@ class mainModel:
     get_insumos_url:str         = Config.GET_ITENS_INSUMO
     update_insumo_url:str       = Config.UPDATE_INSUMO
     update_nota_cliente_url:str = Config.UPDATE_NOTA_CLIENTE
-    
+    notify_pendentes_url:str    = Config.NOTIFY_PENDENTES_URL
 
     async def _post_request(self, url:str, payload:dict, token: str) -> httpx.Response:
         header = {
@@ -29,21 +29,29 @@ class mainModel:
             return response
 
 
-    async def UpdateNotaCliente(self, id_cliente:int, nota:str, token:str):
+    async def notify_pendentes_agenda(self, id_loja:str, token:str):
+        payload = {
+            "id_loja": id_loja
+        }
+
+        return await self._post_request(self.notify_pendentes_url, payload, token)
+
+
+    async def UpdateNotaCliente(self, id_cliente:int, nota:str, token:str) -> httpx.Response:
         payload = {
             "id": id_cliente,
             "nota": nota
         }        
 
-        await self._post_request(self.update_nota_cliente_url, payload, token)
+        return await self._post_request(self.update_nota_cliente_url, payload, token)
         
 
-    async def UpdateInsumoData(self, itens:dict, token:str):
+    async def UpdateInsumoData(self, itens:dict, token:str) -> httpx.Response:
         payload = {
             "itens": itens
         }
 
-        await self._post_request(self.update_insumo_url, payload, token)
+        return await self._post_request(self.update_insumo_url, payload, token)
 
 
     async def GetInsumosData(self, id_loja:str, token:str):
@@ -86,7 +94,7 @@ class mainModel:
             "itens":itens
         }
 
-        await self._post_request(self.receber_venda_url, payload, token)        
+        return await self._post_request(self.receber_venda_url, payload, token)        
         
 
     async def status_caixa(self, id_loja:str, token:str) -> httpx.Response:

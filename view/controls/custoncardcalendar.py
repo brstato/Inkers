@@ -13,7 +13,7 @@ class CustoncardMonth(ft.Card):
             data_do_mes: datetime.date = None    
         ):
         super().__init__()
-        self.page = page
+        page = page
         self.month = month
         self.data_do_mes = data_do_mes
         self.tap = tap
@@ -26,8 +26,8 @@ class CustoncardMonth(ft.Card):
         )
         self.content = ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.BACKGROUND_DARK,    # Cor inicial
                     AppColors.GRAY_DARK,   # Cor final
@@ -69,7 +69,7 @@ class CustonCardDay(ft.Card):
     def __init__(self, page:ft.Page, card_date: datetime.date, is_hoje:bool=False, day_name:str='', tap:callable=None):
         super().__init__()
 
-        self.page = page
+        page = page
 
         self.day:int = card_date.day
         self.card_date = card_date
@@ -116,8 +116,8 @@ class CustonCardDay(ft.Card):
 
         self.content = ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.BACKGROUND_DARK,    # Cor inicial
                     AppColors.GRAY_DARK,   # Cor final
@@ -125,7 +125,7 @@ class CustonCardDay(ft.Card):
             ),            
             #bgcolor=AppColors.GRAY_DARK2,
             border_radius=ft.border_radius.all(5),
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             content=ft.Column(
                 controls=[
                     ft.GestureDetector(
@@ -149,7 +149,7 @@ class CustonCardDay(ft.Card):
         else:
             self.day_number.color = AppColors.GRAY_LIGHT3 
 
-        #self.page.update()    
+        #page.update()    
 
 
     def select(self):
@@ -175,7 +175,7 @@ class CustonRowCalendar(ft.Row):
         super().__init__()
 
         self.instance = instance
-        self.page = page
+#        page = page
 
         self.scroll=ft.ScrollMode.AUTO
         self.spacing=10  
@@ -197,7 +197,7 @@ class CustonRowDays(ft.Row):
         super().__init__()
 
         self.instance = instance
-        self.page = page
+        #page = page
 
         self.scroll=ft.ScrollMode.AUTO
         self.spacing=10  

@@ -12,38 +12,92 @@ from view.controls.custonlist import CustonList
 
 
 class AgendaView(ft.View):
-    def __init__(self, page:ft.Page):
+    def __init__(self, page:ft.Page, is_pendent:bool = False):
         super().__init__(
             route="/agenda", 
             scroll="auto",
             bgcolor=AppColors.BACKGROUND_DARK
         )
 
-        self.id_agenda:int = 0
+        self.id:int = 0
         self.id_prof:int = 0
-
-        self.page = page
 
         self.id_loja:str = ''
         self.token:str   = ''
         self.r_token:str = ''
 
+        self.g_token: str  = ''
+        self.g_r_token:str = ''
+
+        self.zap_instance:str = ''
+
         self.client_name:str = ''
-
         self.client_telefone:int = 0
-
         self.client_id:int = 0
 
-        self.progressRing = CustonProgressRing(self.page.height) 
+        self.progressRing = CustonProgressRing(page.height) 
 
-        self.controller = AgendaController(self.page, self)
+        self.controller = AgendaController(page, self)
 
-        self.month_row = CustonRowCalendar(self.page, self)
+        self.month_row = CustonRowCalendar(page, self)
+
+# --- MODAL E LISTA DE PENDENTES ---
+        self.lista_cards_pendentes = CustonList(page, self)
+
+        self.modal_pendentes = ft.BottomSheet(
+            bgcolor=AppColors.BLACK,
+            content=ft.Container(
+                padding=ft.padding.all(20),
+                content=ft.Column(
+                    controls=[
+                        self.lista_cards_pendentes,
+                    ],
+                ),
+            ),
+        )
+        
+        # self.modal_pendentes = CustonModalView(
+        #     page,
+        #     callback=None, # Não tem botão de ação global, a ação é nos cards
+        #     callback2=lambda e: [page.pop_dialog(), page.update()],
+        #     controls=[
+        #         ft.Text("Solicitações Pendentes", size=15, color=AppColors.GRAY_LIGHT2, weight="bold"),
+        #         self.lista_cards_pendentes
+        #     ],
+        #     height=500,
+        #     text_button_1="Fechar",
+        # )
+
+        # --- SININHO DE NOTIFICAÇÕES ---
+        self.notification_badge = ft.Container(
+            width=10, 
+            height=10, 
+            bgcolor=ft.Colors.RED_700,
+            border_radius=5, 
+            right=8, 
+            top=8, 
+            #visible=False,
+            border=ft.border.all(1, AppColors.GRAY_DARK)
+        )
+        
+        self.btn_notificacoes = ft.IconButton(
+            icon=ft.Icons.NOTIFICATIONS,
+            icon_color=AppColors.GRAY_LIGHT2,
+            on_click=self.controller.abrir_lista_pendentes,
+        )
+        
+        self.area_notificacoes = ft.Stack(
+            visible=False,
+            controls=[
+                self.btn_notificacoes, 
+                self.notification_badge
+            ]
+        )        
 
         self.month_container = ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -74,7 +128,7 @@ class AgendaView(ft.View):
             border=ft.InputBorder.UNDERLINE,
             border_color=AppColors.ORANGE_DARK,
             focused_border_color=AppColors.ORANGE_DARK,           
-            on_change=self.controller.on_client_selected
+            on_text_change=self.controller.on_client_selected
         )
 
         self.edt_client_telefone = CustomTextField(
@@ -113,7 +167,7 @@ class AgendaView(ft.View):
                 ft.IconButton(
                     right=5,
                     icon=ft.Icons.SCHEDULE,                    
-                    on_click=lambda e:[self.page.open(self.hora_fim), self.page.update()],
+                    on_click=lambda e:[page.show_dialog(self.hora_fim), page.update()],
                     icon_color=AppColors.GRAY_LIGHT2,                    
                 )
             ]
@@ -128,7 +182,7 @@ class AgendaView(ft.View):
                 ft.IconButton(
                     right=5,
                     icon=ft.Icons.SCHEDULE,                    
-                    on_click=lambda e:[self.page.open(self.hora_ini), self.page.update()],
+                    on_click=lambda e:[page.show_dialog(self.hora_ini), page.update()],
                     icon_color=AppColors.GRAY_LIGHT2,
                 )
             ]
@@ -148,31 +202,47 @@ class AgendaView(ft.View):
                     icon=ft.Icons.DATE_RANGE,
                     icon_color=AppColors.GRAY_LIGHT2,
                     right=5,
-                    on_click=lambda e:[self.page.open(self.calendario_agenda), self.page.update()]
+                    on_click=lambda e:[page.show_dialog(self.calendario_agenda), page.update()]
                 )                
             ]
         )
 
+        self.edt_edt_valor = CustomTextField(
+            label='Valor',
+            keyboard_type=ft.KeyboardType.NUMBER,
+            #regex=r"^[0-9,]*$"
+        )
+
+        self.edt_edt_sinal = CustomTextField(
+            label='Sinal',
+            keyboard_type=ft.KeyboardType.NUMBER,
+            #regex=r"^[0-9,]*$"
+        )
+
+
         self.modal_create_agenda = CustonModalView(
-            self.page,
+            page,
             callback=self.controller.confirm_agendamento,
-            callback2=lambda e: self.page.run_task(self.controller.fechar_modal_agenda, e),
+            callback2=lambda e: page.run_task(self.controller.fechar_modal_agenda, e),
             controls=[
                 self.edt_client_name,
                 self.edt_client_telefone,
                 self.date_area,
                 self.area_ini,
-                self.area_fim
+                self.area_fim,
+                self.edt_edt_valor,
+                self.edt_edt_sinal,                
             ],
-            height=360,
-        )
+            height=550,
+        )        
 
-        self.calendario = CustonRowDays(self.page, self)
+
+        self.calendario = CustonRowDays(page, self)
 
         self.container_calendario = ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -187,11 +257,12 @@ class AgendaView(ft.View):
         )
 
         self.list_profissionais = CustonListProfessional(
-            self.page
+            page
         )
 
         self.list_agendamento = CustonList(
-            self.page
+            page,
+            instance=self
         )
 
         self.bottom_appbar = ft.BottomAppBar(
@@ -202,11 +273,12 @@ class AgendaView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.HOME,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e:self.page.go("/main")
+                        on_click=lambda e:page.go("/main")
                     ),
                     ft.Container(
                         expand=True,
                     ),
+                    self.area_notificacoes,
                     ft.IconButton(
                         icon=ft.Icons.ADD,
                         icon_color=AppColors.ORANGE_BURNT,

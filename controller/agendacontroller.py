@@ -3,6 +3,7 @@ from model.professionalmodel import ProfessionlModel
 from model.clientmodel import ClientModel
 from utils.formatcurr import formatar_moeda_brasileira, _parse_currency
 import json
+import os
 from controller.call_api import ProtectedApiCall
 from view.controls.controls_mainview.custoncardprofessional import CustonCardProfessional
 from model.agendamodel import AgendaModel
@@ -14,6 +15,7 @@ import locale
 from view.controls.custondialog import CustonDialog
 from model.clientmodel import ClientModel
 from view.controls.colors import AppColors
+
 
 
 class AgendaController:
@@ -29,6 +31,233 @@ class AgendaController:
         self.selected_month = self.today.month
         self.selected_day = self.today.day
         self.selected_date = self.today
+        self.is_pendent: bool = False
+
+
+    async def get_is_pendent(self):
+       is_pendent = self.page.session.store.get("is_pendent")
+       if is_pendent:
+           self.instance.area_notificacoes.visible = True
+       else:
+           self.instance.area_notificacoes.visible = False
+       self.page.update()
+
+
+    async def abrir_lista_pendentes(self, e):
+    
+        self.instance.progressRing.visible = True
+        self.page.update()
+        
+        self.instance.lista_cards_pendentes.controls.clear()
+        
+        try:
+            # Reutiliza o seu método que busca do backend
+            dados_pendentes = await self.list_pendentes()
+            
+            if dados_pendentes and "pendentes" in dados_pendentes:
+                array_pendentes = dados_pendentes["pendentes"]
+                
+                # Guarda na memória para usarmos na hora de aprovar
+                self.dados_pendentes_memoria = array_pendentes 
+                
+                if not array_pendentes:
+                    self.instance.lista_cards_pendentes.controls.append(
+                        ft.Text("Nenhuma solicitação pendente no momento.", color=AppColors.GRAY_LIGHT2)
+                    )
+                else:
+                    for item in array_pendentes:
+                        card = CustonCardItensAgenda(
+                            page       =self.page,
+                            instance   =self.instance,
+                            telefone   =item.get("telefone"     ),
+                            data_atend =item.get("data"         ),
+                            hora_inicio=item.get("hora_ini"     ),
+                            hora_fim   =item.get("hora_fim"     ),
+                            name       =item.get("cliente"      ),
+                            id_agenda  =item.get("id"           ),
+                            id_client  =item.get("cod_client"   ),
+                            
+                            edit=self.iniciar_aprovacao_pendente, 
+                            delete=self.confirm_delete_agendamento, 
+                            tap=self.instance.list_agendamento.on_card_selected,
+                            is_pendente=True 
+                        )
+                        self.instance.lista_cards_pendentes.controls.append(card)
+            
+            self.page.show_dialog(self.instance.modal_pendentes)
+            
+        except Exception as ex:
+            print(f"Erro ao listar pendentes: {ex}")
+            #await self.show_eror_dialog("Erro ao buscar solicitações.")
+            
+        finally:
+            self.instance.progressRing.visible = False
+            self.page.update()
+
+
+    async def iniciar_aprovacao_pendente(self, e):
+        id_selecionado = self.instance.id 
+        
+        pedido = next((p for p in getattr(self, 'dados_pendentes_memoria', []) if p["id"] == id_selecionado), None)
+        
+        if pedido:
+            # 3. Fecha o modal de pendentes
+            self.page.pop_dialog()
+            
+            # 4. Formata a data (O JSON envia YYYY-MM-DD, precisamos de DD/MM/YYYY)
+            data_obj = datetime.strptime(pedido.get("data"), "%Y-%m-%d")
+            data_br = data_obj.strftime("%d/%m/%Y")
+            
+            # 5. Preenche os seus campos já existentes do modal de agendamento normal!
+            self.instance.edt_date_agendamento.value = data_br
+            self.instance.edt_hora_ini.value         = pedido.get("hora_ini"     )
+            self.instance.edt_hora_fim.value         = pedido.get("hora_fim"     )
+            self.instance.edt_client_telefone.value  = pedido.get("telefone"     )
+            self.instance.client_name                = pedido.get("cliente"      )
+            self.instance.client_id                  = pedido.get("cod_client", 0)
+            self.instance.edt_edt_sinal.value        = pedido.get("sinal",      0)
+            self.instance.edt_edt_valor.value        = pedido.get("valor",      0)
+            self.instance.id                         = id_selecionado            
+            
+            self.instance.edt_client_name.label = f"Cliente App: {pedido.get('cliente')}"
+            
+            self.page.show_dialog(self.instance.modal_create_agenda)
+            self.page.update()
+
+
+    async def list_pendentes(self):
+        response = await ProtectedApiCall(
+            self.page,
+            self.instance,
+            self.agendamodel.list_pendentes,
+            id_profissional=self.instance.id_prof,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        if response.status_code == 200:
+            data = response.json()
+            return data
+        else:
+            return None    
+
+
+    async def renew_google_token(self): 
+
+            if not self.instance.g_r_token:
+                return False
+
+            client_id = os.getenv('CLIENT_ID')
+            client_secret = os.getenv('SECRET_ID')
+
+            try:
+                # Import requests se não tiver no topo: import requests
+                response = await self.agendamodel.g_refresh_token(
+                    client_id,
+                    client_secret,
+                    self.instance.g_r_token
+                )
+                
+                if response.status_code == 200:
+                    new_data = response.json()
+                    new_access_token = new_data['access_token']
+                    
+                    # Atualiza na Memória
+                    self.instance.g_token = new_access_token
+                    
+                    # Atualiza no Disco (Persistência)
+                    self.page.session.store.set("google_access_token", new_access_token)
+                    
+                    return True
+                else:
+                    print(f"Falha ao renovar o token do Google: {response.status_code} - {response.text}")
+                    return False
+            except Exception as e:
+                print(f"Erro na renovação: {e}")
+                return False
+
+
+    async def enviar_confirmacao(self, telefone, nome_cliente, data, hora, link_google):
+            
+            mensagem = (
+                f"Olá, *{nome_cliente}*! 👋\n\n"
+                f"Seu agendamento está confirmado.\n"
+                f"🗓 *Data:* {data}\n"
+                f"⏰ *Horário:* {hora}\n\n"
+                f"Confira os detalhes e adicione à sua agenda clicando abaixo:\n"
+                f"{link_google}"
+            )
+                
+            response = await ProtectedApiCall(
+                self.page,
+                self.instance,
+                self.agendamodel.enviar_confirmacao,
+                mensagem=mensagem,
+                telefone=telefone,
+                zap_instance=self.instance.zap_instance,
+                token=self.instance.token
+            ).call_api_refresh_token()
+
+            if response.status_code == 201 or response.status_code == 200:
+                print("Mensagem enviada com sucesso!")
+                return True
+            else:
+                print(f"Erro ao enviar WPP: {response.text}")
+                return False
+
+
+    async def create_event_google_calendar(self, titulo: str, data: str, hora_ini: str, hora_fim: str, descricao: str):
+
+        try:
+            # Tenta renovar o token antes de começar por precaução
+            await self.renew_google_token()
+
+            date_obj = datetime.strptime(data, "%d/%m/%Y").date()
+
+            start_dt = datetime.combine(date_obj, datetime.strptime(hora_ini, "%H:%M").time())
+            end_dt   = datetime.combine(date_obj, datetime.strptime(hora_fim, "%H:%M").time())
+
+            start_iso = start_dt.isoformat()
+            end_iso = end_dt.isoformat()  
+
+            response = await self.agendamodel.CreateEventGoogleCalendar(
+                    titulo=titulo, 
+                    descricao=descricao,
+                    start_iso=start_iso,
+                    end_iso=end_iso,
+                    token=self.instance.g_token
+               )
+
+            if response.status_code == 200:
+                created_event = response.json()
+                google_id = created_event.get("id")
+                google_link = created_event.get("htmlLink")
+                return google_id, google_link
+
+            elif response.status_code == 401:
+                # Se der 401, tenta renovar o token e repetir a requisição
+                print("Token Google expirado, tentando renovar...")
+                if await self.renew_google_token():
+                    response = await self.agendamodel.CreateEventGoogleCalendar(
+                        titulo=titulo, 
+                        descricao=descricao,
+                        start_iso=start_iso,
+                        end_iso=end_iso,
+                        token=self.instance.g_token
+                    )
+                    
+                    if response.status_code == 200:
+                        created_event = response.json()
+                        google_id = created_event.get("id")
+                        google_link = created_event.get("htmlLink")
+                        return google_id, google_link
+
+            # Se cair aqui, loga o erro e retorna vazio para evitar quebra no desempacotamento
+            print(f"Erro no Google Calendar: {response.status_code} - {response.text}")
+            return '', ''
+                     
+        except Exception as e:
+            print(f"Excessão ao criar evento Google: {e}")
+            return '', ''
 
 
     async def list_resume_agenda(self, date:str):
@@ -84,12 +313,12 @@ class AgendaController:
                 content="Selecione um profissional antes de prosseguir.",
                 actions=[
                     ft.TextButton(
-                        text="OK", 
-                        on_click=lambda e:[self.page.close(dialog),self.page.update()]
+                        content="OK", 
+                        on_click=lambda e:[self.page.pop_dialog(),self.page.update()]
                         )
                     ]
             )
-            self.page.open(dialog)
+            self.page.show_dialog(dialog)
             self.page.update()
             return   
 
@@ -112,7 +341,8 @@ class AgendaController:
 
         await self.ListAgendamentos()
 
-        date_str = f"{self.selected_date.year}-{self.selected_date.month}-{self.selected_date.day}"
+        #date_str = f"{self.selected_date.year}-{self.selected_date.month}-{self.selected_date.day}"
+        date_str = self.selected_date.strftime('%Y-%m-%d')
 
         self.page.run_task(self.list_resume_agenda, date_str) 
 
@@ -266,22 +496,27 @@ class AgendaController:
             telefone = item["telefone"  ]
             id_agenda= item["id"        ]
             id_client= item["cod_client"]
+            event_id = item["event_id"  ]
+            tarefa   = item["tarefa"    ]
+            data     = item["data"      ]
 
 
             card = CustonCardItensAgenda(
-                self.page,
-                self.instance,
-                telefone,
-                0.00,
-                '',
-                hora_ini,
-                hora_fim,
-                cliente,
-                id_agenda,
-                id_client,
-                self.confirm_delete_agendamento,
-                self.instance.list_agendamento.on_card_selected,
-                self.detail_agendamento
+                page=self.page,
+                instance=self.instance,
+                telefone=telefone,
+                valor=0.00,
+                atendimento=tarefa,
+                hora_inicio=hora_ini,
+                hora_fim=hora_fim,
+                name=cliente,
+                id_agenda=id_agenda,
+                id_client=id_client,
+                event_id=event_id,
+                data_atend=data,
+                delete=self.confirm_delete_agendamento,
+                tap=self.instance.list_agendamento.on_card_selected,
+                edit=self.detail_agendamento
             )
             self.instance.list_agendamento.controls.append(card)
 
@@ -291,9 +526,14 @@ class AgendaController:
 
 
     async def get_data(self):
-        self.instance.id_loja = await self.page.client_storage.get_async("id"     )
-        self.instance.token   = await self.page.client_storage.get_async("token"  )
-        self.instance.r_token = await self.page.client_storage.get_async("r_token")     
+        self.instance.id_loja      = self.page.session.store.get("id"                  )
+        self.instance.token        = self.page.session.store.get("token"               )
+        self.instance.r_token      = self.page.session.store.get("r_token"             )   
+        self.instance.g_token      = self.page.session.store.get("google_access_token" )  
+        self.instance.zap_instance = self.page.session.store.get("zap_instance"        )
+        self.instance.g_r_token    = self.page.session.store.get("google_refresh_token")
+
+        refresh = self.instance.r_token
         
         if not self.instance.token or not self.instance.id_loja:
             self.page.go("/")
@@ -304,6 +544,7 @@ class AgendaController:
         await self.build_month()
         await self.build_calendar(self.today.year, self.today.month) 
         await self.ListAgendamentos()
+        await self.get_is_pendent()
 
         date_str = f"{self.today.year}-{self.today.month:02d}-{self.today.day:02d}"
         self.page.run_task(self.list_resume_agenda, date_str)
@@ -367,7 +608,7 @@ class AgendaController:
             options.append(
                 ft.DropdownOption(
                     style=ft.ButtonStyle(
-                        color=AppColors.GRAY_DARK,                    
+                        color=AppColors.GRAY_LIGHT2,                    
                     ),
                     text=nome,
                     key=json_key
@@ -389,7 +630,7 @@ class AgendaController:
 
             self.instance.client_id       = dados_do_cliente.get('id_client')
             self.instance.client_telefone = dados_do_cliente.get('telefone', '')
-            self.instance.client_name     = dados_do_cliente.get('nome', '')
+            self.instance.client_name     = dados_do_cliente.get('nome',     '')
 
             self.instance.edt_client_telefone.value = self.instance.client_telefone
 
@@ -412,12 +653,13 @@ class AgendaController:
 
 
     async def fechar_modal_agenda(self, e):
-        self.page.close(self.instance.modal_create_agenda)
+        self.page.pop_dialog()
         self.page.update()    
 
 
     async def create_agenda(self, e):
-        self.page.open(self.instance.modal_create_agenda)
+        self.page.pop_dialog()
+        self.page.show_dialog(self.instance.modal_create_agenda)
         self.instance.edt_date_agendamento.value = ''
         self.instance.edt_hora_ini.value = ''
         self.instance.edt_hora_fim.value = ''
@@ -433,11 +675,11 @@ class AgendaController:
             title='Atenção',
             content=aviso,
             actions=[
-                ft.TextButton("OK", on_click=lambda e: [self.page.close(dialog), self.page.update()])
+                ft.TextButton("OK", on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
             ]
         )
 
-        self.page.open(dialog)
+        self.page.show_dialog(dialog)
         self.page.update()
 
 
@@ -457,7 +699,7 @@ class AgendaController:
             return
 
         elif self.instance.client_id == 0:
-            self.show_eror_dialog('Selecione o cliente!')
+            await self.show_eror_dialog('Selecione o cliente!')
             return
         
         elif not data_str:
@@ -484,20 +726,40 @@ class AgendaController:
             await self.show_eror_dialog('O horario de inicio não pode ser maior que o horario de finalização do atendimento!')
             return
         
-        if self.instance.id_agenda == 0:
+        event_id, event_link = await self.create_event_google_calendar(
+            titulo=f"Atendimento - {self.instance.client_name}",
+            data=data_str,
+            hora_ini=hora_ini_str,
+            hora_fim=hora_fim_str,
+            descricao=f"Atendimento agendado para o cliente {self.instance.client_name}, valor: {self.instance.edt_edt_valor.value}, sinal: {self.instance.edt_edt_sinal.value}."
+        )
+
+        await self.enviar_confirmacao(
+            self.instance.edt_client_telefone.value,
+            self.instance.client_name,
+            data_str,
+            hora_ini_str,
+            event_link if event_link else "Agendamento confirmado."
+        )
+
+        if self.instance.id == 0:
 
             await ProtectedApiCall(
                 self.page,
                 self.instance,
                 self.agendamodel.CreateAgendamento,
-                id_prof=self.instance.id_prof, 
-                date=data_str, 
-                hora_ini=hora_ini_str, 
-                hora_fim=hora_fim_str,
-                id_client=self.instance.client_id, 
+                id_prof    =self.instance.id_prof, 
+                date       =data_str, 
+                hora_ini   =hora_ini_str, 
+                hora_fim   =hora_fim_str,
+                id_client  =self.instance.client_id, 
                 name_client=self.instance.client_name, 
-                telefone=self.instance.client_telefone,
-                token=self.instance.token
+                telefone   =self.instance.edt_client_telefone.value,
+                event_id   =event_id,
+                token      =self.instance.token,
+                valor      =self.instance.edt_edt_valor.value,
+                sinal      =self.instance.edt_edt_sinal.value,
+                id_loja    =self.instance.id_loja
             ).call_api_refresh_token()
 
         else:
@@ -506,21 +768,24 @@ class AgendaController:
                 self.page,
                 self.instance,
                 self.agendamodel.UpadateAgendaData,
-                id_agenda=self.instance.id_agenda, 
-                id_prof=self.instance.id_prof,  
-                telefone=self.instance.client_telefone, 
-                id_client=self.instance.client_id,
-                date=data_str, 
-                hora_ini=hora_ini_str,
-                hora_fim=hora_fim_str,
+                id_agenda  =self.instance.id, 
+                id_prof    =self.instance.id_prof,  
+                telefone   =self.instance.edt_client_telefone.value, 
+                id_client  =self.instance.client_id,
+                date       =data_str, 
+                hora_ini   =hora_ini_str,
+                hora_fim   =hora_fim_str,
                 name_client=self.instance.client_name, 
-                token=self.instance.token
+                event_id   =event_id,
+                token      =self.instance.token,
+                valor      =self.instance.edt_edt_valor.value,
+                sinal      =self.instance.edt_edt_sinal.value,                
             ).call_api_refresh_token()    
 
-        self.page.close(self.instance.modal_create_agenda)
+        self.page.pop_dialog()
         self.page.update()
 
-        self.instance.id_agenda = 0
+        self.instance.id = 0
 
         date_str = self.selected_date.strftime('%Y-%m-%d')
 
@@ -533,15 +798,16 @@ class AgendaController:
             self.page,
             self.instance,
             self.agendamodel.DeleteAgendaData,
-            id_agenda = self.instance.id_agenda,
+            id_agenda = self.instance.id,
             token = self.instance.token
         ).call_api_refresh_token()
 
-        self.instance.id_agenda = 0
+        self.instance.id = 0
 
         date_str = self.selected_date.strftime('%Y-%m-%d')
         await self.list_resume_agenda(date_str)
         await self.ListAgendamentos()
+        await self.abrir_lista_pendentes(None)
 
 
     async def confirm_delete_agendamento(self, e):
@@ -552,19 +818,19 @@ class AgendaController:
             [
                 ft.TextButton(
                     'Cancelar',
-                    on_click=lambda e:[self.page.close(dialog), self.page.update()]
+                    on_click=lambda e:[self.page.pop_dialog(), self.page.update()]
                 ),
                 ft.TextButton(
                     'Excluir',
                     on_click=lambda e:[
-                        self.page.close(dialog),
+                        self.page.pop_dialog(),
                         self.page.update(),
                         self.page.run_task(self.delete_agendamento)
                     ]
                 )
             ]
         )
-        self.page.open(dialog)
+        self.page.show_dialog(dialog)
         self.page.update()
 
 
@@ -573,7 +839,7 @@ class AgendaController:
             self.page,
             self.instance,
             self.agendamodel.DetailAgendaData,
-            id_agenda = self.instance.id_agenda,
+            id_agenda = self.instance.id,
             token = self.instance.token
         ).call_api_refresh_token()
 
@@ -606,6 +872,8 @@ class AgendaController:
         self.instance.edt_hora_fim.value         = data.get("hora_fim" )
         self.instance.client_id                  = data.get("id_client")
         self.instance.id_prof                    = data.get("id_prof"  )
+        self.instance.edt_edt_valor.value        = data.get("valor"    )
+        self.instance.edt_edt_sinal.value        = data.get("sinal"    )
 
-        self.page.open(self.instance.modal_create_agenda)
+        self.page.show_dialog(self.instance.modal_create_agenda)
         self.page.update()

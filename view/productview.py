@@ -15,26 +15,28 @@ class ProductView(ft.View):
             scroll = ft.ScrollMode.AUTO
         )
         
-        self.page    = page
+#        page    = page
 
-        self.width = self.page.width
+        self.width = page.width
 
         self.id_loja = None
         self.token   = None
         self.r_token = None
         self.id_prod = None
 
-        self.controller  = ProductController(self.page, self)
+        self.controller  = ProductController(page, self)
 
         self.edtNome     = CustomTextField(label="Nome do produto:")    
-        self.edtValcusto = CustomTextField(label="Valor de custo:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtValVenda = CustomTextField(label="Valor de venda:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtEstoque  = CustomTextField(label="Estoque:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtMEstoque = CustomTextField(label="Estoque mínimo:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
-        self.insumo      = ft.Switch(
+        self.edtValcusto = CustomTextField(label="Valor de custo:",  regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValVenda = CustomTextField(label="Valor de venda:",  regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+
+        self.edtEstoque  = CustomTextField(label="Estoque:",         regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtMEstoque = CustomTextField(label="Estoque mínimo:",  regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+
+        self.insumo = ft.Switch(
             label="Insumo",
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT,
                 size=18,
             ),
@@ -44,7 +46,7 @@ class ProductView(ft.View):
 
         self.Comissionado  = ft.Switch(
             label="Comissionado",
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT,
                 size=18,
             ),            
@@ -54,7 +56,7 @@ class ProductView(ft.View):
 
         self.infvalor  = ft.Switch(
             label="Informar valor na venda",
-            label_style=ft.TextStyle(
+            label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT,
                 size=18,
             ),            
@@ -62,11 +64,29 @@ class ProductView(ft.View):
             active_color=AppColors.ORANGE_DARK
         )   
 
+
+        self.modalview = CustonModalView(
+            page,
+            height=650,
+            callback=self.controller.editProduct,
+            callback2=lambda e:self.close_modal_view(e),
+            controls=[
+                self.edtNome,
+                self.edtValcusto,
+                self.edtValVenda,
+                self.edtEstoque,
+                self.edtMEstoque,
+                self.insumo,
+                self.Comissionado,
+                self.infvalor    
+            ],
+        )        
+
         self.modalviewCreateProduct = CustonModalView(
-            self.page,
+            page,
             height=650,
             callback=self.controller.createProduct,
-            callback2=self.close_modal_view_create_product,
+            callback2=lambda e: self.close_modal_view_create_product(e),
             controls=[
                 self.edtNome,
                 self.edtValcusto,
@@ -79,28 +99,13 @@ class ProductView(ft.View):
             ],            
         )        
         
-        self.modalview = CustonModalView(
-            self.page,
-            height=550,
-            callback=self.controller.editProduct,
-            callback2=self.close_modal_view,
-            controls=[
-                self.edtNome,
-                self.edtValcusto,
-                self.edtValVenda,
-                self.edtEstoque,
-                self.edtMEstoque,
-                self.insumo,
-                self.Comissionado,
-                self.infvalor    
-            ],
-        )
+
 
         self.selected_card = None
 
-        self.list = CustonList(self.page)
+        self.list = CustonList(page)
         
-        self.progressRing = CustonProgressRing(self.page.height)  
+        self.progressRing = CustonProgressRing(page.height)  
         
         self.appbar = ft.AppBar(
             automatically_imply_leading=False,
@@ -121,7 +126,7 @@ class ProductView(ft.View):
                     ft.IconButton(
                         icon=ft.Icons.HOME,
                         icon_color=AppColors.ORANGE_BURNT,
-                        on_click=lambda e:self.page.go("/main")
+                        on_click=lambda e:page.go("/main")
                     ),
                     ft.Container(
                         expand=True,
@@ -158,25 +163,25 @@ class ProductView(ft.View):
         self.insumo.value = False
         self.Comissionado.value = False
         self.infvalor.value = False  
-        self.page.open(self.modalviewCreateProduct)
+        self.page.show_dialog(self.modalviewCreateProduct)
         self.page.update()
 
 
-    def close_modal_view_create_product(self):
-        self.page.close(self.modalviewCreateProduct)
+    def close_modal_view_create_product(self, e):
+        self.page.pop_dialog()
         self.page.update()
 
 
     def close_modal_view(self, e):
-        self.page.close(self.modalview)
+        self.page.pop_dialog()
         self.page.update()
 
 
     async def _get_product_data(self):
         
-        self.id_loja: str = await self.page.client_storage.get_async("id"     )
-        self.token:   str = await self.page.client_storage.get_async("token"  )
-        self.r_token: str = await self.page.client_storage.get_async("r_token")      
+        self.id_loja: str = self.page.session.store.get("id"     )
+        self.token:   str = self.page.session.store.get("token"  )
+        self.r_token: str = self.page.session.store.get("r_token")      
 
         self.controller = ProductController(self.page, self)
 

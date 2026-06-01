@@ -24,7 +24,7 @@ class ProfessionalController:
 
     async def createProfessional(self, e):
 
-        self.page.close(self.instance.modalviewCreateProfessional)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()          
@@ -40,14 +40,13 @@ class ProfessionalController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-            await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+            self.page.session.store.set("token", json.loads(response.content)["token"])
+            self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await self.page.client_storage.get_async("token")
-            self.instance.r_token = await self.page.client_storage.get_async("r_token")
-
+            self.instance.token = self.page.session.store.get("token")
+            self.instance.r_token = self.page.session.store.get("r_token")
             if response.status_code != 200:
-                self.page.go("/")
+                await self.page.push_route("/")
 
             else:
                 await self.model.createProfessionalData(
@@ -65,7 +64,7 @@ class ProfessionalController:
 
     async def editProfessional(self, e):
 
-        self.page.close(self.instance.modalview)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()  
@@ -81,14 +80,14 @@ class ProfessionalController:
         if response.status_code != 200:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
-            await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-            await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+            self.page.session.store.set("token", json.loads(response.content)["token"])
+            self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
 
-            self.instance.token = await self.page.client_storage.get_async("token")
-            self.instance.r_token = await self.page.client_storage.get_async("r_token")
+            self.instance.token = self.page.session.store.get("token")
+            self.instance.r_token = self.page.session.store.get("r_token")
 
             if response.status_code != 200:
-                self.page.go("/")
+                await self.page.push_route("/")
 
             else:
                 response = await self.model.editProfessionalData(
@@ -119,15 +118,15 @@ class ProfessionalController:
             response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])   
+                self.page.session.store.set("token", json.loads(response.content)["token"])
+                self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
 
                 await self.model.deleteProfessionalData(id_prof, self.instance.token)
             else:
-                self.page.go("/")    
+                self.page.push_route("/")    
 
         self.instance.progressRing.visible = False
         self.page.update()                              
@@ -139,7 +138,7 @@ class ProfessionalController:
     async def listProfessionalData(self):
 
         if not self.instance.token or not self.instance.id_loja:    
-            self.page.go("/")
+            await self.page.push_route("/")
             self.page.update()
             return
 
@@ -154,17 +153,17 @@ class ProfessionalController:
 
             if response.status_code == 200:
 
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                self.page.session.store.set("token", json.loads(response.content)["token"])
+                self.page.session.store.set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
 
                 response = await self.model.getProfessionalData(self.instance.id_loja, self.instance.token)
 
                 self.page.update()
             else:    
-                self.page.go("/login")
+                self.page.push_route("/login")
 
         elif response.status_code == 200:
             
@@ -211,23 +210,21 @@ class ProfessionalController:
 
             if response.status_code == 200:
 
-                await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                self.page.session.store.set("token", json.loads(response.content)["token"])
+                self.page.session.store.set("r_token", json.load(response.content)["r_token"])
 
-                self.instance.token = await self.page.client_storage.get_async("token")
-                self.instance.r_token = await self.page.client_storage.get_async("r_token")
+                self.instance.token = self.page.session.store.get("token")
+                self.instance.r_token = self.page.session.store.get("r_token")
 
                 response = await self.model.DetailProfessionalData(id=id, token=self.instance.token)
             else:    
-                self.page.go("/login")                
+                self.page.push_route("/login")                
 
         elif response.status_code == 200:
             self.instance.edtName.value     = json.loads(response.content)["nome"    ]
             self.instance.edtTelefone.value = json.loads(response.content)["telefone"]
             self.instance.edtComissao.value = json.loads(response.content)["comissao"]
 
-
-
-            self.page.open(self.instance.modalview)
+            self.page.show_dialog(self.instance.modalview)
 
         self.page.update()    

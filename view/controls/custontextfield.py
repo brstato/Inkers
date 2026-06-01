@@ -10,6 +10,7 @@ class CustomTextField(ft.TextField):
             can_reveal_password:bool=False, 
             visible:bool=True,       
             on_change=None,
+            on_blur=None,
             readOnly:bool=False,  
             keyboard_type: ft.KeyboardType = ft.KeyboardType.TEXT,
             regex: str = '.*',
@@ -29,8 +30,11 @@ class CustomTextField(ft.TextField):
             visible=visible,
             read_only=readOnly,
             on_change = on_change,
+            on_blur = on_blur,
             keyboard_type=keyboard_type,
             input_filter = ft.InputFilter(regex_string=regex, replacement_string="", allow=True),
+            expand=True,
+            **kwargs
         )     
 
 

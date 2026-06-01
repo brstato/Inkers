@@ -5,7 +5,7 @@ from view.controls.custonprogressring import CustonProgressRing
 from view.controls.custontextfield import CustomTextField
 from view.controls.custonmodalview import CustonModalView
 from view.controls.custonlist import CustonList
-
+import asyncio
 
 class ServiceView(ft.View):
     def __init__(self, page: ft.Page):
@@ -15,46 +15,46 @@ class ServiceView(ft.View):
             scroll = ft.ScrollMode.AUTO
         )
         
-        self.page    = page
+        #page    = page
 
-        self.width = self.page.width
+        self.width = page.width
 
         self.id_loja = None
         self.token   = None
         self.r_token = None
         self.id_serv = None
 
-        self.controller  = ServiceController(self.page, self)
+        self.controller  = ServiceController(page, self)
 
         self.edtNome     = CustomTextField(label="Nome do produto:")    
-        self.edtValcusto = CustomTextField(label="Valor de custo:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtValVenda = CustomTextField(label="Valor de venda:", chars=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
-        self.edtComissao = CustomTextField(label="Comissão do serviço em %:", chars=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValcusto = CustomTextField(label="Valor de custo:", regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtValVenda = CustomTextField(label="Valor de venda:", regex=r"^[0-9,]*$", keyboard_type=ft.KeyboardType.NUMBER,)
+        self.edtComissao = CustomTextField(label="Comissão do serviço em %:", regex=r"^[0-9]*$", keyboard_type=ft.KeyboardType.NUMBER,)
 
         self.Comissionado  = ft.Switch(
-            label="Comissionado",
-            label_style=ft.TextStyle(
+            label="Comissionado",            
+            value=False,
+            active_color=AppColors.ORANGE_DARK,
+                        label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT,
                 size=18,
-            ),            
-            value=False,
-            active_color=AppColors.ORANGE_DARK
+            ),
         )        
 
 
         self.infvalor  = ft.Switch(
-            label="Informar valor na venda",
-            label_style=ft.TextStyle(
+            label="Informar valor na venda",          
+            value=False,
+            active_color=AppColors.ORANGE_DARK,
+                        label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT,
                 size=18,
-            ),            
-            value=False,
-            active_color=AppColors.ORANGE_DARK
+            ),
         )   
 
 
         self.modalviewCreateService = CustonModalView(
-            self.page,
+            page,
             height=500,
             callback=self.controller.createService,
             callback2=self.close_modal_view_create_service,
@@ -68,7 +68,7 @@ class ServiceView(ft.View):
         )        
         
         self.modalview = CustonModalView(
-            self.page,
+            page,
             height=450,
             callback=self.controller.editService,
             callback2=self.close_modal_view,
@@ -82,8 +82,8 @@ class ServiceView(ft.View):
         )
 
         self.selected_card = None
-        self.list = CustonList(self.page)
-        self.progressRing = CustonProgressRing(self.page.height)  
+        self.list = CustonList(page)
+        self.progressRing = CustonProgressRing(page.height)  
         
         self.appbar = ft.AppBar(
             automatically_imply_leading=False,
@@ -138,25 +138,25 @@ class ServiceView(ft.View):
         self.edtValVenda.value = ''
         self.Comissionado.value = False
         self.infvalor.value = False  
-        self.page.open(self.modalviewCreateService)
+        self.page.show_dialog(self.modalviewCreateService)
         self.page.update()
 
 
     def close_modal_view_create_service(self, e):
-        self.page.close(self.modalviewCreateService)
+        self.page.pop_dialog()
         self.page.update()
 
 
     def close_modal_view(self, e):
-        self.page.close(self.modalview)
+        self.page.pop_dialog()
         self.page.update()
 
 
     async def _get_service_data(self):
         
-        self.id_loja: str = await self.page.client_storage.get_async("id"     )
-        self.token:   str = await self.page.client_storage.get_async("token"  )
-        self.r_token: str = await self.page.client_storage.get_async("r_token")      
+        self.id_loja: str = self.page.session.store.get("id"     )
+        self.token:   str = self.page.session.store.get("token"  )
+        self.r_token: str = self.page.session.store.get("r_token")      
 
         self.controller = ServiceController(self.page, self)
 

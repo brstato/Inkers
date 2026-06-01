@@ -1,10 +1,10 @@
 import flet as ft
 from view.controls.colors import AppColors
 
-class CustonButton(ft.ElevatedButton):
+class CustonButton(ft.Button):
     def __init__(self, page:ft.Page, text:str = '', route:str=''):
         super().__init__(
-            text = text,
+            content = text,
             bgcolor=AppColors.GRAY_DARK,
             color=AppColors.WHITE,
             elevation=5,
@@ -18,6 +18,9 @@ class CustonButton(ft.ElevatedButton):
         )
 
         self.route = route
-        self.page = page
-        self.on_click=lambda e: self.page.go(self.route)  
+        self.on_click=self._go_to_route 
+
+
+    async def _go_to_route(self, e):
+        await self.page.push_route(self.route)
 

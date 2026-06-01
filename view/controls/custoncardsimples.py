@@ -10,7 +10,7 @@ class CustonCardSimples(ft.Card):
         self.tap = tap
         self.shadow_color=AppColors.BLACK
         self.elevation=5
-        self.page = page
+#        self.page = page
         self.id = id
         self.selected = False    
         self.instance = instance
@@ -18,8 +18,8 @@ class CustonCardSimples(ft.Card):
         
         self.container = ft.Container(     
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -55,7 +55,7 @@ class CustonCardSimples(ft.Card):
         self.instance.text_client.value = self.title
         self.instance.text_client.visible = True
         self.instance.id_client = self.id
-        self.page.close(self.instance.modal_pesquisa_clientes)
+        self.page.pop_dialog()
         self.page.update()       
 
 

@@ -10,7 +10,7 @@ class CustonProgressRing(ft.Container):
             height=height,
             expand=True,
             blur=10,
-            alignment=ft.alignment.center,
+            alignment=ft.Alignment.CENTER,
             visible=visible,
             bgcolor=AppColors.BLACK,
             opacity=0.5,

@@ -4,41 +4,60 @@ from utils.formatcurr import formatar_moeda_brasileira
 from view.controls.custonmodalview import CustonModalView
 from view.controls.custondialog import CustonDialog
 from view.controls.custontextfield import CustomTextField
+from datetime import datetime
 
 class CustonCardItensAgenda(ft.Card):
     def __init__(
             self, 
             page: ft.Page,
             instance,  
-            telefone:int=0,
-            valor:float=0.00,
             atendimento:str='',
             hora_inicio:str='',
-            hora_fim:str='',
-            name:str='', 
-            id_agenda:int=0, 
-            id_client:int=0,
-            delete:callable=None,
-            tap:callable=None,
-            edit:callable=None
+            hora_fim   :str='',
+            name       :str='', 
+            event_id   :str='',
+            data_atend :str='',
+            telefone   :int=0,                        
+            id_agenda  :int=0, 
+            id_client  :int=0,
+            valor      :float=0.00,            
+            is_pendente:bool=False,
+            delete     :callable=None,
+            tap        :callable=None,
+            edit       :callable=None,            
         ):
         super().__init__()
 
         self.edit = edit
-        self.page = page
+        page = page
         self.valor = valor
         self.name:str = name
         self.atendimento=atendimento
         self.hora_inicio=hora_inicio
         self.hora_fim=hora_fim
+        # Formata data para dd/mm/yyyy
+        try:
+            
+            if data_atend and 'T' in str(data_atend):
+                self.data_atend = datetime.fromisoformat(str(data_atend)).strftime("%d/%m/%Y")
+            elif data_atend and '-' in str(data_atend):
+                self.data_atend = datetime.strptime(str(data_atend), "%Y-%m-%d").strftime("%d/%m/%Y")
+            else:
+                self.data_atend = data_atend
+        except Exception:
+            self.data_atend = data_atend
+            
         self.id_agenda:int = id_agenda
+        self.id = id_agenda
         self.id_client:int = id_client
         self.selected:bool = False
         self.tap = tap
         self.instance = instance
-        self.height = 135
+        self.height = 145
         self.telefone = telefone
         self.delete = delete
+        self.event_id = event_id
+        self.is_pendente = is_pendente
         
         self.border_radius=ft.border_radius.all(10)
         self.elevation=10
@@ -46,7 +65,7 @@ class CustonCardItensAgenda(ft.Card):
 
         self.edtValor = CustomTextField(
             label="Valor de venda:", 
-            chars=r"^[0-9,]*$",
+            regex=r"^[0-9,]*$",
             keyboard_type=ft.KeyboardType.NUMBER,
         )
 
@@ -58,16 +77,18 @@ class CustonCardItensAgenda(ft.Card):
         )
 
         self.btn_edit = ft.IconButton(
-            icon=ft.Icons.EDIT,
-            icon_color=AppColors.ORANGE_BURNT,    
+            icon=ft.Icons.CHECK if is_pendente else ft.Icons.EDIT,
+            icon_color=AppColors.ORANGE_BURNT,
             on_click=self.detail_agendamento                                                        
         )    
 
         self.btn_remove = ft.IconButton(
-            icon=ft.Icons.DELETE,
+            icon=ft.Icons.CLOSE if is_pendente else ft.Icons.DELETE,
             icon_color=AppColors.ORANGE_BURNT,    
             on_click=self.delete_agendamento                                                          
-        )             
+        )          
+
+        self.cor_borda = AppColors.ORANGE_DARK if is_pendente else AppColors.GRAY_MED2   
 
         self.text_name = ft.Text( 
             size=18, 
@@ -86,8 +107,8 @@ class CustonCardItensAgenda(ft.Card):
 
         self.container=ft.Container(
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -99,15 +120,19 @@ class CustonCardItensAgenda(ft.Card):
             padding=ft.padding.all(10),
             content=ft.Row(
                 controls=[
-                    ft.Icon(name=ft.Icons.DATE_RANGE, color=AppColors.ORANGE_DARK),
-                    ft.VerticalDivider(color=AppColors.ORANGE_DARK),
+                    # ft.Icon(
+                    #     icon=ft.Icons.ACCESS_TIME if is_pendente else ft.Icons.DATE_RANGE, 
+                    #     color=AppColors.ORANGE_DARK
+                    # ),
+                    # ft.VerticalDivider(color=AppColors.ORANGE_DARK),
                     ft.Container(
                         content=ft.Column(
+                            spacing=5,
                             controls=[
                                 ft.Text(value=self.name, color=AppColors.ORANGE_DARK, size=16, weight=ft.FontWeight.BOLD,),
                                 self.telefone_area,
                                 #ft.Text(value=self.atendimento, color=AppColors.GRAY_LIGHT2, size=14),
-                                ft.Text(value=f'Inicio: {self.hora_inicio} - Fim: {self.hora_fim}', color=AppColors.GRAY_LIGHT2, size=14),
+                                ft.Text(value=f'Data: {self.data_atend}\nInicio: {self.hora_inicio} - Fim: {self.hora_fim}', color=AppColors.GRAY_LIGHT2, size=14),
                             ],
                             #width=self.width / 2,
                         ),
@@ -157,12 +182,13 @@ class CustonCardItensAgenda(ft.Card):
 
 
     async def delete_agendamento(self, e):
-        self.instance.id_agenda = self.id_agenda
+        self.instance.id = self.id
         self.page.run_task(self.delete, e)
 
 
     async def detail_agendamento(self, e):
-        self.instance.id_agenda = self.id_agenda
+        self.instance.id = self.id
+        self.instance.client_id = self.id_client
         self.page.run_task(self.edit, e)
 
 

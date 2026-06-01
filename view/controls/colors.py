@@ -6,7 +6,7 @@ class AppColors:
     """
     # Cores Principais
     ORANGE_BURNT = "#CC5500"
-    ORANGE_DARK = "#FF8C00"
+    ORANGE_DARK  = "#bb6401"
 
     WHITE           = "#FFFFFF"
     GRAY_LIGHT      = "#DFDFDF"    

@@ -17,7 +17,7 @@ class SignaturePad(ft.Container):
         self.shapes = []
         self.draw_data = []
         self.current_points = []
-        self.page = page
+        page = page
         self.instance = instance
         
         # Canvas onde o desenho acontece
@@ -42,11 +42,11 @@ class SignaturePad(ft.Container):
 
     def start_stroke(self, e: ft.DragStartEvent):
         # Inicia um novo caminho (Path) quando o usuário toca na tela
-        # self.page.scroll = None
-        # self.page.update()
+        # page.scroll = None
+        # page.update()
 
         self.current_path = cv.Path(
-            [cv.Path.MoveTo(e.local_x, e.local_y)],
+            [cv.Path.MoveTo(e.local_position.x, e.local_position.y)],
             paint=ft.Paint(
                 stroke_width=self.stroke_width,
                 style=ft.PaintingStyle.STROKE,
@@ -57,15 +57,15 @@ class SignaturePad(ft.Container):
         )
         self.shapes.append(self.current_path)
         # inicia a lista de pontos do traço atual
-        self.current_points = [(e.local_x, e.local_y)]
+        self.current_points = [(e.local_position.x, e.local_position.y)]
         self.update()
 
     def update_stroke(self, e: ft.DragUpdateEvent):   
         # Adiciona linhas ao caminho enquanto o usuário arrasta
         if self.current_path:
-            self.current_path.elements.append(cv.Path.LineTo(e.local_x, e.local_y))
+            self.current_path.elements.append(cv.Path.LineTo(e.local_position.x, e.local_position.y))
             # registra também os pontos vetoriais para exportação/rasters
-            self.current_points.append((e.local_x, e.local_y))
+            self.current_points.append((e.local_position.x, e.local_position.y))
             self.update()
 
     def clear(self):
@@ -102,7 +102,7 @@ class SignaturePad(ft.Container):
                 self.current_points = []
             # finalizar o caminho atual
             # self.current_path = None
-            # self.page.scroll = ft.ScrollMode.AUTO
+            # page.scroll = ft.ScrollMode.AUTO
 
             self.page.update()
 

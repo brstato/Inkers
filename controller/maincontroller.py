@@ -5,6 +5,7 @@ from model.clientmodel import ClientModel
 from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
 from model.mainmodel import mainModel
 from utils.formatcurr import formatar_moeda_brasileira, _parse_currency
+from utils.secure_storage import SecureStorage
 import json
 from view.controls.custoncardsimples import CustonCardSimples
 from view.controls.colors import AppColors
@@ -14,6 +15,9 @@ from model.accountmodel import AccountModel
 from urllib.parse import quote, urlparse
 import datetime
 from model.zapmodel import ZapModel
+import asyncio
+from controller.integracaocontroller import IntegracaoController
+from flet.security import decrypt
 
 
 class MainController:
@@ -26,20 +30,100 @@ class MainController:
         self.model_clientes = ClientModel()
         self.account_model = AccountModel()
         self.zap_model = ZapModel()
+        self.meta_integracao = IntegracaoController(self.page, self.instance)
 
 
-    def create_link_anamnese(self, e):
+    async def on_switch_ads(self, e):
+        await self.meta_integracao.on_switch_ads(e.control.value)
+
+
+    async def init_onesignal(self):
+        if self.page.session.store.get("onesignal_initialized"):
+            return
+        if self.instance.account_tel:
+            js_login = f"javascript:window.OneSignalDeferred?.push(function(OS) {{ OS.login('{self.instance.account_tel}'); }});"
+            await self.page.launch_url(js_login)
+            self.page.session.store.set("onesignal_initialized", True)
+
+
+    async def notify_agenda_pendentes(self):
+        response = await ProtectedApiCall(
+            self.page, 
+            self.instance, 
+            self.model.notify_pendentes_agenda,
+            id_loja=self.instance.id_loja,
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        if response.status_code == 200:
+            resposta = json.loads(response.content)
+            pendentes = resposta.get("count", 0)
+
+            if pendentes > 0:
+                self.page.session.store.set("is_pendent", True)
+                self.page.run_task(self.animar_notificacao, True)
+            else:
+                self.page.session.store.set("is_pendent", False)
+                self.page.run_task(self.animar_notificacao, False)
+
+        
+    async def animar_notificacao(self, ativar: bool):
+        if ativar:
+            # Se já estiver visível e animando, não faz nada para evitar duplo loop
+            if self.instance.icon_notification.visible:
+                return
+                
+            self.instance.icon_notification.visible = True
+            self.instance.icon_notification.scale = 1.0
+            self.page.update()
+            
+            # Loop de animação (Batimento)
+            while self.instance.icon_notification.visible:
+                # Alterna o tamanho entre o normal (1.0) e maior (1.3)
+                self.instance.icon_notification.scale = 1.3 if self.instance.icon_notification.scale == 1.0 else 1.0
+                self.page.update()
+                await asyncio.sleep(0.5) # Aguarda a transição terminar antes de inverter
+        else:
+            # Desliga a notificação e reseta o tamanho
+            self.instance.icon_notification.visible = False
+            self.instance.icon_notification.scale = 1.0
+            self.page.update()        
+
+
+    async def show_drawer(self):
+        await self.page.show_drawer()
+
+
+    async def create_link_agenda_turnos(self, e):
+        parsed_url = urlparse(self.page.url)
+        base_domain = f"https://{parsed_url.netloc}"
+        base_url = f"{base_domain}/agendaturnos"
+        await ft.Clipboard().set(base_url)
+        await self.page.close_drawer()
+        self.page.show_dialog(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
+        self.page.update()
+
+
+    async def create_link_anamnese(self, e):
         account_name = quote(self.instance.account_name)
         parsed_url = urlparse(self.page.url)
         base_domain = f"https://{parsed_url.netloc}"
         base_url = f"{base_domain}/anamnese/{account_name}/{self.instance.account_tel}"
-        self.page.set_clipboard(base_url)
-        self.page.open(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
+        await ft.Clipboard().set(base_url)
+        await self.page.close_drawer()
+        self.page.show_dialog(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
         self.page.update()
 
 
+    async def login_meta(self, e):
+        if self.instance.meta_long_token:
+            await self.meta_integracao.desconectar_meta_ads(e)
+        else:
+            await self.meta_integracao.vincular_meta_ads(e)
+
+
     async def create_instance_zap(self, e):
-        self.page.close(self.instance.drawer)
+        await self.page.close_drawer()
 
         self.instance.progressRing.visible = True
         self.page.update()
@@ -58,7 +142,7 @@ class MainController:
             qr_code = resposta.get('qrcode', {})
             par_code = qr_code.get('pairingCode', '')
 
-            self.page.set_clipboard(par_code)
+            await ft.Clipboard().set(par_code)
 
             zap_dialog = CustonDialog(
                 page=self.page,
@@ -67,12 +151,12 @@ class MainController:
                 actions=[
                     ft.TextButton(
                         'OK',
-                        on_click=lambda e: [self.page.close(zap_dialog), self.page.update()]
+                        on_click=lambda e: [self.page.pop_dialog(), self.page.update()]
                     ),
                 ]
             )
 
-            self.page.open(zap_dialog)
+            self.page.show_dialog(zap_dialog)
 
         self.instance.progressRing.visible = False
 
@@ -85,8 +169,6 @@ class MainController:
             zap_instance=self.instance.zap_instance,
             token=self.instance.token
         ).call_api_refresh_token()
-
-        #print(response.content)
         
         resposta = json.loads(response.content)
 
@@ -96,10 +178,10 @@ class MainController:
         self.instance.zap_status = state
 
         if self.instance.zap_status != 'open':
-            self.instance.botao_whatsapp.text = 'Conectar'
+            self.instance.botao_whatsapp.content = 'Conectar'
             self.instance.status_whatsapp.value = 'Desconectado'
         else:
-            self.instance.botao_whatsapp.text = 'Desconectar'
+            self.instance.botao_whatsapp.content = 'Desconectar'
             self.instance.status_whatsapp.value = 'Conectado'
 
         self.page.update()
@@ -112,8 +194,10 @@ class MainController:
         await ProtectedApiCall(self.page, self.instance, self.model.UpdateNotaCliente,
             id_cliente=id_cliente,
             nota=nota,
-            token=self.instance.token).call_api_refresh_token()
-        self.page.close(self.instance.modal_nota_cliente)
+            token=self.instance.token
+        ).call_api_refresh_token()
+
+        self.page.pop_dialog()
         self.page.update()
         await self.limpar_venda(e)
 
@@ -127,28 +211,52 @@ class MainController:
         self.instance.text_troco.value   = 'Troco: R$ 0,00'
         
         self.instance.text_total.value = f'Total: R$ {formatar_moeda_brasileira(self.instance.total)}'
-        self.page.open(self.instance.modal_recebimento)                
+        self.page.show_dialog(self.instance.modal_recebimento)                
         self.page.update()
     
     
     async def get_account_data(self):
-     
-        response = await ProtectedApiCall(
-            self.page, self.instance, self.account_model.getAccountData,
-            id=self.instance.id_loja,
-            token=self.instance.token
-        ).call_api_refresh_token()
-
-        if response.status_code == 200:
+        try:
+            response = await ProtectedApiCall(
+                self.page, self.instance, 
+                self.account_model.getAccountData,
+                id=self.instance.id_loja,
+                token=self.instance.token
+            ).call_api_refresh_token()
+            
             data = json.loads(response.content)
 
-            self.instance.account_name = data["nome"        ]
-            self.instance.account_tel  = data["telefone"    ]
-            self.instance.zap_instance = data["zap_instance"]
+            meta_long_token_encrypted = data.get("meta_long_token", "")
+            
+            self.instance.meta_long_token = ''
+            if meta_long_token_encrypted:
+                try:
+                    decrypted_token = await self.meta_integracao.secure_storage.decrypt_value(meta_long_token_encrypted)
+                    self.instance.meta_long_token = decrypted_token
+                except Exception as dec_ex:
+                    print(f"ERROR ao descriptografar token Meta: {dec_ex}")
 
-        if not self.instance.account_tel:
-            self.page.go("/account")
+            self.instance.account_name    = data["nome"           ]
+            self.instance.account_tel     = data["telefone"       ]
+            self.instance.zap_instance    = data["zap_instance"   ]
+            self.instance.slug            = data["slug"           ]
+            self.instance.status_campanha = data["status_campanha"]
 
+            self.page.session.store.set("account_name", self.instance.account_name)
+            self.page.session.store.set("account_tel",  self.instance.account_tel)
+            self.page.session.store.set("zap_instance", self.instance.zap_instance)
+            self.page.session.store.set("slug",                 self.instance.slug)
+            self.page.session.store.set("meta_long_token", self.instance.meta_long_token)
+            self.page.session.store.set("status_campanha", self.instance.status_campanha)
+
+            await self.meta_integracao.atualizar_ui_meta()
+
+            if not self.instance.account_tel:
+                await self.page.push_route("/account")
+        except Exception as ex:
+            print(f"ERROR em get_account_data: {ex}")
+            import traceback
+            traceback.print_exc()
 
 
     async def get_status_caixa(self):
@@ -157,14 +265,13 @@ class MainController:
             self.page, self.instance, self.model.status_caixa, 
             id_loja=self.instance.id_loja,
             token=self.instance.token
-        ).call_api_refresh_token()
-        
-        if response.status_code == 200:           
-            self.instance.status_caixa = json.loads(response.content)["status"]
-            self.instance.id_caixa = json.loads(response.content)["id_caixa"]
+        ).call_api_refresh_token()       
+                
+        self.instance.status_caixa = json.loads(response.content)["status"]
+        self.instance.id_caixa = json.loads(response.content)["id_caixa"]
 
-            await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
-            await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+        self.page.session.store.set("status_caixa", self.instance.status_caixa)
+        self.page.session.store.set("id_caixa", str(self.instance.id_caixa))
 
 
     def _collect_payment_values(self):
@@ -204,41 +311,74 @@ class MainController:
 
 
     async def get_Data(self):
-        self.instance.id_loja      = await self.page.client_storage.get_async("id"     )
-        self.instance.token        = await self.page.client_storage.get_async("token"  )
-        self.instance.r_token      = await self.page.client_storage.get_async("r_token")   
+        try:
+            try:
+                self.instance.id_loja = self.page.session.store.get(     "id")
+                self.instance.token   = self.page.session.store.get(  "token")
+                self.instance.r_token = self.page.session.store.get("r_token")
+            except Exception as e:
+                print(f"DEBUG: Erro ao obter id_loja: {e}")
+                self.instance.id_loja = None
+                self.instance.token = None
+            
+            if not self.instance.token or not self.instance.id_loja:    
+                await self.page.push_route("/")
+                return
 
-        if not self.instance.token or not self.instance.id_loja:    
-             self.page.go("/")
-             self.page.update()
-             return
-        
-        await self.get_status_caixa()
+            self.instance.progressRing.visible = True
+            self.page.update()
+            
+            await self.get_status_caixa()
 
-        if self.instance.total == 0:            
-            self.instance.btn_total.visible = False
-            self.instance.btn_fechar_caixa.visible = True  
+            if self.instance.total == 0:            
+                self.instance.btn_total.visible = False
+                self.instance.btn_fechar_caixa.visible = True  
 
-        if self.instance.status_caixa == 'F':
-            self.instance.btn_abrir_caixa.visible = True
-            self.instance.btn_fechar_caixa.visible = False
+            if self.instance.status_caixa == 'F':
+                self.instance.btn_abrir_caixa.visible = True
+                self.instance.btn_fechar_caixa.visible = False
 
-        elif self.instance.status_caixa == 'A':   
-            self.instance.btn_fechar_caixa.visible = True
-            self.instance.btn_abrir_caixa.visible = False        
+            elif self.instance.status_caixa == 'A':   
+                self.instance.btn_fechar_caixa.visible = True
+                self.instance.btn_abrir_caixa.visible = False        
 
-        self.instance.progressRing.visible = True
-        self.page.update()
+            self.page.update()
 
-        await self.get_account_data()
-        await self.listPorfissionais()
-        await self.listItens()
-        await self.listClientes()
-        await self.listInsumos()
-        await self.get_connection_zap()
+            # Verificação e carregamento dos dados da conta com cache em sessão
+            cached_name = self.page.session.store.get("account_name")
+            cached_tel = self.page.session.store.get("account_tel")
 
-        self.instance.progressRing.visible = False
-        self.page.update()         
+            if cached_name and cached_tel:
+                self.instance.account_name = cached_name
+                self.instance.account_tel = cached_tel
+                self.instance.zap_instance = self.page.session.store.get("zap_instance") or ''
+                self.instance.slug = self.page.session.store.get("slug") or ''
+                self.instance.meta_long_token = self.page.session.store.get("meta_long_token") or ''
+                self.instance.status_campanha = self.page.session.store.get("status_campanha") or 'False'
+            #else:
+            await self.get_account_data()
+
+            # Atualiza a UI da integração Meta em qualquer cenário (cache ou API)
+            await self.meta_integracao.atualizar_ui_meta()
+
+            # Dispara requisições paralelas para otimização extrema de performance
+            tasks = [
+                self.listPorfissionais(),
+                self.listItens(),
+                self.listClientes(),
+                self.get_connection_zap(),
+                self.notify_agenda_pendentes(),
+                self.init_onesignal(),
+                self.meta_integracao.salvar_google_analytics()
+            ]
+            await asyncio.gather(*tasks)
+
+            self.instance.progressRing.visible = False
+            self.page.update()
+        except Exception as ex:
+            print(f"ERROR em get_Data: {ex}")
+            import traceback
+            traceback.print_exc()         
 
 
     def exibir_edt_pesquisa_produtos(self, e):
@@ -250,19 +390,23 @@ class MainController:
 
 
     def exibir_lista_clientes(self, e):
-        self.page.open(self.instance.modal_pesquisa_clientes)
+        self.page.show_dialog(self.instance.modal_pesquisa_clientes)
+        self.instance.btn_agenda.visible = False
+        self.instance.btn_cancelar.visible = True
+        self.instance.btn_fechar_caixa.visible = False
+
         self.page.update()        
 
 
     def cancelar_modal_pesquisa_clientes(self, e):
         self.instance.id_client = 0
         self.instance.text_client.visible = False
-        self.page.close(self.instance.modal_pesquisa_clientes)
+        self.page.pop_dialog()
         self.page.update()           
 
 
     async def confirmar_pequisa_clientes(self, e):
-        self.page.close(self.instance.modal_pesquisa_clientes)
+        self.page.pop_dialog()
         self.page.update()
 
 
@@ -273,13 +417,15 @@ class MainController:
         self.instance.edt_debito.value   = ''
         self.instance.edt_credito.value  = ''
 
-        self.page.close(self.instance.modal_recebimento)
+        self.page.pop_dialog()
         self.page.update()   
 
 
     async def limpar_venda(self, e):
         self.instance.btn_fechar_caixa.visible = True
         self.instance.btn_total.visible = False
+        self.instance.btn_agenda.visible = True
+        self.instance.btn_fechar_caixa.visible = True       
         self.instance.total = 0
         self.instance.text_client.value = ''
         self.instance.id_client = 0
@@ -351,12 +497,12 @@ class MainController:
 
         self.instance.status_caixa = "F"
 
-        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)   
-        await self.page.client_storage.set_async("id_caixa", "0")   
+        self.page.session.store.set("status_caixa", self.instance.status_caixa)   
+        self.page.session.store.set("id_caixa", "0")   
 
         self.instance.btn_fechar_caixa.visible = False                    
         self.instance.btn_abrir_caixa.visible = True
-        self.page.close(self.instance.modal_fechamento_caixa)
+        self.page.pop_dialog()
         self.page.update()
 
 
@@ -368,16 +514,16 @@ class MainController:
                 content="Por favor selecione o profissional!",
                 actions=[
                     ft.TextButton(
-                        text="Voltar",
+                        content="Voltar",
                         on_click=lambda e: [
-                            self.page.close(self.dialog_profissional_caixa),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
             
-            self.page.open(self.dialog_profissional_caixa)
+            self.page.show_dialog(self.dialog_profissional_caixa)
             self.page.update()
             return      
         
@@ -387,7 +533,7 @@ class MainController:
         self.instance.edt_debito_fechamento.value   = ''
         self.instance.edt_credito_fechamento.value  = ''
 
-        self.page.open(self.instance.modal_fechamento_caixa)
+        self.page.show_dialog(self.instance.modal_fechamento_caixa)
         self.page.update()
    
 
@@ -424,7 +570,7 @@ class MainController:
 
         self.instance.status_caixa = 'A'    
 
-        await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa )    
+        self.page.session.store.set("status_caixa", self.instance.status_caixa )    
 
         data_abertura = datetime.datetime.now().timestamp()
 
@@ -446,16 +592,15 @@ class MainController:
 
         if response.status_code == 200:
             self.instance.id_caixa = json.loads(response.content)["id_caixa"]
-            await self.page.client_storage.set_async("id_caixa", self.instance.id_caixa)
+            self.page.session.store.set("id_caixa", self.instance.id_caixa)
 
             self.instance.btn_abrir_caixa.visible = False
             self.instance.btn_fechar_caixa.visible = True
-            self.page.close(self.instance.modal_caixa)
-
+            self.page.pop_dialog()
             self.page.update()
         else:
             self.instance.status_caixa = 'F'
-            await self.page.client_storage.set_async("status_caixa", self.instance.status_caixa)
+            self.page.session.store.set("status_caixa", self.instance.status_caixa)
             self.dialog_erro_abrir_caixa = CustonDialog(
                 page = self.page,
                 title="Atenção",
@@ -464,13 +609,17 @@ class MainController:
                     ft.TextButton(
                         text="OK",
                         on_click=lambda e:[
-                            self.page.close(self.dialog_erro_abrir_caixa),
+                            self.page.pop_dialog(),
                             self.page.update()                            
                         ]
 
                     )
                 ]
-            )       
+            )  
+
+            self.page.show_dialog(self.dialog_erro_abrir_caixa)     
+            self.page.update()
+            return
         
     
     async def abrir_caixa(self):
@@ -481,20 +630,20 @@ class MainController:
                 content="Por favor selecione o profissional!",
                 actions=[
                     ft.TextButton(
-                        text="Voltar",
+                        content="Voltar",
                         on_click=lambda e: [
-                            self.page.close(self.dialog_profissional_abrir_caixa),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
-            
-            self.page.open(self.dialog_profissional_abrir_caixa)
+
+            self.page.show_dialog(self.dialog_profissional_abrir_caixa)
             self.page.update()
             return
 
-        self.page.open(self.instance.modal_caixa)
+        self.page.show_dialog(self.instance.modal_caixa)
         self.page.update()  
         
 
@@ -512,24 +661,24 @@ class MainController:
                 }
 
                 itens_insumo.append(item_data)
-
+            else:
+                return
         await ProtectedApiCall(
             self.page, self.instance, self.model.UpdateInsumoData, 
             itens=itens_insumo,
             token=self.instance.token
         ).call_api_refresh_token()
 
-        self.page.close(self.instance.modal_insumos)
-        self.page.open(self.instance.dialog_nota_cliente)
+        self.page.pop_dialog()
+        self.page.show_dialog(self.instance.dialog_nota_cliente)
         self.page.update()
-        #await self.limpar_venda(e)
-        #await self.abrir_dialogo_nota_clientes(e)
         
 
     async def listInsumos(self):         
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.GetInsumosData, 
-            id_loja=self.instance.id_loja, token=self.instance.token).call_api_refresh_token()
+            id_loja=self.instance.id_loja, token=self.instance.token
+        ).call_api_refresh_token()
            
         array = json.loads(response.content)
 
@@ -687,22 +836,22 @@ class MainController:
 
 
     async def recebimento(self, e):
-        if self.instance.id_prof == 0:
+        if not self.instance.id_prof:
             self.dialog = CustonDialog(
                 self.page,
                 title="Atenção",
                 content="Por favor selecione o profissional!",
                 actions=[
                     ft.TextButton(
-                        text="Voltar",
+                        content="Voltar",
                         on_click=lambda e:[
-                            self.page.close(self.dialog),
+                            self.page.pop_dialog(),
                             self.page.update()
                         ]
                     )
                 ]
             )
-            self.page.open(self.dialog)
+            self.page.show_dialog(self.dialog)
             self.page.update()
             return
         
@@ -725,7 +874,7 @@ class MainController:
                     color=AppColors.GRAY_LIGHT,
                 ),
             )
-            self.page.open(snackbar)
+            self.page.show_dialog(snackbar)
             self.page.update()
             return
         
@@ -748,10 +897,10 @@ class MainController:
             itens=itens
         ).call_api_refresh_token()
 
-        self.page.close(self.instance.modal_recebimento)
+        self.page.pop_dialog()
 
         if self.instance.ident_serv == 1:
-            self.page.open(self.instance.dialog_insumo)
+            self.page.show_dialog(self.instance.dialog_insumo)
         else:
             await self.limpar_venda(e)
 
@@ -759,39 +908,55 @@ class MainController:
 
 
     async def fechar_dialogo_nota_clientes(self, e):
-        self.page.close(self.instance.dialog_nota_cliente) 
+        self.page.pop_dialog()
         self.page.update()
         await self.limpar_venda(e)
 
 
     def abrir_dialogo_nota_clientes(self, e):
         if not self.instance.id_client == 0:
-            self.page.open(self.instance.dialog_nota_cliente)
+            self.page.show_dialog(self.instance.dialog_nota_cliente)
             self.page.update()
 
 
     async def fechar_modal_nota_clientes(self, e):
-        self.page.close(self.instance.modal_nota_cliente) 
+        self.page.pop_dialog() 
         self.page.update() 
         await self.limpar_venda(e)
 
 
     async def fechar_dialogo_insumos(self, e):
-        self.page.close(self.instance.dialog_insumo) 
+        self.page.pop_dialog()
         self.page.update() 
-        await self.abrir_dialogo_nota_clientes(e)        
+        self.abrir_dialogo_nota_clientes(e)        
 
 
     async def abrir_modal_insumos(self, e):
-        self.page.close(self.instance.dialog_insumo)
-        self.page.open(self.instance.modal_insumos)
+        await self.listInsumos()
+        self.page.pop_dialog()
+        self.page.show_dialog(self.instance.modal_insumos)
         self.page.update()
 
 
     def fechar_modal_insumos(self, e):
-        self.page.close(self.instance.modal_insumos) 
+        self.page.pop_dialog()
         self.page.update() 
         self.abrir_dialogo_nota_clientes(e)   
+
+
+    async def handler_logout(self):
+        self.page.session.store.set("token",        '')
+        self.page.session.store.set("r_token",      '')
+        self.page.session.store.set("id",           '')
+        self.page.session.store.set("status_caixa", '')
+        self.page.session.store.set("slug",         '')
+
+        # Remove tokens persistidos de forma segura para desabilitar o auto-login
+        _storage = SecureStorage()
+        for key in ("r_token", "id", "google_refresh_token", "login_method"):
+            await _storage.remove(key)
+
+        await self.page.push_route("/")    
     
 
 

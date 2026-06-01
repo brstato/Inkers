@@ -20,7 +20,7 @@ class CustonCard(ft.Card):
         self.callback2 = callback2
         self.shadow_color=AppColors.BLACK
         self.elevation=5
-        self.page = page
+#        self.page = page
         self.id = id
         self.selected = False
         
@@ -31,7 +31,7 @@ class CustonCard(ft.Card):
                 ft.SubmenuButton(
                     content=ft.TextButton(
                         icon=ft.Icons.SMS,
-                        text='Chamar',
+                        content='Chamar',
                         url=f'https://wa.me/55{self.telefone}'
                     ),
                 ),
@@ -49,14 +49,14 @@ class CustonCard(ft.Card):
         self.btn_edit = ft.IconButton(
             icon=ft.Icons.EDIT,
             icon_color=AppColors.ORANGE_BURNT,
-            on_click=lambda e: self.page.run_task(self.open_modal_view_detail)
+            on_click=lambda e: page.run_task(self.open_modal_view_detail)
         )
         
         
         self.container = ft.Container(     
             gradient=ft.LinearGradient(
-                begin=ft.alignment.top_center,  # Ponto inicial do gradiente
-                end=ft.alignment.bottom_center, # Ponto final do gradiente
+                begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
+                end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
                 colors=[
                     AppColors.GRAY_DARK,    # Cor inicial
                     AppColors.BACKGROUND_DARK,   # Cor final
@@ -70,7 +70,7 @@ class CustonCard(ft.Card):
             content=ft.Row(
                 controls=[
                     ft.Icon(
-                        name=icon,
+                        icon=icon,
                         color=AppColors.ORANGE_BURNT,
                         size=20,
                     ),
@@ -199,7 +199,7 @@ class CustonCard(ft.Card):
                 ft.TextButton(
                     "Cancelar", 
                     on_click=lambda e: [
-                        self.page.close(dialog), 
+                        self.page.pop_dialog(), 
                         self.page.update()
                         ]
                     ),
@@ -209,7 +209,7 @@ class CustonCard(ft.Card):
                 )
             ]
         ) 
-        self.page.open(dialog)
+        self.page.show_dialog(dialog)
         self.page.update()   
 
 
@@ -218,7 +218,7 @@ class CustonCard(ft.Card):
 
 
     async def confirm_delete(self, dialog):
-        self.page.close(dialog)
+        self.page.pop_dialog()
         self.page.update()
         await self.callback(self.id)
    

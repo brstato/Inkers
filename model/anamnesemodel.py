@@ -5,7 +5,8 @@ import httpx
 
 class AnamneseModel:
     def __init__(self):
-        self.create_anamnese_url = Config.CREATE_ANAMENESE_URL
+        self.create_anamnese_url    = Config.CREATE_ANAMENESE_URL
+        self.list_profissionais_url = Config.LIST_PROFISSIONAIS_URL
 
 
     async def _post_request(self, url: str, payload: dict)    -> httpx.Response:
@@ -20,6 +21,12 @@ class AnamneseModel:
             )
             return response   
 
+
+    async def list_profissionais(self, telefone_estudio: str):
+        payload = {
+            'telefone': telefone_estudio
+        }
+        return await self._post_request(self.list_profissionais_url, payload)
 
 
     async def CreateAnamnese(self, dados: AnamneseDTO):

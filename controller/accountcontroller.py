@@ -6,19 +6,117 @@ import json
 
 
 class AccountController:
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, instance):
         self.page = page
         self.model = AccountModel()
 
         self.dialog = None
 
-        self.r_token:str = ''
+        self.instance = instance
+
+
+    async def get_endereco(self):
+        cep = self.instance.txt_cep.value
+        if not cep:
+            return
+
+        cep = "".join(filter(str.isdigit, cep))       
+
+        if len(cep) != 8:     
+            return CustonDialog(
+                self.page,
+                'Atenção!',
+                'Informe um CEP válido.',
+                [
+                    ft.TextButton(
+                        'OK', 
+                        on_click=lambda e: 
+                        [
+                            self.page.pop_dialog(), 
+                            self.page.update()
+                        ]
+                    )
+                ]
+            )
+
+        self.instance.progressRing.visible = True   
+        self.page.update()
+
+        response = await self.model.get_endereco(cep)
+
+        if response.status_code == 200:
+            data = response.json()
+            
+            self.instance.txt_endereco.value = data.get("street",       "")
+            self.instance.txt_bairro.value   = data.get("neighborhood", "")
+            self.instance.txt_cidade.value   = data.get("city",         "")
+            self.instance.txt_estado.value   = data.get("state",        "")
+
+            self.instance.txt_numero.focus()
+
+        else:
+            self.instance.txt_endereco.readOnly = False
+            self.instance.txt_bairro.readOnly   = False
+            self.instance.txt_cidade.readOnly   = False
+            self.instance.txt_estado.readOnly   = False
+
+
+        self.instance.progressRing.visible = False
+        self.page.update()
+        
+
+    async def get_slug(self):
+        self.instance.progressRing.visible = True
+        self.page.update()
+        
+        self.instance.txt_slug.value = self.instance.txt_slug.value.strip().replace(" ", "")
+        self.instance.txt_slug.update()
+        
+        slug = self.instance.txt_slug.value
+        response = await self.model.get_slug(slug)
+        if response.status_code == 200:
+            data = json.loads(response.content)
+            slug_bool:bool = bool(data.get("slug", False))
+            id_loja:str    = data.get("id_loja", "")
+            if (slug_bool == True and id_loja != self.instance.id) or (slug_bool == True and self.instance.id == ""):
+                dialog = CustonDialog(
+                    self.page,
+                    title="Atenção",
+                    content="Este apelido já está em uso!",
+                    actions=[
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
+                    ]
+                )
+                self.page.show_dialog(dialog)    
+
+                self.instance.txt_slug.border = ft.InputBorder.OUTLINE 
+            else:        
+                self.instance.txt_slug.border = ft.InputBorder.UNDERLINE
+        self.instance.progressRing.visible = False
+        self.page.update()
+                
+
+    def clean_slug(self, e):
+        # Remove espaços enquanto digita
+        if " " in e.control.value:
+            e.control.value = e.control.value.replace(" ", "")
+        if "." in e.control.value:
+            e.control.value = e.control.value.replace(".", "")    
+        e.control.update()
+
+
+    async def get_schedule_json_data(self, view_instance):
+        import json
+        data = {}
+        for item in view_instance.schedule_controls:
+            data[item.day_id] = item.get_data()    
+        return data     
 
 
     async def getAccountData(self, view_instance):
-        id: str = await self.page.client_storage.get_async("id")
-        token: str = await self.page.client_storage.get_async("token")
-        r_token: str = await self.page.client_storage.get_async("r_token")
+        id:str      = self.page.session.store.get("id"     )
+        token:str   = self.page.session.store.get("token"  )
+        r_token:str = self.page.session.store.get("r_token")
 
         if id and r_token:
 
@@ -30,26 +128,56 @@ class AccountController:
             if response.status_code == 401:
                 response = await LoginModel().refresh_token(r_token, id)
                 if response.status_code == 200:
-                    await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                    await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                    self.page.session.store.set("token",   json.loads(response.content)["token"  ])
+                    self.page.session.store.set("r_token", json.loads(response.content)["r_token"])
 
-                    token: str = await self.page.client_storage.get_async("token")
-                    r_token: str = await self.page.client_storage.get_async("r_token")
+                    token: str = self.page.session.store.get("token")
+                    r_token: str = self.page.session.store.get("r_token")
 
                     response = await self.model.getAccountData(id, token)
 
-                    view_instance.txt_username.value = json.loads(response.content)["nome"]
-                    view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
-                    view_instance.txt_email.value = json.loads(response.content)["email"]
+                    data = json.loads(response.content)
+
+                    view_instance.txt_username.value = data.get("nome",     "")
+                    view_instance.txt_telefone.value = data.get("telefone", "")                
+                    view_instance.txt_email.value    = data.get("email",    "")
+                    view_instance.txt_slug.value     = data.get("slug",     "")
+
+                    view_instance.txt_cep.value        = data.get("cep",        "")
+                    view_instance.txt_endereco.value   = data.get("endereco",   "")
+                    view_instance.txt_bairro.value     = data.get("bairro",     "")
+                    view_instance.txt_cidade.value     = data.get("cidade",     "")
+                    view_instance.txt_estado.value     = data.get("estado",     "")
+                    view_instance.txt_numero.value     = data.get("numero",     "")
+                    view_instance.txt_complemento.value= data.get("complemento","")
+                    view_instance.txt_instagram.value  = data.get("insta",      "")
+                    view_instance.txt_m_pixel.value    = data.get("meta_pixel", "")
+                    view_instance.txt_g_id.value       = data.get("g_tag",      "")
 
                     self.page.update()
                 else:    
                     self.page.go("/")
 
             elif response.status_code == 200:
-                view_instance.txt_username.value = json.loads(response.content)["nome"]
-                view_instance.txt_telefone.value = json.loads(response.content)["telefone"]                
-                view_instance.txt_email.value = json.loads(response.content)["email"]
+                data = json.loads(response.content)
+                view_instance.txt_username.value   = data.get("nome",     "")
+                view_instance.txt_telefone.value   = data.get("telefone", "")
+                view_instance.txt_email.value      = data.get("email",    "")
+                view_instance.txt_slug.value       = data.get("slug",     "")
+                view_instance.txt_cep.value        = data.get("cep",        "")
+                view_instance.txt_endereco.value   = data.get("endereco",   "")
+                view_instance.txt_bairro.value     = data.get("bairro",     "")
+                view_instance.txt_cidade.value     = data.get("cidade",     "")
+                view_instance.txt_estado.value     = data.get("estado",     "")
+                view_instance.txt_numero.value     = data.get("numero",     "")
+                view_instance.txt_complemento.value= data.get("complemento","")
+                view_instance.txt_instagram.value  = data.get("insta",      "")
+                view_instance.txt_m_pixel.value    = data.get("meta_pixel", "")
+                view_instance.txt_g_id.value       = data.get("g_tag",      "")                
+
+                horario_data = data.get("horario", {})
+
+                view_instance.load_schedule_data(horario_data)
 
             if not view_instance.txt_telefone.value:
                 dialog = CustonDialog(
@@ -57,52 +185,78 @@ class AccountController:
                     'Atenção!',
                     'Complete seus dados.',
                     [
-                        ft.TextButton('Ok', on_click=lambda e:[self.page.close(dialog), self.page.update()])
+                        ft.TextButton('Ok', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                     ]
                 )    
-                self.page.open(dialog)
+                self.page.show_dialog(dialog)
 
             view_instance.progressRing.visible = False
             self.page.update()
+        else:
+            return    
 
 
-    def navigation(self, e, id:str = None):
+    async def navigation(self, e):
         if self.dialog is not None:
-            self.page.close(self.dialog)
+            self.page.pop_dialog()
             self.dialog = None
             self.page.update() 
             
-        if self.r_token:
-            self.page.go("/main")
-            self.page.update()
+        if self.instance.r_token:
+            await self.page.push_route("/main")
         else:
-            self.page.go("/")    
+            await self.page.push_route("/")    
 
 
     async def handle_save(self, e, view_instance):
 
-        self.username = view_instance.txt_username.value
-        self.telefone = view_instance.txt_telefone.value
-        self.email    = view_instance.txt_email.value
-        self.password = view_instance.txt_password.value
-        self.conf_pass= view_instance.txt_conf_password.value
+        horario_funcionamento = await self.get_schedule_json_data(view_instance)    
+
+        self.username    = view_instance.txt_username.value
+        self.telefone    = view_instance.txt_telefone.value
+        self.email       = view_instance.txt_email.value
+        self.slug        = view_instance.txt_slug.value
+        self.cep         = view_instance.txt_cep.value
+        self.endereco    = view_instance.txt_endereco.value
+        self.bairro      = view_instance.txt_bairro.value
+        self.cidade      = view_instance.txt_cidade.value
+        self.estado      = view_instance.txt_estado.value
+        self.numero      = view_instance.txt_numero.value
+        self.complemento = view_instance.txt_complemento.value
+        self.instagram   = view_instance.txt_instagram.value
+        self.m_pixel     = view_instance.txt_m_pixel.value
+        self.g_tag       = view_instance.txt_g_id.value
 
         self.id:str      = view_instance.id
         self.token:str   = view_instance.token
-        self.r_token = view_instance.r_token
+        self.r_token     = view_instance.r_token
 
         if not self.r_token:
 
-            if not all([self.username, self.telefone, self.email, self.password, self.conf_pass]):
+            if not all(
+                [
+                    self.username, 
+                    self.telefone, 
+                    self.email, 
+                    self.slug,
+                    self.cep,
+                    self.endereco,
+                    self.bairro,
+                    self.cidade,
+                    self.estado,
+                    self.numero,
+                    self.complemento
+                ]
+            ):#self.password, self.conf_pass, self.slug]):
                 self.dialog = CustonDialog(
                     self.page,
                     title="Atenção",
                     content="Por favor preencha todos os campos.",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
                 return
         
@@ -112,10 +266,10 @@ class AccountController:
                     title="Atenção",
                     content="As senhas não coincidem!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
                 return    
         
@@ -126,7 +280,18 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
-                self.password
+                self.slug,
+                self.cep,
+                self.endereco,
+                self.bairro,
+                self.cidade,
+                self.estado,
+                self.numero,
+                self.complemento,
+                self.instagram,
+                self.m_pixel,
+                self.g_tag,
+                horario_funcionamento
             )    
 
             view_instance.progressRing.visible = False         
@@ -137,10 +302,10 @@ class AccountController:
                     title="Sucesso",
                     content="Conta criada com sucesso!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update(), self.page.go("/")])
+                        ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update(), self.page.go("/")])
                     ]
                 )
-                self.page.open(self.dialog)  
+                self.page.show_dialog(self.dialog)  
                 return
 
             if response.status_code == 409:
@@ -149,38 +314,38 @@ class AccountController:
                     title="Erro!",
                     content=f"Atenção o nome {self.username} ja esta em uso!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog) 
+                self.page.show_dialog(self.dialog) 
                 return                  
                     
         else:
-            if not all([self.username, self.telefone, self.email]):
+            if not all(
+                [
+                    self.username, 
+                    self.telefone, 
+                    self.email,
+                    self.cep,
+                    self.endereco,
+                    self.bairro,
+                    self.cidade,
+                    self.estado,
+                    self.numero,
+                    self.complemento
+                ]
+            ):
                 self.dialog = CustonDialog(
                     self.page,
                     title="Atenção",
                     content="Por favor preencha todos os campos.",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e: [self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update()
-                return
-
-            if self.password != self.conf_pass:
-                self.dialog = CustonDialog(
-                    self.page,
-                    title="Atenção",
-                    content="As senhas não coincidem!",
-                    actions=[
-                        ft.TextButton('OK', on_click=lambda e: [self.page.close(self.dialog), self.page.update()])
-                    ]
-                )
-                self.page.open(self.dialog)          
-                self.page.update()
-                return                
+                return              
 
             view_instance.progressRing.visible = True
             self.page.update()
@@ -190,23 +355,37 @@ class AccountController:
                 self.username,
                 self.telefone,
                 self.email,
-                self.password,
-                self.token
+                self.cep,
+                self.endereco,
+                self.bairro,
+                self.cidade,
+                self.estado,
+                self.numero,
+                self.complemento,
+                self.instagram,
+                self.m_pixel,
+                self.g_tag,
+                self.token, 
+                horario_funcionamento,
+                self.slug   
             )    
 
             view_instance.progressRing.visible = False     
             self.page.update()     
             
             if response.status_code == 200:
+                self.page.session.store.set("account_name", self.username)
+                self.page.session.store.set("account_tel", self.telefone)
+                self.page.session.store.set("slug", self.slug)
                 self.dialog = CustonDialog(
                     self.page,
                     title="Sucesso",
                     content="Dados atualizados com sucesso!",
                     actions=[
-                        ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
+                        ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                     ]
                 )
-                self.page.open(self.dialog)          
+                self.page.show_dialog(self.dialog)          
                 self.page.update() 
 
             elif response.status_code == 401:
@@ -215,11 +394,12 @@ class AccountController:
                 response = await LoginModel().refresh_token(r_token, id)
                 
                 if response.status_code == 200:
-                    await self.page.client_storage.set_async("token", json.loads(response.content)["token"])
-                    await self.page.client_storage.set_async("r_token", json.load(response.content)["r_token"])
+                    data = json.loads(response.content)
+                    self.page.session.store.set("token",   data["token"  ])
+                    self.page.session.store.set("r_token", data["r_token"])
 
-                    token: str = json.loads(response.content)["token"]
-                    r_token: str = json.load(response.content)["r_token"]
+                    token:str   = data["token"  ]
+                    r_token:str = data["r_token"]
 
                     view_instance.token  = token
                     view_instance.r_token = r_token
@@ -229,17 +409,31 @@ class AccountController:
                         self.username,
                         self.telefone,
                         self.email,
-                        self.password,
-                        token
+                        self.cep,
+                        self.endereco,
+                        self.bairro,
+                        self.cidade,
+                        self.estado,
+                        self.numero,
+                        self.complemento,
+                        self.instagram,
+                        self.m_pixel,
+                        self.g_tag,
+                        token,
+                        horario_funcionamento,
+                        self.slug   
                     )    
 
                     if response.status_code == 200:
+                        self.page.session.store.set("account_name", self.username)
+                        self.page.session.store.set("account_tel", self.telefone)
+                        self.page.session.store.set("slug", self.slug)
                         self.dialog = CustonDialog(
                             self.page,
                             title="Sucesso",
                             content="Dados atualizados com sucesso!",
                             actions=[
-                                ft.TextButton('OK', on_click=lambda e:[self.page.close(self.dialog), self.page.update()])
+                                ft.TextButton('OK', on_click=lambda e:[self.page.pop_dialog(), self.page.update()])
                             ]
                         )
         self.page.update()

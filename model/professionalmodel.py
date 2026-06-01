@@ -1,13 +1,13 @@
 import httpx
-import model.config
+from model.config import Config
 
 
 class ProfessionlModel:
-    getprofessionaldataURL:str    = "http://127.0.0.1:8082/api/v1/professional/list"
-    deleteprofessionaldataURL:str = "http://127.0.0.1:8082/api/v1/professional/delete"
-    detailprofessionaldataURL:str = "http://127.0.0.1:8082/api/v1/professional/detail"
-    editprofessionaldataURL:str   = "http://127.0.0.1:8082/api/v1/professional/edit"    
-    createprofessionaldataURL:str = "http://127.0.0.1:8082/api/v1/professional/create"   
+    getprofessionaldataURL:str    = Config.LIST_PROFESSIONAL_URL
+    deleteprofessionaldataURL:str = Config.DELETE_PROFESSIONAL_URL
+    detailprofessionaldataURL:str = Config.DETAIL_PROFESSIONAL_URL
+    editprofessionaldataURL:str   = Config.EDIT_PROFESSIONAL_URL    
+    createprofessionaldataURL:str = Config.CREATE_PROFESSIONAL_URL   
 
 
 

@@ -2,18 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug Uvicorn (Flet)",
+            "name": "Debug Uvicorn (FastAPI/Flet) com Reload",
             "type": "debugpy",
             "request": "launch",
-            "module": "uvicorn", 
+            "module": "uvicorn",
             "args": [
                 "main:app",
-                "--host", "0.0.0.0",
-                "--port", "8086",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8087",
                 "--reload"
             ],
             "jinja": true,
-            "justMyCode": true
+            "justMyCode": true,
+            "subProcess": true,
+            "console": "integratedTerminal"
         }
     ]
 }
