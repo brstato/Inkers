@@ -49,11 +49,16 @@ class Config:
     BAIXAR_DESP_URL       = f"{BASE_API_URL}/despesas/baixa"
     
     
-    UPDATE_ACCOUNT_URL    = f"{BASE_API_URL}/account/update"
-    GET_ACCOUNT_DATA_URL  = f"{BASE_API_URL}/account/get_data"
-    ACCOUNT_REGISTER_URL  = f"{BASE_API_URL}/account/register"
-    GET_SLUG_URL          = f"{BASE_API_URL}/account/get_slug"
-    GET_ENDERECO_URL      = f"{BASE_API_URL}/public/endereco"
+    UPDATE_ACCOUNT_URL         = f"{BASE_API_URL}/account/update"
+    GET_ACCOUNT_DATA_URL       = f"{BASE_API_URL}/account/get_data"
+    ACCOUNT_REGISTER_URL       = f"{BASE_API_URL}/account/register"
+    GET_SLUG_URL               = f"{BASE_API_URL}/account/get_slug"
+    GET_ENDERECO_URL           = f"{BASE_API_URL}/public/endereco"
+    UPDATE_META_LONG_TOKEN_URL = f"{BASE_API_URL}/account/metatoken"
+    UPDATE_META_ADS_ID_URL     = f"{BASE_API_URL}/account/meta_ads_id"
+    UPDATE_META_PIXEL_ID_URL   = f"{BASE_API_URL}/account/meta_pixel_id"  
+    UPDATE_GOOGLE_ANALYTICS_ID_URL = f"{BASE_API_URL}/account/google_analytics_id"
+    UPDATE_STATUS_CAMPANHA_META_URL = f"{BASE_API_URL}/account/status_campanha_meta"  
       
     # Client URLs
     CREATE_CLIENT_URL     = f"{BASE_API_URL}/client/create"
@@ -86,6 +91,7 @@ class Config:
     LOGIN_URL             = f"{BASE_API_URL}/login"
     REFRESH_TOKEN_URL     = f"{BASE_API_URL}/token/refresh"
     LOGIN_GOOGLE_URL      = f"{BASE_API_URL}/login_google"
+    GET_GOOGLE_ADS_ACCOUNT_URL = f"{BASE_API_URL}/account/get_ads_account"
 
     # Professional URLs
     LIST_PROFESSIONAL_URL    = f"{BASE_API_URL}/professional/list"

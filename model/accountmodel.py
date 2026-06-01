@@ -9,6 +9,7 @@ class AccountModel:
     updateaccountdataURL:str = Config.UPDATE_ACCOUNT_URL
     getslugurl:str           = Config.GET_SLUG_URL
     getenderecoURL:str       = Config.GET_ENDERECO_URL
+    updatemetatokenURL:str   = Config.UPDATE_META_LONG_TOKEN_URL
 
     async def get_endereco(self, cep:str) -> httpx.Response:
         async with httpx.AsyncClient(timeout=60) as client:
@@ -71,7 +72,6 @@ class AccountModel:
 
             return response
 
-
     async def getAccountData(self, id: str, token,) -> httpx.Response:
         payload = {
             "id": id,
@@ -85,6 +85,26 @@ class AccountModel:
 
             response = await client.post(
                 self.getaccountdataURL, 
+                json=payload,
+                headers=header
+            )
+
+            return response
+
+
+    async def update_meta_long_token(self, meta_long_token:str, token: str) -> httpx.Response:
+        payload = {
+            "meta_long_token": meta_long_token,
+        }
+        header = {
+            "Authorization": f"Bearer {token}",
+            'Content-Type': 'application/json'
+        }
+
+        async with httpx.AsyncClient() as client:
+
+            response = await client.post(
+                self.updatemetatokenURL, 
                 json=payload,
                 headers=header
             )

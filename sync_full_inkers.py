@@ -22,15 +22,18 @@ import os
 from datetime import datetime
 
 # ─── CONFIGURAÇÕES DE CONEXÃO ────────────────────────────────────────────────
-DEV_HOST  = "127.0.0.1"
-DEV_PATH  = "base_dev"
-DEV_USER  = "SYSDBA"
-DEV_PASS  = "masterkey"
+from dotenv import load_dotenv
+load_dotenv()
 
-PROD_HOST = "100.72.176.93"
-PROD_PATH = "base"
-PROD_USER = "SYSDBA"
-PROD_PASS = "masterkey"
+DEV_HOST  = os.getenv('DEV_HOST', '127.0.0.1')
+DEV_PATH  = os.getenv('DEV_PATH', 'base_dev')
+DEV_USER  = os.getenv('DEV_USER', 'SYSDBA')
+DEV_PASS  = os.getenv('DEV_PASS', 'masterkey')
+
+PROD_HOST = os.getenv('PROD_HOST', '100.72.176.93')
+PROD_PATH = os.getenv('PROD_PATH', 'base')
+PROD_USER = os.getenv('PROD_USER', 'SYSDBA')
+PROD_PASS = os.getenv('PROD_PASS', 'masterkey')
 
 SQL_OUTPUT = "update_full_structure.sql"
 # ─────────────────────────────────────────────────────────────────────────────

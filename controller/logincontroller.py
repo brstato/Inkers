@@ -2,12 +2,15 @@ import flet as ft
 from flet.auth.providers import GoogleOAuthProvider
 from view.controls.custondialog import CustonDialog
 from model.loginmodel import LoginModel
+from controller.integracaocontroller import IntegracaoController
 from controller.call_api import ProtectedApiCall
+from utils.secure_storage import SecureStorage
 from urllib.parse import urlparse
 import json
 import os
 from datetime import datetime
 import requests
+import httpx
 
 
 class LoginController:
@@ -52,10 +55,15 @@ class LoginController:
         Side Effects:
             - Define `page.on_login` apontando para `self.on_login`,
               registrando o callback de retorno do fluxo OAuth2.
-            - Adiciona os escopos `userinfo.email`, `userinfo.profile` e
-              `calendar` ao provider.
+            - Adiciona ao provider os seguintes escopos Google:
+                * `userinfo.email` — endereço de e-mail do usuário.
+                * `userinfo.profile` — nome e foto de perfil.
+                * `calendar.events` — leitura/escrita de eventos no Google Calendar.
+                * `adwords` — acesso à API Google Ads (Google AdWords).
+                * `analytics.readonly` — leitura de dados do Google Analytics (GA4).
             - Adiciona `?access_type=offline&prompt=consent` ao endpoint de
-              autorização para garantir a entrega do refresh_token do Google.
+              autorização para garantir a entrega do `refresh_token` do Google
+              mesmo em reautenticações subsequentes.
         """
 
         self.client_id = os.getenv('CLIENT_ID')
@@ -86,6 +94,111 @@ class LoginController:
         self.provider.authorization_endpoint += "?access_type=offline&prompt=consent"
 
         self.page.on_login = self.on_login
+
+
+    async def fetch_google_ads_id(self, access_token: str):
+        """Busca o ID da conta do Google Ads do usuário."""
+        # Puxando o dev token do seu .env
+        dev_token = os.getenv('DEVELOPER_TOKEN') 
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "developer-token": dev_token
+        }
+            
+        try:
+            async with httpx.AsyncClient() as client:
+                # Endpoint que lista todas as contas que este usuário tem acesso
+                res_ads = await client.get(
+                    'https://googleads.googleapis.com/v20/customers:listAccessibleCustomers',
+                    headers=headers
+                )
+                    
+                if res_ads.status_code == 200:
+                    data = res_ads.json()
+
+                    ads_id:str = data['resourceNames'][0]
+                    ads_id = ads_id.replace('customers/', '')
+
+                    print(f"[GOOGLE ADS ID] {ads_id}")
+
+                    return ads_id                        
+        except Exception as ex:
+            print(f"[GOOGLE ADS ERRO] {ex}")
+            
+        return None        
+
+
+    async def fetch_google_analytics_id(self, access_token: str):
+        """
+        Busca o Measurement ID (ex.: ``G-XXXXXXXXXX``) do Google Analytics 4
+        associado à primeira propriedade web encontrada na conta do usuário.
+
+        Realiza duas chamadas sequenciais à Google Analytics Admin API:
+            1. ``accountSummaries`` — lista as contas e suas propriedades GA4.
+            2. ``dataStreams`` — lista os data streams da primeira propriedade,
+               extraindo o ``measurementId`` do primeiro stream web encontrado.
+
+        Args:
+            access_token (str): Access token do Google OAuth2 com o escopo
+                ``analytics.readonly`` ativo na sessão atual.
+
+        Returns:
+            str | None: O Measurement ID (``G-XXXXXXXXXX``) se encontrado;
+                ``None`` se a conta não possuir propriedades/streams
+                ou se ocorrer qualquer erro de rede ou API.
+
+        Side Effects:
+            - Imprime o ID encontrado no console via ``print``.
+            - Em caso de exceção, imprime a mensagem de erro com
+              o prefixo ``[GOOGLE ANALYTICS ERRO]``.
+
+        Note:
+            Após o retorno, o chamador (``on_login``) persiste o valor
+            em ``session.store`` sob a chave ``google_analytics_id``.
+            A persistência em banco de dados fica a cargo de uma chamada
+            à API backend (não implementada neste método).
+        """
+        headers = {"Authorization": f"Bearer {access_token}"}
+            
+        try:
+            async with httpx.AsyncClient() as client:
+                # 1. Busca as contas e propriedades do usuário
+                res_summaries = await client.get(
+                    'https://analyticsadmin.googleapis.com/v1beta/accountSummaries',
+                    headers=headers
+                )
+                
+                if res_summaries.status_code == 200:
+                    data = res_summaries.json()
+                    accounts = data.get('accountSummaries', [])
+                        
+                if not accounts:
+                    return None
+                        
+                    # Pega a primeira propriedade da primeira conta
+                first_property = accounts[0].get('propertySummaries', [])[0].get('property')
+                
+                # 2. Busca o Data Stream (para extrair o Measurement ID: G-XXXX)
+                res_streams = await client.get(
+                    f'https://analyticsadmin.googleapis.com/v1beta/{first_property}/dataStreams',
+                    headers=headers
+                )
+                
+                if res_streams.status_code == 200:
+                    streams = res_streams.json().get('dataStreams', [])
+                    for stream in streams:
+                        if 'webStreamData' in stream:
+                            ga_id = stream['webStreamData'].get('measurementId')
+                            print(f"Google Analytics ID encontrado: {ga_id}")
+                            # Envie para a sua API C# atualizar a coluna GOOGLE_ANALYTICS_ID
+                            
+                    
+                            return ga_id
+        except Exception as ex:
+            print(f"[GOOGLE ANALYTICS ERRO] {ex}")
+            
+        return None        
 
 
     async def handle_login_google(self):
@@ -150,12 +263,26 @@ class LoginController:
 
         g_mail = g_user["email"]
         g_id   = g_user["sub"  ]
-        g_name = g_user["name"]
+        g_name = g_user["name" ]
 
         g_token = token_obj.access_token
+        r_token = token_obj.refresh_token
 
         try:
-            response = await self.LoginModel.login_google(g_mail, g_id, g_token, g_name)
+            try:
+               ads_id = await self.fetch_google_ads_id(g_token)
+            except Exception as e:
+                print(f"Erro ao buscar Google Ads ID: {e}")
+
+            response = await self.LoginModel.login_google(
+                g_mail, 
+                g_id, 
+                g_token, 
+                g_name, 
+                ads_id, 
+                r_token
+            )
+
 
             if response.status_code == 200:
                 data = json.loads(response.content)
@@ -168,11 +295,18 @@ class LoginController:
                 self.page.session.store.set("token",   data["token"  ])
                 self.page.session.store.set("id",      user_id)
 
-                # Persistente: salva para auto-login na próxima sessão
-                await ft.SharedPreferences().set("r_token",              r_token)
-                await ft.SharedPreferences().set("id",                   str(user_id))
-                await ft.SharedPreferences().set("google_refresh_token", token_obj.refresh_token or "")
-                await ft.SharedPreferences().set("login_method",         "google")
+                # Persistente: salva criptografado para auto-login na próxima sessão
+                _storage = SecureStorage()
+                await _storage.set("r_token",              r_token)
+                await _storage.set("google_refresh_token", token_obj.refresh_token or "")
+                await ft.SharedPreferences().set("id",          str(user_id))
+                await ft.SharedPreferences().set("login_method", "google")
+
+                # Busca o Analytics ID em background
+                ga_id = await self.fetch_google_analytics_id(g_token)
+                if ga_id:
+                    # Salve na sessão ou chame a API para persistir no banco (GOOGLE_ANALYTICS_ID)
+                    self.page.session.store.set("google_analytics_id", ga_id)
 
                 self.page.update()
                 self.page.go("/main")
@@ -202,23 +336,21 @@ class LoginController:
 
         Note:
             Este método está implementado mas **não está sendo chamado**
-            (a linha de invocação em `on_login` está comentada). É uma
+            (a linha de invocação em ``on_login`` está comentada). É uma
             feature planejada para versões futuras da aplicação.
-
-        Warning:
-            Utiliza a biblioteca `requests` (síncrona) em vez de `httpx`
-            (assíncrona), o que pode bloquear o event loop do Flet.
-            Recomenda-se migrar para `httpx.AsyncClient` antes de ativar
-            esta feature em produção.
+            O escopo ``calendar.events`` já é solicitado no OAuth2, portanto
+            não há necessidade de reautenticação para ativá-la.
 
         API Endpoint:
             GET https://www.googleapis.com/calendar/v3/calendars/primary/events
 
         Query Params:
-            - timeMin: Data/hora atual em UTC (ISO 8601).
-            - maxResults: 10 eventos.
-            - singleEvents: True (expande eventos recorrentes).
-            - orderBy: startTime (ordem cronológica).
+            - timeMin (str): Data/hora atual em UTC no formato ISO 8601
+              (ex.: ``2026-05-29T23:00:00Z``).
+            - maxResults (int): Número máximo de eventos retornados (10).
+            - singleEvents (bool): ``True`` para expandir eventos recorrentes
+              em ocorrências individuais.
+            - orderBy (str): ``startTime`` para ordem cronológica ascendente.
         """
         token_obj = await self.page.auth.get_token()
 
@@ -286,7 +418,8 @@ class LoginController:
             na tela de login.
         """
         # Lê r_token e id do SharedPreferences (persistente entre sessões)
-        r_token: str = await ft.SharedPreferences().get("r_token")
+        _storage = SecureStorage()
+        r_token: str = await _storage.get("r_token")
         user_id: str = await ft.SharedPreferences().get("id")
 
         if r_token:
@@ -303,17 +436,17 @@ class LoginController:
                 new_token   = data["token"]
                 new_r_token = data["r_token"]
 
-                # SharedPreferences: atualiza persistência para a próxima sessão
-                await ft.SharedPreferences().set("r_token", new_r_token)
-                await ft.SharedPreferences().set("id",      user_id)
+                # SharedPreferences: atualiza persistência criptografada para a próxima sessão
+                await _storage.set("r_token", new_r_token)
+                await ft.SharedPreferences().set("id", user_id)
 
                 # session.store: necessário para o MainView e demais views lerem nesta sessão
                 self.page.session.store.set("token",   new_token)
                 self.page.session.store.set("r_token", new_r_token)
                 self.page.session.store.set("id",      user_id)
 
-                # Busca o google_refresh_token e coloca na sessão também
-                g_refresh = await ft.SharedPreferences().get("google_refresh_token")
+                # Busca o google_refresh_token descriptografado e coloca na sessão
+                g_refresh = await _storage.get("google_refresh_token")
                 if g_refresh:
                     self.page.session.store.set("google_refresh_token", g_refresh)
 
@@ -334,20 +467,29 @@ class LoginController:
 
         Deve ser chamado nos seguintes cenários:
             - Logout explícito do usuário.
-            - Falha na renovação do token (`refresh_token` inválido ou expirado).
+            - Falha na renovação do token (``r_token`` inválido ou expirado).
             - Detecção de sessão comprometida ou inválida.
 
         Após esta operação, o próximo acesso à aplicação exigirá que o usuário
         realize um novo login completo (Google OAuth2 ou e-mail/senha).
 
-        Keys removidas do SharedPreferences:
-            - `r_token`: Refresh token da API backend.
-            - `id`: ID do usuário na API backend.
-            - `google_refresh_token`: Refresh token do Google OAuth2.
-            - `login_method`: Método de login utilizado (ex: "google").
+        Note:
+            Os tokens são armazenados de forma **criptografada** via
+            ``SecureStorage`` (wrapper sobre ``flet.security``), e não
+            diretamente no ``ft.SharedPreferences``. Esta função delega
+            a remoção ao método ``SecureStorage.remove()``.
+
+        Keys removidas do SecureStorage:
+            - ``r_token``: Refresh token da API backend.
+            - ``google_refresh_token``: Refresh token do Google OAuth2.
+            - ``login_method``: Método de login utilizado (ex.: ``"google"``).
+
+        Keys removidas do SharedPreferences (via SecureStorage):
+            - ``id``: ID do usuário na API backend (não criptografado).
         """
+        _storage = SecureStorage()
         for key in ("r_token", "id", "google_refresh_token", "login_method"):
-            await ft.SharedPreferences().remove(key)
+            await _storage.remove(key)
 
 
     async def handle_login(self, e, view_instance):
@@ -490,16 +632,20 @@ class LoginController:
                 - Controlar a visibilidade do `progress_ring`.
 
         Flow:
-            1. Lê o e-mail do campo `txt_username`.
+            1. Lê o e-mail do campo ``txt_username``.
             2. Se vazio: exibe dialog "Por favor informe o email." e encerra.
-            3. Exibe o `progress_ring`.
-            4. Chama `LoginModel.recovery_password(email)`.
-            5. Oculta o `progress_ring`.
+            3. Exibe o ``progress_ring``.
+            4. Chama ``LoginModel.recovery_password(email)``.
+            5. Oculta o ``progress_ring``.
             6. Processa a resposta HTTP:
-               - 200: Exibe dialog de sucesso com `message["message"]`
-                      (texto personalizado retornado pelo backend).
-               - 404: Exibe dialog de erro com `message["message"]`
-                      (ex: "E-mail não encontrado").
+               - 200: Exibe dialog de sucesso com ``message["message"]``
+                      (texto personalizado retornado pelo backend, ex.:
+                      "Enviamos um link de redefinição para o seu e-mail.").
+               - 404: Exibe dialog de erro com ``message["message"]``
+                      (ex.: "E-mail não encontrado").
+               - Outros status: nenhum tratamento específico implementado;
+                 o ``progress_ring`` é ocultado mas nenhum feedback
+                 visual adicional é exibido ao usuário.
 
         Note:
             O texto das mensagens de sucesso e erro são definidos

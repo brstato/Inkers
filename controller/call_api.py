@@ -1,8 +1,8 @@
-from model.loginmodel import LoginModel
 import flet as ft
+from model.loginmodel import LoginModel
 
 class ProtectedApiCall:
-    def __init__(self, page: ft.Page, instance, function, **kwargs):
+    def __init__(self, page: ft.Page, instance=None, function=None, **kwargs):
         
         self.page = page
 

@@ -5,6 +5,7 @@ from model.clientmodel import ClientModel
 from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
 from model.mainmodel import mainModel
 from utils.formatcurr import formatar_moeda_brasileira, _parse_currency
+from utils.secure_storage import SecureStorage
 import json
 from view.controls.custoncardsimples import CustonCardSimples
 from view.controls.colors import AppColors
@@ -15,6 +16,8 @@ from urllib.parse import quote, urlparse
 import datetime
 from model.zapmodel import ZapModel
 import asyncio
+from controller.integracaocontroller import IntegracaoController
+from flet.security import decrypt
 
 
 class MainController:
@@ -27,12 +30,20 @@ class MainController:
         self.model_clientes = ClientModel()
         self.account_model = AccountModel()
         self.zap_model = ZapModel()
+        self.meta_integracao = IntegracaoController(self.page, self.instance)
+
+
+    async def on_switch_ads(self, e):
+        await self.meta_integracao.on_switch_ads(e.control.value)
 
 
     async def init_onesignal(self):
-        js_login = f"javascript:window.OneSignalDeferred?.push(function(OS) {{ OS.login('{self.instance.account_tel}'); }});"
-        await self.page.launch_url(js_login)
-
+        if self.page.session.store.get("onesignal_initialized"):
+            return
+        if self.instance.account_tel:
+            js_login = f"javascript:window.OneSignalDeferred?.push(function(OS) {{ OS.login('{self.instance.account_tel}'); }});"
+            await self.page.launch_url(js_login)
+            self.page.session.store.set("onesignal_initialized", True)
 
 
     async def notify_agenda_pendentes(self):
@@ -102,6 +113,13 @@ class MainController:
         await self.page.close_drawer()
         self.page.show_dialog(ft.SnackBar(content=ft.Text("Link copiado para a área de transferência!")))
         self.page.update()
+
+
+    async def login_meta(self, e):
+        if self.instance.meta_long_token:
+            await self.meta_integracao.desconectar_meta_ads(e)
+        else:
+            await self.meta_integracao.vincular_meta_ads(e)
 
 
     async def create_instance_zap(self, e):
@@ -200,20 +218,38 @@ class MainController:
     async def get_account_data(self):
         try:
             response = await ProtectedApiCall(
-                self.page, self.instance, self.account_model.getAccountData,
+                self.page, self.instance, 
+                self.account_model.getAccountData,
                 id=self.instance.id_loja,
                 token=self.instance.token
             ).call_api_refresh_token()
             
             data = json.loads(response.content)
 
-            self.instance.account_name = data["nome"        ]
-            self.instance.account_tel  = data["telefone"    ]
-            self.instance.zap_instance = data["zap_instance"]
-            self.instance.slug         = data["slug"        ]
+            meta_long_token_encrypted = data.get("meta_long_token", "")
+            
+            self.instance.meta_long_token = ''
+            if meta_long_token_encrypted:
+                try:
+                    decrypted_token = await self.meta_integracao.secure_storage.decrypt_value(meta_long_token_encrypted)
+                    self.instance.meta_long_token = decrypted_token
+                except Exception as dec_ex:
+                    print(f"ERROR ao descriptografar token Meta: {dec_ex}")
 
+            self.instance.account_name    = data["nome"           ]
+            self.instance.account_tel     = data["telefone"       ]
+            self.instance.zap_instance    = data["zap_instance"   ]
+            self.instance.slug            = data["slug"           ]
+            self.instance.status_campanha = data["status_campanha"]
+
+            self.page.session.store.set("account_name", self.instance.account_name)
+            self.page.session.store.set("account_tel",  self.instance.account_tel)
             self.page.session.store.set("zap_instance", self.instance.zap_instance)
-            self.page.session.store.set("slug",         self.instance.slug        )
+            self.page.session.store.set("slug",                 self.instance.slug)
+            self.page.session.store.set("meta_long_token", self.instance.meta_long_token)
+            self.page.session.store.set("status_campanha", self.instance.status_campanha)
+
+            await self.meta_integracao.atualizar_ui_meta()
 
             if not self.instance.account_tel:
                 await self.page.push_route("/account")
@@ -277,8 +313,8 @@ class MainController:
     async def get_Data(self):
         try:
             try:
-                self.instance.id_loja = self.page.session.store.get("id")
-                self.instance.token = self.page.session.store.get("token")
+                self.instance.id_loja = self.page.session.store.get(     "id")
+                self.instance.token   = self.page.session.store.get(  "token")
                 self.instance.r_token = self.page.session.store.get("r_token")
             except Exception as e:
                 print(f"DEBUG: Erro ao obter id_loja: {e}")
@@ -288,6 +324,9 @@ class MainController:
             if not self.instance.token or not self.instance.id_loja:    
                 await self.page.push_route("/")
                 return
+
+            self.instance.progressRing.visible = True
+            self.page.update()
             
             await self.get_status_caixa()
 
@@ -303,16 +342,36 @@ class MainController:
                 self.instance.btn_fechar_caixa.visible = True
                 self.instance.btn_abrir_caixa.visible = False        
 
-            self.instance.progressRing.visible = True
             self.page.update()
 
+            # Verificação e carregamento dos dados da conta com cache em sessão
+            cached_name = self.page.session.store.get("account_name")
+            cached_tel = self.page.session.store.get("account_tel")
+
+            if cached_name and cached_tel:
+                self.instance.account_name = cached_name
+                self.instance.account_tel = cached_tel
+                self.instance.zap_instance = self.page.session.store.get("zap_instance") or ''
+                self.instance.slug = self.page.session.store.get("slug") or ''
+                self.instance.meta_long_token = self.page.session.store.get("meta_long_token") or ''
+                self.instance.status_campanha = self.page.session.store.get("status_campanha") or 'False'
+            #else:
             await self.get_account_data()
-            await self.listPorfissionais()
-            await self.listItens()
-            await self.listClientes()
-            await self.get_connection_zap()
-            await self.notify_agenda_pendentes()
-            await self.init_onesignal()
+
+            # Atualiza a UI da integração Meta em qualquer cenário (cache ou API)
+            await self.meta_integracao.atualizar_ui_meta()
+
+            # Dispara requisições paralelas para otimização extrema de performance
+            tasks = [
+                self.listPorfissionais(),
+                self.listItens(),
+                self.listClientes(),
+                self.get_connection_zap(),
+                self.notify_agenda_pendentes(),
+                self.init_onesignal(),
+                self.meta_integracao.salvar_google_analytics()
+            ]
+            await asyncio.gather(*tasks)
 
             self.instance.progressRing.visible = False
             self.page.update()
@@ -892,9 +951,10 @@ class MainController:
         self.page.session.store.set("status_caixa", '')
         self.page.session.store.set("slug",         '')
 
-        # Remove tokens persistidos para desabilitar o auto-login
+        # Remove tokens persistidos de forma segura para desabilitar o auto-login
+        _storage = SecureStorage()
         for key in ("r_token", "id", "google_refresh_token", "login_method"):
-            await ft.SharedPreferences().remove(key)
+            await _storage.remove(key)
 
         await self.page.push_route("/")    
     

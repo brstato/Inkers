@@ -1,6 +1,4 @@
 # main.py
-#id do cliente 184100860737-52caf580q16d4ht8hgkl7ak8p7dr92js.apps.googleusercontent.com
-#chave secreta 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
 import traceback
 import flet as ft
 import flet.fastapi as flet_fastapi

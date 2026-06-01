@@ -37,21 +37,21 @@ class mainModel:
         return await self._post_request(self.notify_pendentes_url, payload, token)
 
 
-    async def UpdateNotaCliente(self, id_cliente:int, nota:str, token:str):
+    async def UpdateNotaCliente(self, id_cliente:int, nota:str, token:str) -> httpx.Response:
         payload = {
             "id": id_cliente,
             "nota": nota
         }        
 
-        await self._post_request(self.update_nota_cliente_url, payload, token)
+        return await self._post_request(self.update_nota_cliente_url, payload, token)
         
 
-    async def UpdateInsumoData(self, itens:dict, token:str):
+    async def UpdateInsumoData(self, itens:dict, token:str) -> httpx.Response:
         payload = {
             "itens": itens
         }
 
-        await self._post_request(self.update_insumo_url, payload, token)
+        return await self._post_request(self.update_insumo_url, payload, token)
 
 
     async def GetInsumosData(self, id_loja:str, token:str):
@@ -94,7 +94,7 @@ class mainModel:
             "itens":itens
         }
 
-        await self._post_request(self.receber_venda_url, payload, token)        
+        return await self._post_request(self.receber_venda_url, payload, token)        
         
 
     async def status_caixa(self, id_loja:str, token:str) -> httpx.Response:

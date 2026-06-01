@@ -374,6 +374,9 @@ class AccountController:
             self.page.update()     
             
             if response.status_code == 200:
+                self.page.session.store.set("account_name", self.username)
+                self.page.session.store.set("account_tel", self.telefone)
+                self.page.session.store.set("slug", self.slug)
                 self.dialog = CustonDialog(
                     self.page,
                     title="Sucesso",
@@ -422,6 +425,9 @@ class AccountController:
                     )    
 
                     if response.status_code == 200:
+                        self.page.session.store.set("account_name", self.username)
+                        self.page.session.store.set("account_tel", self.telefone)
+                        self.page.session.store.set("slug", self.slug)
                         self.dialog = CustonDialog(
                             self.page,
                             title="Sucesso",

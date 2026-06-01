@@ -25,29 +25,28 @@ class MainView(ft.View):
 
         self.controller = MainController(page, self)
 
-        self.id_loja:     str = ''
-        self.token:       str = ''
-        self.r_token:     str = ''
-        self.account_name:str = ''
-        self.account_tel: str = ''
-        self.client:      str = ''
-        self.zap_instance:str = ''
-        self.zap_status:  str = ''
-        self.slug:        str = ''
+        self.id_loja:             str = ''
+        self.token:               str = ''
+        self.r_token:             str = ''
+        self.account_name:        str = ''
+        self.account_tel:         str = ''
+        self.client:              str = ''
+        self.zap_instance:        str = ''
+        self.zap_status:          str = ''
+        self.slug:                str = ''
+        self.meta_long_token:     str = ''
+        self.status_caixa:        str = 'F'
+        self.status_campanha:     str="False"
 
-        self.ident_serv:int = 0
+        self.ident_serv:          int = 0 
+        self.id_caixa:            int = 0
+        self.id_client:           int = 0
+        self.id_prof:             int = 0
+        self.comission:           int = 0
 
-        self.status_caixa:str = 'F'
+        self.total:               float=0              
 
-        self.id_caixa:int = 0
-
-        self.id_client:int = 0
-
-        self.id_prof:int=0
-
-        self.comission: int = 0
-
-        self.total:float=0              
+        
 
         self.bgcolor = AppColors.BACKGROUND_DARK
 
@@ -544,16 +543,18 @@ class MainView(ft.View):
             expand=True,          
         )
 
-        self.btn_login_meta = ft.Button(
-            content=ft.Text(
-                "Login Meta",
-                size=12,
-                color=AppColors.GRAY_LIGHT2,
-            ),
+        self.status_meta = ft.Text(
+            'Desconectado',
+            size=12,
+            color=AppColors.ORANGE_DARK,
+        )
+
+        self.botao_meta = ft.Button(
+            'Conectar',
             elevation=5,
             expand=True,
             color=AppColors.GRAY_LIGHT2,
-            #on_click=self.controller.create_instance_zap,
+            on_click=self.controller.login_meta,
             bgcolor=AppColors.GRAY_DARK,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=8),
@@ -562,16 +563,83 @@ class MainView(ft.View):
             ),
         )
 
+        self.botao_alterar_meta = ft.Button(
+            'Alterar Conta',
+            elevation=5,
+            expand=True,
+            visible=False,
+            color=AppColors.GRAY_LIGHT2,
+            on_click=lambda e: asyncio.create_task(self.controller.meta_integracao.get_meta_ads_id(self.meta_long_token)),
+            bgcolor=AppColors.GRAY_DARK,
+            style=ft.ButtonStyle(
+                shape=ft.RoundedRectangleBorder(radius=8),
+                side=ft.BorderSide(1, AppColors.GRAY_MED3),
+                color=AppColors.GRAY_LIGHT,
+            ),
+        )
+
+        self.meta_ads_list_dropdown = ft.Dropdown(
+            label="Contas Meta Ads",
+            label_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),            
+            elevation=5,
+            editable=True,
+            enable_filter=True,
+            expand=True,
+            enable_search=True,            
+            text_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            border=ft.InputBorder.UNDERLINE,
+            border_color=AppColors.ORANGE_DARK,
+            focused_border_color=AppColors.ORANGE_DARK,   
+        )
+
+        self.meta_ads_dialog = CustonDialog(
+            page=page,
+            title='Atenção!',
+            content='Selecione a conta de anuncio para começar',
+            actions=[
+                self.meta_ads_list_dropdown,
+                ft.Row(
+                    controls=[
+                        ft.TextButton(
+                            "Fechar",  
+                            style=ft.ButtonStyle(
+                                color=AppColors.GRAY_LIGHT2,
+                            ),
+                            on_click=lambda _: [self.page.pop_dialog(), self.page.update()]),
+                        ft.Container(expand=True),
+                        ft.TextButton(
+                            "Ok",
+                            style=ft.ButtonStyle(
+                                color=AppColors.GRAY_LIGHT2,
+                            ),
+                            on_click=lambda e: asyncio.create_task(self.controller.meta_integracao.salvar_meta_ads_id_selecionado(e))),                        
+                    ]
+                )
+            ]
+        )
+
+        self.meta_ads_campaign_activate = ft.Switch(
+            active_color=AppColors.ORANGE_BURNT,
+            label='Ativar anúncios',
+            label_text_style=ft.TextStyle(
+                color=AppColors.GRAY_LIGHT2,
+            ),
+            on_change=self.controller.on_switch_ads
+        ) 
+
         self.area_meta = ft.Container(
             padding=ft.Padding.all(10),
-            #margin=ft.margin.all(10),
             border_radius=ft.BorderRadius.all(10),
             shadow=ft.BoxShadow(
                 color=AppColors.BLACK, 
                 blur_radius=10,
                 offset=ft.Offset(x=0, y=-0.5),
             ),
-            #height=120,
+            #height=150,
             gradient=ft.LinearGradient(
                 begin=ft.Alignment.TOP_CENTER,  # Ponto inicial do gradiente
                 end=ft.Alignment.BOTTOM_CENTER, # Ponto final do gradiente
@@ -582,11 +650,22 @@ class MainView(ft.View):
             ),                
             content=ft.Column(
                 controls=[
+                    ft.Text('Meta Ads: ', size=12, color=AppColors.GRAY_LIGHT2),
                     ft.Row(
                         controls=[
-                            self.btn_login_meta
-                        ]
-                    )
+                            ft.Text('status: ', size=12, color=AppColors.GRAY_LIGHT2),
+                            self.status_meta,
+                        ],
+                    ),
+                    ft.Row(
+                        controls=[self.botao_meta],
+                    ),
+                    ft.Row(
+                        controls=[self.botao_alterar_meta],
+                    ),
+                    ft.Row(
+                        controls=[self.meta_ads_campaign_activate],
+                    ),
                 ]
             )
         )
@@ -625,13 +704,13 @@ class MainView(ft.View):
 
                             self.area_whatsapp,
                             self.area_meta,
-                            CustonButton(page, "Minha conta",     "/account"),
-                            CustonButton(page, "Profissionais",   "/professional"),
-                            CustonButton(page, "Produtos",        "/product"),  
-                            CustonButton(page, "Serviços",        "/services"),  
-                            CustonButton(page, "Clientes",        "/clients"),    
-                            CustonButton(page, "Despesas",        "/despesas"),  
-                            CustonButton(page, "Portfólio",       "/portfolio"),                                              
+                            CustonButton(page, "Minha conta",        "/account"),
+                            CustonButton(page, "Profissionais", "/professional"),
+                            CustonButton(page, "Produtos",           "/product"),  
+                            CustonButton(page, "Serviços",          "/services"),  
+                            CustonButton(page, "Clientes",           "/clients"),    
+                            CustonButton(page, "Despesas",          "/despesas"),  
+                            CustonButton(page, "Portfólio",        "/portfolio"),                                              
                                                
                             ft.Button(
                                 content="Sair",

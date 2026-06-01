@@ -14,9 +14,11 @@ class LoginModel:
     loginURL: str             = Config.LOGIN_URL
     refreshTokenURL: str      = Config.REFRESH_TOKEN_URL
     logingoogleURL: str       = Config.LOGIN_GOOGLE_URL
+    getGoogleAdsAccountURL: str = Config.GET_GOOGLE_ADS_ACCOUNT_URL
 
 
-    async def login_google(self, g_email: str, g_id: str, g_token: str, g_name: str) -> httpx.Response:
+    async def login_google(self, g_email: str, g_id: str, g_token: str, 
+                           g_name: str, ads_id: str, r_token: str) -> httpx.Response:
         """
         Autentica um usuário no backend da aplicação usando as credenciais
         provenientes do provedor Google OAuth2.
@@ -41,7 +43,9 @@ class LoginModel:
             "g_email": g_email,
             "g_id":    g_id,
             "g_token": g_token,
-            "g_name":  g_name
+            "g_name":  g_name,
+            "ads_id":  ads_id,
+            "r_token": r_token
         }
         header = {
             'Content-Type': 'application/json'
