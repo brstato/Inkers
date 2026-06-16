@@ -5,8 +5,8 @@ load_dotenv()
 
 def get_col_type(dsn, table, col):
     try:
-        user = os.getenv('DEV_USER', 'SYSDBA')
-        password = os.getenv('DEV_PASS', 'masterkey')
+        user = os.getenv('DEV_USER', '')
+        password = os.getenv('DEV_PASS', '')
         conn = fdb.connect(dsn, user=user, password=password)
         cur = conn.cursor()
         cur.execute(f"""
@@ -25,10 +25,10 @@ def get_col_type(dsn, table, col):
     except Exception as e:
         return str(e)
 
-dev_host = os.getenv('DEV_HOST', '127.0.0.1')
-dev_path = os.getenv('DEV_PATH', 'base_dev')
-prod_host = os.getenv('PROD_HOST', '100.72.176.93')
-prod_path = os.getenv('PROD_PATH', 'base')
+dev_host = os.getenv('DEV_HOST', '')
+dev_path = os.getenv('DEV_PATH', '')
+prod_host = os.getenv('PROD_HOST', '')
+prod_path = os.getenv('PROD_PATH', '')
 
 print("DEV:")
 print("LOJA.ID_LOJA_EX:", get_col_type(f"{dev_host}:{dev_path}", "LOJA", "ID_LOJA_EX"))

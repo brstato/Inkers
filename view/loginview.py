@@ -1,21 +1,36 @@
+"""
+view/loginview.py
+-----------------
+Tela inicial da aplicação, responsável pela interface de autenticação.
+
+A comunicação com o ``LoginController`` acontece exclusivamente via:
+    - **Callbacks** injetados no construtor do Controller, que ele
+      invoca para feedback visual (loading, dialogs, navegação).
+    - **Parâmetros** passados aos métodos do Controller — a View extrai
+      os valores dos campos e os envia como argumentos simples (strings),
+      em vez de enviar a si mesma (``self``).
+
+Isso garante que:
+    - O Controller não conhece nenhum controle da View
+      (``txt_username``, ``progress_ring``, etc.).
+    - A View pode ser redesenhada livremente sem alterar o Controller.
+"""
+
 import flet as ft
 from view.controls.colors import AppColors
 from view.controls.custontextfield import CustomTextField
-from controller.logincontroller import LoginController
 from view.controls.custonprogressring import CustonProgressRing
+from view.controls.custondialog import CustonDialog
+from controller.logincontroller import LoginController
 
 
 class LoginView(ft.View):
     """
     Tela inicial da aplicação, responsável pela interface de autenticação do usuário.
 
-    Atende pela rota raiz ("/") e é exibida sempre que o usuário não possui
-    uma sessão ativa. Delega toda a lógica de negócio ao `LoginController`.
-
-    Fluxo de inicialização:
-        1. O construtor monta todos os componentes visuais.
-        2. `did_mount()` é chamado automaticamente pelo Flet após a montagem,
-           disparando a tentativa de auto login via refresh token em background.
+    Atende pela rota raiz (``"/"``) e é exibida sempre que o usuário não possui
+    uma sessão ativa. Delega toda a lógica de negócio ao ``LoginController``,
+    comunicando-se com ele via callbacks e parâmetros.
 
     Attributes:
         controller (LoginController): Instância do controller que gerencia
@@ -37,13 +52,13 @@ class LoginView(ft.View):
 
     def __init__(self, page: ft.Page):
         """
-        Inicializa a LoginView, instancia o controller e constrói todos
-        os componentes visuais da interface de login.
+        Inicializa a LoginView, instancia o controller (injetando callbacks
+        de UI) e constrói todos os componentes visuais da interface de login.
 
         Args:
-            page (ft.Page): Objeto principal do Flet que representa a janela/aba
-                            atual da aplicação. Passado ao controller para
-                            permitir navegação, dialogs e acesso à sessão.
+            page: Objeto principal do Flet que representa a janela/aba atual
+                  da aplicação. Passado ao controller para permitir acesso
+                  ao OAuth2 e session store.
         """
         super().__init__(
             route="/",
@@ -51,7 +66,14 @@ class LoginView(ft.View):
             padding=0,
         )
 
-        self.controller = LoginController(page)
+        # Controller recebe callbacks para comunicação com a View
+        self.controller = LoginController(
+            page,
+            on_show_loading=self._set_loading,
+            on_show_error=self._show_error_dialog,
+            on_show_message=self._show_message_dialog,
+            on_navigate=self._navigate,
+        )
 
         self.progress_ring = CustonProgressRing(page.height)
 
@@ -195,6 +217,42 @@ class LoginView(ft.View):
             ),
         ]
 
+    # ── Callbacks injetados no Controller ──────────────────────────
+
+    def _set_loading(self, visible: bool) -> None:
+        """Controla a visibilidade do progress ring (callback do Controller)."""
+        self.progress_ring.visible = visible
+
+    def _show_error_dialog(self, title: str, message: str) -> None:
+        """Exibe um dialog de erro ao usuário (callback do Controller)."""
+        dialog = CustonDialog(
+            self.page,
+            title=title,
+            content=message,
+            actions=[ft.TextButton("OK", on_click=lambda e: self.page.pop_dialog())],
+        )
+        self.page.show_dialog(dialog)
+        self.page.update()
+
+    def _show_message_dialog(self, title: str, message: str) -> None:
+        """Exibe um dialog informativo ao usuário (callback do Controller)."""
+        dialog = CustonDialog(
+            self.page,
+            title=title,
+            content=message,
+            actions=[ft.TextButton("OK", on_click=lambda e: self.page.pop_dialog())],
+        )
+        self.page.show_dialog(dialog)
+        self.page.update()
+
+    async def _navigate(self, route: str) -> None:
+        """Navega para a rota especificada (callback do Controller)."""
+        if route == "/main":
+            await self.page.push_route(route)
+        else:
+            self.page.go(route)
+
+    # ── Ciclo de vida ──────────────────────────────────────────────
 
     def did_mount(self):
         """
@@ -203,35 +261,36 @@ class LoginView(ft.View):
 
         Responsabilidade:
             Dispara a tentativa de "Auto Login" em background usando o
-            `refresh_token` persistido no dispositivo da sessão anterior.
-            Utiliza `page.run_task()` para não bloquear a thread principal
+            refresh_token persistido no dispositivo da sessão anterior.
+            Utiliza ``page.run_task()`` para não bloquear a thread principal
             da UI durante a requisição assíncrona.
 
         Comportamento:
-            - Se um `r_token` válido existir em `SharedPreferences`:
-              o usuário é autenticado silenciosamente e redirecionado para `/main`.
+            - Se um ``r_token`` válido existir em SharedPreferences:
+              o usuário é autenticado silenciosamente e redirecionado.
             - Se não existir ou for inválido:
-              a tela de login permanece exibida aguardando interação do usuário.
+              a tela de login permanece exibida aguardando interação.
         """
-        self.page.run_task(self._refresh_token_task)
+        self.page.run_task(self._auto_login_task)
 
 
-    async def _refresh_token_task(self):
+    async def _auto_login_task(self):
         """
-        Tarefa assíncrona de auto login, executada em background pelo `did_mount`.
+        Tarefa assíncrona de auto login, executada em background pelo ``did_mount``.
 
-        Wrapper que delega ao controller a lógica de tentativa de renovação
-        de sessão via refresh token, passando a própria instância da view
-        para que o controller possa manipular o `progress_ring`.
+        Delega ao controller a lógica de tentativa de renovação de sessão
+        via refresh token. O controller usa os callbacks injetados para
+        controlar o progress_ring e navegar.
         """
-        await self.controller.refresh_token(self)
+        await self.controller.try_auto_login()
 
+    # ── Handlers de eventos ────────────────────────────────────────
 
     async def _go_to_account(self, e):
         """
-        Navega para a tela de criação de conta (`/account`).
+        Navega para a tela de criação de conta (``/account``).
 
-        Acionado pelo `btn_create_account` (atualmente comentado na UI).
+        Acionado pelo ``btn_create_account`` (atualmente comentado na UI).
 
         Args:
             e: Evento de clique do Flet (não utilizado diretamente).
@@ -243,13 +302,14 @@ class LoginView(ft.View):
         """
         Manipulador do clique em "Esqueci minha senha".
 
-        Delega ao controller o fluxo de recuperação de senha, passando
-        a instância da view para leitura do campo `txt_username` (e-mail).
+        Extrai o e-mail do campo ``txt_username`` e passa como parâmetro
+        ao controller — o controller nunca acessa o campo diretamente.
 
         Args:
-            e: Evento de clique do Flet, repassado ao controller.
+            e: Evento de clique do Flet.
         """
-        await self.controller.handler_forgot_password(e, self)
+        email = self.txt_username.value
+        await self.controller.handle_forgot_password(email)
 
 
     async def _on_click_login_google(self, e):
@@ -260,7 +320,7 @@ class LoginView(ft.View):
         que abre o popup/redirecionamento do Google para o usuário.
 
         Args:
-            e: Evento de clique do Flet (não utilizado diretamente pelo controller).
+            e: Evento de clique do Flet (não utilizado diretamente).
         """
         await self.controller.handle_login_google()
 
@@ -269,17 +329,17 @@ class LoginView(ft.View):
         """
         Manipulador do clique no botão de login tradicional (e-mail e senha).
 
-        Delega ao controller o fluxo de autenticação convencional, passando
-        a instância da view para leitura dos campos `txt_username` e
-        `txt_password` e para controle do `progress_ring`.
+        Extrai e-mail e senha dos campos da View e passa como parâmetros
+        ao controller — o controller nunca acessa os campos diretamente.
 
         Args:
-            e: Evento de clique do Flet, repassado ao controller para
-               verificação de campos e tratamento de feedback visual.
+            e: Evento de clique do Flet.
 
         Note:
-            O botão que aciona este método (`btn_login`) está atualmente
+            O botão que aciona este método (``btn_login``) está atualmente
             comentado no layout da view. O método permanece implementado
             para futura reativação da feature.
         """
-        await self.controller.handle_login(e, self)
+        email = self.txt_username.value
+        password = self.txt_password.value
+        await self.controller.handle_login(email, password)

@@ -59,6 +59,7 @@ class Config:
     UPDATE_META_PIXEL_ID_URL   = f"{BASE_API_URL}/account/meta_pixel_id"  
     UPDATE_GOOGLE_ANALYTICS_ID_URL = f"{BASE_API_URL}/account/google_analytics_id"
     UPDATE_STATUS_CAMPANHA_META_URL = f"{BASE_API_URL}/account/status_campanha_meta"  
+    GET_COORDINATES_URL_MAPBOX = f"https://api.mapbox.com/geocoding/v5/mapbox.places/"
       
     # Client URLs
     CREATE_CLIENT_URL     = f"{BASE_API_URL}/client/create"

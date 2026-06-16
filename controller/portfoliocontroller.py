@@ -242,8 +242,8 @@ class PortfolioController:
                     "titulo": data.get("titulo", ""),
                     "subtitulo": data.get("subtitulo", ""),
                     "bio": data.get("bio", ""),
-                    "avatar": f"https://app.inkers.com.br{avatar_path}?v={ts}" if avatar_path else "",
-                    "foto_bio": f"https://app.inkers.com.br{bio_foto_path}?v={ts}" if bio_foto_path else ""
+                    "avatar": f"https://app.inkers.com.br{avatar_path}" if avatar_path else "",
+                    "foto_bio": f"https://app.inkers.com.br{bio_foto_path}" if bio_foto_path else ""
                 }
                 
                 self.instance.fill_form(view_data)

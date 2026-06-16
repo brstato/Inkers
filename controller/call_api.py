@@ -21,7 +21,7 @@ class ProtectedApiCall:
 
         if response is not None:
             if response.status_code in [401, 403]:
-                response = await self.model.refresh_token(self.instance.r_token, self.instance.id_loja)
+                response = await self.model.refresh_token_raw(self.instance.r_token, self.instance.id_loja)
 
                 if response.status_code == 200:
                     data = response.json()

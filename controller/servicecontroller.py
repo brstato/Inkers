@@ -40,7 +40,7 @@ class ServiceController:
         )
 
         if response.status_code != 200:
-            response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
+            response = await LoginModel().refresh_token_raw(self.instance.r_token, self.instance.id_loja)
 
             self.page.session.store.set("token", json.loads(response.content)["token"])
             self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
@@ -85,7 +85,7 @@ class ServiceController:
         )
 
         if response.status_code != 200:
-            response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
+            response = await LoginModel().refresh_token_raw(self.instance.r_token, self.instance.id_loja)
 
             self.page.session.store.set("token", json.loads(response.content)["token"])
             self.page.session.store.set("r_token", json.load(response.content)["r_token"])   
@@ -124,7 +124,7 @@ class ServiceController:
         response = await self.model.deleteServiceData(id_prof, self.instance.token)
 
         if response.status_code != 200:
-            response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
+            response = await LoginModel().refresh_token_raw(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
                 self.page.session.store.set("token", json.loads(response.content)["token"])
@@ -158,7 +158,7 @@ class ServiceController:
 
         if response.status_code != 200:
             
-            response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
+            response = await LoginModel().refresh_token_raw(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
 
@@ -217,7 +217,7 @@ class ServiceController:
         response = await self.model.DetailServiceData(id=id, token=self.instance.token)
 
         if response.status_code != 200:
-            response = await LoginModel().refresh_token(self.instance.r_token, self.instance.id_loja)
+            response = await LoginModel().refresh_token_raw(self.instance.r_token, self.instance.id_loja)
 
             if response.status_code == 200:
 

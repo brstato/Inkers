@@ -1,5 +1,4 @@
 import flet as ft
-from view.controls.controls_mainview.custoncardprofessional import CustonCardProfessional
 from model.professionalmodel import ProfessionlModel
 from model.clientmodel import ClientModel
 from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
@@ -7,7 +6,6 @@ from model.mainmodel import mainModel
 from utils.formatcurr import formatar_moeda_brasileira, _parse_currency
 from utils.secure_storage import SecureStorage
 import json
-from view.controls.custoncardsimples import CustonCardSimples
 from view.controls.colors import AppColors
 from controller.call_api import ProtectedApiCall
 from view.controls.custondialog import CustonDialog
@@ -283,33 +281,6 @@ class MainController:
         return dinheiro, pix, debito, credito
 
 
-    def filter_clients(self, e):
-        search_term = self.instance.edtPesquisaClientes.value.lower()
-        
-        # Percorre todos os cards na lista
-        for card in self.instance.list_clients.controls:
-            if isinstance(card, CustonCardSimples):
-                client_name = card.title.lower()
-                # Se o termo de busca estiver no nome do cliente, torna o card visível
-                if search_term in client_name:
-                    card.visible = True
-                # Caso contrário, oculta o card
-                else:
-                    card.visible = False
-        
-        self.page.update()          
-
-
-    def on_exit_edt_pesquisa(self, e):
-        self.instance.edtPesquisa.border_color=AppColors.GRAY_MED3
-        self.page.update()   
-
-
-    def on_enter_edt_pesquisa(self, e):
-        self.instance.edtPesquisa.border_color=AppColors.ORANGE_DARK
-        self.page.update()
-
-
     async def get_Data(self):
         try:
             try:
@@ -363,9 +334,9 @@ class MainController:
 
             # Dispara requisições paralelas para otimização extrema de performance
             tasks = [
-                self.listPorfissionais(),
-                self.listItens(),
-                self.listClientes(),
+                self.instance.carregar_profissionais(),
+                self.instance.carregar_itens(),
+                self.instance.carregar_clientes(),
                 self.get_connection_zap(),
                 self.notify_agenda_pendentes(),
                 self.init_onesignal(),
@@ -379,35 +350,6 @@ class MainController:
             print(f"ERROR em get_Data: {ex}")
             import traceback
             traceback.print_exc()         
-
-
-    def exibir_edt_pesquisa_produtos(self, e):
-        self.instance.edtPesquisa.visible = True
-        self.instance.btn_pesquisa_produtos.visible = False
-        self.instance.btn_pesquisa_clientes.visible = False
-        self.instance.btn_fechar_pesquisa.visible = True
-        self.page.update()  
-
-
-    def exibir_lista_clientes(self, e):
-        self.page.show_dialog(self.instance.modal_pesquisa_clientes)
-        self.instance.btn_agenda.visible = False
-        self.instance.btn_cancelar.visible = True
-        self.instance.btn_fechar_caixa.visible = False
-
-        self.page.update()        
-
-
-    def cancelar_modal_pesquisa_clientes(self, e):
-        self.instance.id_client = 0
-        self.instance.text_client.visible = False
-        self.page.pop_dialog()
-        self.page.update()           
-
-
-    async def confirmar_pequisa_clientes(self, e):
-        self.page.pop_dialog()
-        self.page.update()
 
 
     def cancelar_receber_venda(self, e):
@@ -438,7 +380,7 @@ class MainController:
         self.instance.list_itens.cancelar()
         self.instance.list_profissionais.cancelar()   
         self.page.update()
-        await self.listItens()     
+        await self.instance.carregar_itens()     
 
 
     def handle_filter_itens(self, e):
@@ -674,141 +616,37 @@ class MainController:
         self.page.update()
         
 
-    async def listInsumos(self):         
+    async def get_insumos_data(self) -> list[dict]:         
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.GetInsumosData, 
             id_loja=self.instance.id_loja, token=self.instance.token
         ).call_api_refresh_token()
            
-        array = json.loads(response.content)
-
-        self.instance.list_insumos.controls.clear()
-
-        for item in array:
-            id_prod      = item["id"     ]
-            name         = item["nome"   ]
-            estoque      = item["estoque"]
-            valor        = item["valor"  ]
-
-            card = CustonCardItensVenda(
-                page=self.page,
-                width=280,
-                instance=self.instance,
-                icon=None,
-                name=name,
-                id=id_prod,
-                estoque=estoque,
-                valor=valor,
-                tap=self.instance.list_itens.on_card_selected,
-                on_change=self.instance.list_insumos.recalculate_total
-            )
-
-            self.instance.list_insumos.controls.append(card) 
-            
-        self.page.update()  
+        return json.loads(response.content)
 
 
-    async def listItens(self):         
+    async def get_itens_data(self) -> list[dict]:         
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.GetItensData, 
             id=self.instance.id_loja, token=self.instance.token).call_api_refresh_token()
            
-        array = json.loads(response.content)["message"]
-
-        self.instance.list_itens.controls.clear()
-
-        for item in array:
-            id_prod      = item["id"                ]
-            name         = item["nome"              ]
-            ident        = item["ident_serv"        ]
-            estoque      = item["quantidade_estoque"]
-            valor        = item["valor_venda"       ]
-            inf_valor    = item["inf_valor"         ]
-            comissionado = item["comissionado"      ]
-
-            if ident == 0:
-                icon = ft.Icons.CATEGORY
-            elif ident == 1:
-                icon = ft.Icons.MISCELLANEOUS_SERVICES
-
-            card = CustonCardItensVenda(
-                ident_serv=ident,
-                page=self.page,
-                width=self.instance.page.width,
-                instance=self.instance,
-                icon=icon,
-                name=name,
-                id=id_prod,
-                estoque=estoque,
-                valor=valor,
-                inf_valor=inf_valor,
-                comissionado=comissionado,
-                tap=self.instance.list_itens.on_card_selected,
-                on_change=self.instance.list_itens.recalculate_total
-            )
-
-            self.instance.list_itens.controls.append(card) 
-            
-        self.page.update()  
+        return json.loads(response.content)["message"]
 
 
-    async def listPorfissionais(self):
-
+    async def get_profissionais_data(self) -> list[dict]:
         response = await ProtectedApiCall(
             self.page, self.instance, self.model_professional.getProfessionalData, 
             id=self.instance.id_loja, token=self.instance.token).call_api_refresh_token()
             
-        array = json.loads(response.content)["message"]
-
-        self.instance.list_profissionais.controls.clear()
-
-        for item in array:
-            name      = item["name"    ]
-            id_prof   = item["id"      ]
-            comission = item["comissao"]
-
-            if len(array) == 1:
-                self.instance.id_prof = id_prof
-                self.instance.comission = comission
-
-            card = CustonCardProfessional(
-                instance=self.instance,
-                name=name,
-                id=id_prof,
-                comission=comission,
-                tap=self.instance.list_profissionais.on_card_selected
-            )
-
-            self.instance.list_profissionais.controls.append(card) 
-        
-        self.page.update()
+        return json.loads(response.content)["message"]
        
 
-    async def listClientes(self):
-
+    async def get_clientes_data(self) -> list[dict]:
         response = await ProtectedApiCall(
             self.page, self.instance, self.model.GetClientsData, 
             id=self.instance.id_loja, token=self.instance.token).call_api_refresh_token()        
             
-        array = json.loads(response.content)["message"]
-
-        self.instance.list_clients.controls.clear()
-
-        for item in array:
-            name      = item["nome"]
-            id_client = item["id"  ]
-
-            card = CustonCardSimples(
-                page=self.page,
-                title=name,
-                id=id_client,
-                tap=self.instance.list_clients.on_card_selected,
-                instance=self.instance
-            )
-
-            self.instance.list_clients.controls.append(card) 
-        
-        self.page.update()
+        return json.loads(response.content)["message"]
 
 
     async def itens_venda(self):

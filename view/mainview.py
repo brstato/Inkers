@@ -1,5 +1,6 @@
 import flet as ft
 from view.controls.colors import AppColors
+from view.controls.controls_mainview.custoncardprofessional import CustonCardProfessional
 from view.controls.controls_mainview.custonlistprofessionais import CustonListProfessional
 from view.controls.custonprogressring import CustonProgressRing
 from controller.maincontroller import MainController
@@ -361,7 +362,7 @@ class MainView(ft.View):
             width=300,
             color=AppColors.GRAY_LIGHT2,
             label="Pesquisar clientes por nome...",
-            on_change=self.controller.filter_clients, # Função que fará a mágica
+            on_change=self.filter_clients, 
             border_color=AppColors.ORANGE_DARK,
             border=ft.InputBorder.UNDERLINE,  
         ) 
@@ -369,8 +370,8 @@ class MainView(ft.View):
         self.modal_pesquisa_clientes = CustonModalView(
             height=600,
             page=page,
-            callback=self.controller.confirmar_pequisa_clientes,
-            callback2=self.controller.cancelar_modal_pesquisa_clientes,
+            callback=self.confirmar_pequisa_clientes,
+            callback2=self.cancelar_modal_pesquisa_clientes,
             controls=[
                 self.edtPesquisaClientes,
                 self.list_clients
@@ -382,13 +383,13 @@ class MainView(ft.View):
             visible=False,
             color=AppColors.GRAY_LIGHT2,
             label="Pesquisar produto ou serviço por nome...",
-            on_change=self.controller.handle_filter_itens,
+            on_change=self.handle_filter_itens,
             border_color=AppColors.GRAY_MED3,
             border=ft.InputBorder.UNDERLINE,
             height=40,
             content_padding=10,    
-            on_click=lambda e: self.controller.on_enter_edt_pesquisa(e),
-            on_blur=lambda e: self.controller.on_exit_edt_pesquisa(e)
+            on_click=lambda e: self.on_enter_edt_pesquisa(e),
+            on_blur=lambda e: self.on_exit_edt_pesquisa(e)
         )        
 
         self.btn_pesquisa_produtos = ft.Button(
@@ -403,7 +404,7 @@ class MainView(ft.View):
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),             
-            on_click=lambda e: self.controller.exibir_edt_pesquisa_produtos(e)
+            on_click=lambda e: self.exibir_edt_pesquisa_produtos(e)
         )
 
         self.btn_pesquisa_clientes = ft.Button(
@@ -418,7 +419,7 @@ class MainView(ft.View):
                 side=ft.BorderSide(1, AppColors.GRAY_MED3),
                 color=AppColors.GRAY_LIGHT,
             ),     
-            on_click=lambda e: self.controller.exibir_lista_clientes(e)        
+            on_click=lambda e: self.exibir_lista_clientes(e)        
         )
 
         self.btn_fechar_pesquisa = ft.IconButton(
@@ -426,7 +427,7 @@ class MainView(ft.View):
             icon=ft.Icons.CLOSE,
             icon_color=AppColors.ORANGE_DARK,
             visible=False,     
-            on_click=lambda e: self.controller.handle_fechar_pesquisa(e)                   
+            on_click=lambda e: self.handle_fechar_pesquisa(e)                   
         )
 
         self.container_pesquisa = ft.Container(
@@ -628,7 +629,7 @@ class MainView(ft.View):
             label_text_style=ft.TextStyle(
                 color=AppColors.GRAY_LIGHT2,
             ),
-            on_change=self.controller.on_switch_ads
+            #on_change=self.controller.on_switch_ads
         ) 
 
         self.area_meta = ft.Container(
@@ -703,7 +704,6 @@ class MainView(ft.View):
                             ),                            
 
                             self.area_whatsapp,
-                            self.area_meta,
                             CustonButton(page, "Minha conta",        "/account"),
                             CustonButton(page, "Profissionais", "/professional"),
                             CustonButton(page, "Produtos",           "/product"),  
@@ -812,27 +812,161 @@ class MainView(ft.View):
         asyncio.create_task(self.controller.get_Data())
 
 
+    def filter_clients(self, e):
+        search_term = self.edtPesquisaClientes.value.lower()
+        
+        for card in self.list_clients.controls:
+            from view.controls.custoncardsimples import CustonCardSimples
+            if isinstance(card, CustonCardSimples):
+                client_name = card.title.lower()
+                if search_term in client_name:
+                    card.visible = True
+                else:
+                    card.visible = False
+        
+        self.page.update()          
+
+
+    def on_exit_edt_pesquisa(self, e):
+        self.edtPesquisa.border_color=AppColors.GRAY_MED3
+        self.page.update()   
+
+
+    def on_enter_edt_pesquisa(self, e):
+        self.edtPesquisa.border_color=AppColors.ORANGE_DARK
+        self.page.update()
+
+
+    def exibir_edt_pesquisa_produtos(self, e):
+        self.edtPesquisa.visible = True
+        self.btn_pesquisa_produtos.visible = False
+        self.btn_pesquisa_clientes.visible = False
+        self.btn_fechar_pesquisa.visible = True
+        self.page.update()  
+
+
+    def exibir_lista_clientes(self, e):
+        self.page.show_dialog(self.modal_pesquisa_clientes)
+        self.btn_agenda.visible = False
+        self.btn_cancelar.visible = True
+        self.btn_fechar_caixa.visible = False
+        self.page.update()        
+
+
+    def cancelar_modal_pesquisa_clientes(self, e):
+        self.id_client = 0
+        self.text_client.visible = False
+        self.page.pop_dialog()
+        self.page.update()           
+
+
+    async def confirmar_pequisa_clientes(self, e):
+        self.page.pop_dialog()
+        self.page.update()
+
+
+    def handle_filter_itens(self, e):
+        search_term = self.edtPesquisa.value.lower()
+        for card in self.list_itens.controls:
+            from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
+            if isinstance(card, CustonCardItensVenda):
+                client_name = card.name.lower()
+                if search_term in client_name:
+                    card.visible = True
+                else:
+                    card.visible = False
+        self.page.update()  
+
+
+    def handle_fechar_pesquisa(self, e):
+        self.edtPesquisa.visible = False
+        self.edtPesquisa.value = ''    
+        self.handle_filter_itens(e)
+        self.btn_pesquisa_produtos.visible = True
+        self.btn_pesquisa_clientes.visible = True
+        self.btn_fechar_pesquisa.visible = False        
+        self.page.update()
+
+
+    async def carregar_insumos(self):
+        array = await self.controller.get_insumos_data()
+        self.list_insumos.controls.clear()
+        for item in array:
+            from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
+            card = CustonCardItensVenda(
+                page=self.page,
+                width=280,
+                instance=self,
+                icon=None,
+                name=item["nome"],
+                id=item["id"],
+                estoque=item["estoque"],
+                valor=item["valor"],
+                tap=self.list_itens.on_card_selected,
+                on_change=self.list_insumos.recalculate_total
+            )
+            self.list_insumos.controls.append(card) 
+        self.page.update()
+
+
+    async def carregar_itens(self):
+        array = await self.controller.get_itens_data()
+        self.list_itens.controls.clear()
+        for item in array:
+            ident = item["ident_serv"]
+            icon = ft.Icons.CATEGORY if ident == 0 else ft.Icons.MISCELLANEOUS_SERVICES
             
-  
-           
+            from view.controls.controls_mainview.custoncarditensvenda import CustonCardItensVenda
+            card = CustonCardItensVenda(
+                ident_serv=ident,
+                page=self.page,
+                width=self.page.width,
+                instance=self,
+                icon=icon,
+                name=item["nome"],
+                id=item["id"],
+                estoque=item["quantidade_estoque"],
+                valor=item["valor_venda"],
+                inf_valor=item["inf_valor"],
+                comissionado=item["comissionado"],
+                tap=self.list_itens.on_card_selected,
+                on_change=self.list_itens.recalculate_total
+            )
+            self.list_itens.controls.append(card) 
+        self.page.update()
 
 
+    async def carregar_profissionais(self):
+        array = await self.controller.get_profissionais_data()
+        self.list_profissionais.controls.clear()
+        for item in array:
+            if len(array) == 1:
+                self.id_prof = item["id"]
+                self.comission = item["comissao"]
+
+            from view.controls.controls_mainview.custoncardprofessional import CustonCardProfessional
+            card = CustonCardProfessional(
+                instance=self,
+                name=item["name"],
+                id=item["id"],
+                comission=item["comissao"],
+                tap=self.list_profissionais.on_card_selected
+            )
+            self.list_profissionais.controls.append(card) 
+        self.page.update()
 
 
-
-       
-
-
-       
-
-
-
-
-
-
-
-
-  
-
-
-         
+    async def carregar_clientes(self):
+        array = await self.controller.get_clientes_data()
+        self.list_clients.controls.clear()
+        for item in array:
+            from view.controls.custoncardsimples import CustonCardSimples
+            card = CustonCardSimples(
+                page=self.page,
+                id=item["id"],
+                title=item["nome"],
+                tap=self.list_clients.on_card_selected,
+                instance=self
+            )
+            self.list_clients.controls.append(card)
+        self.page.update()

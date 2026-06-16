@@ -323,7 +323,6 @@ class IntegracaoController:
         self.page.update()
          
 
-
     async def on_login_meta(self, e: ft.LoginEvent):
         """
         Callback exclusivo para processar o retorno do provedor Meta.

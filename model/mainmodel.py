@@ -20,7 +20,7 @@ class mainModel:
             "Authorization": f"Bearer {token}",
             'Content-Type': 'application/json'            
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=120) as client:
             response = await client.post(
                 url=url,
                 json=payload,
