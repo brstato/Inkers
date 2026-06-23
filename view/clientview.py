@@ -248,12 +248,12 @@ class ClientView(ft.View):
 
 
     def close_modal_view_create_client(self, e):
-        self.page.pop_dialog(self.modalviewCreateClient)
+        self.page.pop_dialog()
         self.page.update()
 
 
     def close_modal_view(self, e):
-        self.page.pop_dialog(self.modalview)
+        self.page.pop_dialog()
         self.page.update()
 
 
@@ -299,7 +299,7 @@ class ClientView(ft.View):
         self.edtPesquisa.visible = True
         self.open_search_icon.visible = False
         self.close_search_icon.visible = True
-        self.edtPesquisa.focus()
+        #self.edtPesquisa.focus()
         self.page.update()      
 
 

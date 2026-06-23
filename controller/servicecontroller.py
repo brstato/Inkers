@@ -24,7 +24,7 @@ class ServiceController:
 
     async def createService(self, e):
 
-        self.page.pop_dialog(self.instance.modalviewCreateService)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()          
@@ -69,7 +69,7 @@ class ServiceController:
 
     async def editService(self, e):
 
-        self.page.pop_dialog(self.instance.modalview)
+        self.page.pop_dialog()
         
         self.instance.progressRing.visible = True
         self.page.update()  

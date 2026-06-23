@@ -145,7 +145,7 @@ class LoginController:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    "https://googleads.googleapis.com/v20/customers:listAccessibleCustomers",
+                    "https://googleads.googleapis.com/v24/customers:listAccessibleCustomers",
                     headers=headers,
                 )
 
@@ -194,7 +194,7 @@ class LoginController:
                     payload = {
                         "query": query
                     }
-                    url = f"https://googleads.googleapis.com/v20/customers/{customer_id}/googleAds:search"
+                    url = f"https://googleads.googleapis.com/v23/customers/{customer_id}/googleAds:search"
                     response = await client.post(url, headers=headers, json=payload)
                     if response.status_code == 200:
                         data = response.json()
