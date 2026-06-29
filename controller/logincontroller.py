@@ -116,8 +116,8 @@ class LoginController:
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
             "https://www.googleapis.com/auth/calendar.events",
-            "https://www.googleapis.com/auth/adwords",
-            "https://www.googleapis.com/auth/analytics.readonly",
+            #"https://www.googleapis.com/auth/adwords",
+            #"https://www.googleapis.com/auth/analytics.readonly",
         ])
 
         self._provider.authorization_endpoint += "?access_type=offline&prompt=consent"

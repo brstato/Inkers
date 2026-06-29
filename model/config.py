@@ -113,3 +113,7 @@ class Config:
 
     CREATE_EVENT_CALENDAR_URL = "https://www.googleapis.com/calendar/v3/calendars/primary/events"
     G_REFRESH_TOKEN_URL       = "https://oauth2.googleapis.com/token"
+
+    RESUME_VENDAS_URL         = f"{BASE_API_URL}/relatorio/entradas_grafico"
+    LIST_MES_ENTRADAS_URL     = f"{BASE_API_URL}/relatorio/entradas"
+    DETAIL_VENDA_URL          = f"{BASE_API_URL}/relatorio/entrada_detalhes"

@@ -110,7 +110,7 @@ class LoginModel:
             "r_token": r_token,
         }
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
                 url=self._login_google_url,
                 json=payload,

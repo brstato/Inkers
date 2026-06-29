@@ -3,7 +3,7 @@ from view.controls.colors import AppColors
 import flet as ft
 
 class BackgroundRod(flc.BarChartRod):
-    def __init__(self, y: float, max_y:float, date:str=''):
+    def __init__(self, y: float, max_y:float, date:str='', month_number: int = 0, year: int = 0):
         super().__init__()
         # Configurações dinâmicas baseadas no estado
         self.from_y = 0
@@ -16,6 +16,8 @@ class BackgroundRod(flc.BarChartRod):
         self.bg_to_y = max_y # Altura total do trilho
         self.bg_color = ft.Colors.with_opacity(0.1, AppColors.GRAY_LIGHT2)
         self.date = date
+        self.month_number = month_number
+        self.year = year
 
 
 class CustombarChart(flc.BarChart):

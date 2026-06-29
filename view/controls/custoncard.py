@@ -6,7 +6,7 @@ from view.controls.custondialog import CustonDialog
 class CustonCard(ft.Card):
     def __init__(self, page:ft.Page, width, id:int, icon:None, callback:None, callback2:None, tap:callable=None,  
         title:str = '', desc:str = '', detail:str = '', sub_desc = '', sub_detail = '', categoria = '',
-        telefone:str='', visible_menu:bool=False):
+        telefone:str='', visible_menu:bool=False, visible_btn: bool = True, height:int=120):
 
         super().__init__()
         self.telefone = telefone
@@ -23,6 +23,9 @@ class CustonCard(ft.Card):
 #        self.page = page
         self.id = id
         self.selected = False
+        self.visible_btn = visible_btn
+        self.height = height
+        
         
         
         self.menu = ft.MenuBar(
@@ -51,6 +54,21 @@ class CustonCard(ft.Card):
             icon_color=AppColors.ORANGE_BURNT,
             on_click=lambda e: page.run_task(self.open_modal_view_detail)
         )
+
+        area_botoes = ft.Container(       
+            visible=self.visible_btn,                     
+            content=ft.Column(                                                
+                controls=[
+                    self.btn_delete,
+                    self.btn_edit,                                                        
+                ],
+            ), 
+            border=ft.border.all(1, AppColors.GRAY_MED2),
+            border_radius=ft.border_radius.all(5),
+            bgcolor=AppColors.GRAY_DARK,
+            shadow=ft.BoxShadow(color=AppColors.BLACK, blur_radius=5),
+            padding=ft.padding.all(5),
+        )        
         
         
         self.container = ft.Container(     
@@ -134,22 +152,10 @@ class CustonCard(ft.Card):
                         ),
                         
                         width=width / 1.7,
-                        height=120,
+                        height=self.height,
                     ),
                     ft.Container(expand=True),
-                    ft.Container(                            
-                        content=ft.Column(                                                
-                            controls=[
-                                self.btn_delete,
-                                self.btn_edit,                                                        
-                            ],
-                        ), 
-                        border=ft.border.all(1, AppColors.GRAY_MED2),
-                        border_radius=ft.border_radius.all(5),
-                        bgcolor=AppColors.GRAY_DARK,
-                        shadow=ft.BoxShadow(color=AppColors.BLACK, blur_radius=5),
-                        padding=ft.padding.all(5),
-                    ),                          
+                    area_botoes,                          
                 ]
             ),
         )  

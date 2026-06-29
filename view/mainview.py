@@ -704,13 +704,14 @@ class MainView(ft.View):
                             ),                            
 
                             self.area_whatsapp,
-                            CustonButton(page, "Minha conta",        "/account"),
-                            CustonButton(page, "Profissionais", "/professional"),
-                            CustonButton(page, "Produtos",           "/product"),  
-                            CustonButton(page, "Serviços",          "/services"),  
-                            CustonButton(page, "Clientes",           "/clients"),    
-                            CustonButton(page, "Despesas",          "/despesas"),  
-                            CustonButton(page, "Portfólio",        "/portfolio"),                                              
+                            CustonButton(page, "Minha conta",          "/account"),
+                            CustonButton(page, "Profissionais",   "/professional"),
+                            CustonButton(page, "Produtos",             "/product"),  
+                            CustonButton(page, "Serviços",            "/services"),  
+                            CustonButton(page, "Clientes",             "/clients"),    
+                            CustonButton(page, "Despesas",            "/despesas"),  
+                            CustonButton(page, "Portfólio",          "/portfolio"), 
+                            CustonButton(page, "Rel. Vendas","/relatorioentradas"),                                              
                                                
                             ft.Button(
                                 content="Sair",

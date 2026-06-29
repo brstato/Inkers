@@ -16,6 +16,7 @@ from view.anamnese_response import AnamneseResponse
 from view.despesasview import DespesasView
 from view.estudioview import EstudioView
 from view.portfolioview import PortfolioView
+from view.relatorioentradasview import RelatorioEntradasView
 import asyncio
 from urllib.parse import urlparse
 
@@ -96,6 +97,8 @@ async def main(page: ft.Page):
                     page.views.append(AgendaTurnosView(page))  
                 elif troute.match("/portfolio"):
                     page.views.append(PortfolioView(page))
+                elif troute.match("/relatorioentradas"):
+                    page.views.append(RelatorioEntradasView(page))
                            
             page.update()
 

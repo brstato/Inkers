@@ -27,6 +27,7 @@ class PortfolioModel:
             'Authorization': f'Bearer {token}'
         }
         response = await self._client.post(
+            timeout=60,
             url=url,
             json=payload,
             headers=header
