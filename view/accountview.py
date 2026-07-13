@@ -305,7 +305,7 @@ class AccountView(ft.View):
     async def _getAccountData(self):
         self.id      = self.page.session.store.get("id") or ""
         self.token   = self.page.session.store.get("token") or ""
-        self.r_token = self.page.session.store.get("r_token") or ""
+        self.r_tokuen = self.page.session.store.get("r_token") or ""
 
         if self.id and self.r_token:
             self.progressRing.visible = True

@@ -80,18 +80,18 @@ class mainModel:
         ) -> httpx.Response:
 
         payload = {
-            "id_loja":id_loja,
-            "id_prof":id_prof,
+            "id_loja"  :id_loja,
+            "id_prof"  :id_prof,
             "comission":comission,
             "id_client":id_client,
-            "id_caixa":id_caixa,
-            "total":total,
-            "din":din,
-            "pix":pix,
-            "deb":deb,
-            "cred":cred,
-            "troco":troco,
-            "itens":itens
+            "id_caixa" :id_caixa,
+            "total"    :total,
+            "din"      :din,
+            "pix"      :pix,
+            "deb"      :deb,
+            "cred"     :cred,
+            "troco"    :troco,
+            "itens"    :itens
         }
 
         return await self._post_request(self.receber_venda_url, payload, token)        

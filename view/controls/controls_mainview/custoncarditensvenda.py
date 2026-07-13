@@ -225,24 +225,24 @@ class CustonCardItensVenda(ft.Card):
 
 
     def add_quant(self, e):
-        if self.instance.status_caixa == 'F':
-            self.dialog_alert = CustonDialog(
-                page=self.page,
-                title="Atenção",
-                content="O caixa esta fechado, por favor abra o caixa para continuar!",
-                actions=[
-                    ft.TextButton(
-                        text="OK",
-                        on_click=lambda e:[
-                            self.page.pop_dialog(),
-                            self.page.update()
-                        ]
-                    )
-                ]
-            )
-            self.page.show_dialog(self.dialog_alert)
-            self.page.update()
-            return
+        #if self.instance.status_caixa == 'F':
+        #    self.dialog_alert = CustonDialog(
+        #        page=self.page,
+        #        title="Atenção",
+        #        content="O caixa esta fechado, por favor abra o caixa para continuar!",
+        #        actions=[
+        #            ft.TextButton(
+        #                content="OK",
+        #                on_click=lambda e:[
+        #                    self.page.pop_dialog(),
+        #                    self.page.update()
+        #                ]
+        #            )
+        #        ]
+        #    )
+        #    self.page.show_dialog(self.dialog_alert)
+        #    self.page.update()
+        #    return
 
         if self.inf_valor == 'True' and self.quantidade == 0:
             self.page.show_dialog(self.moda_view)

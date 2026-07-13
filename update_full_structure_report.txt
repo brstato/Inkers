@@ -1,17 +1,9 @@
-Relatório de Sincronização — 2026-06-16 14:08:09
+Relatório de Sincronização — 2026-07-02 18:19:28
 ============================================================
 
 ══ TABELAS ══
-  [+] Tabela nova: CAMPANHAS
 
 ══ COLUNAS ══
-  [+] LOJA.GOOGLE_ADS_ID  (VARCHAR(100) CHARACTER SET UTF8)
-  [+] LOJA.GOOGLE_ADS_NOME  (VARCHAR(100) CHARACTER SET UTF8)
-  [+] LOJA.LATITUDE  (NUMERIC(15,8))
-  [+] LOJA.LONGITUDE  (NUMERIC(15,8))
-  [+] LOJA.META_ADS_ID  (VARCHAR(100) CHARACTER SET UTF8)
-  [+] LOJA.META_CAMPANHA_ATIVA  (BOOLEAN)
-  [+] LOJA.META_LONG_TOKEN  (BLOB SUB_TYPE 1)
   [-] AGENDA.COD_CLIENTE existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.FUNCIONARIO existe em PROD mas não em DEV (não removido — manual)
   [-] AGENDA.ID_LOJA existe em PROD mas não em DEV (não removido — manual)
@@ -27,13 +19,11 @@ Relatório de Sincronização — 2026-06-16 14:08:09
   [!] DESPESAS.VALOR: DEV=NUMERIC(15,2)  PROD=FLOAT  → INCOMPATÍVEL (manual)
 
 ══ CONSTRAINTS ══
-  [+] FK CAMPANHAS_LOJA_FK: CAMPANHAS (LOJA_ID) → LOJA (UUID)
-  [+] PRIMARY KEY CAMPANHAS_PK em CAMPANHAS (ID)
+  [+] FK VENDA_CAIXA_FK: VENDA (ID_CAIXA) → CAIXA (ID)
 
 ══ ÍNDICES ══
 
 ══ STORED PROCEDURES / FUNCTIONS ══
-  [≠] PROCEDURE alterada: REGISTRAR_VENDA_LOTE
   [≠] PROCEDURE alterada: SP_BUSCA_DADOS_CLIENTE
   [≠] PROCEDURE alterada: SP_DESPESAS
   [≠] PROCEDURE alterada: SP_LISTAR_DESPESAS_MES
@@ -43,4 +33,4 @@ Relatório de Sincronização — 2026-06-16 14:08:09
 
 ══ APLICANDO NO BANCO DE PRODUÇÃO ══
 
-  ✅ Todos os 15 statement(s) aplicados com sucesso!
+  ✅ Todos os 5 statement(s) aplicados com sucesso!

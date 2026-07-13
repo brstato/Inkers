@@ -481,8 +481,10 @@ class LoginController:
         user_id: str = await ft.SharedPreferences().get("id")
 
         if not r_token:
+            print("[AutoLogin] r_token não encontrado no SharedPreferences.")
             return
 
+        print(f"[AutoLogin] Tentando auto-login com user_id: {user_id}")
         self._on_show_loading(True)
 
         try:
@@ -507,6 +509,7 @@ class LoginController:
                 await self._on_navigate("/main")
             else:
                 # Token inválido/expirado: limpa persistência
+                print(f"[AutoLogin] Falha no refresh_token. Status: {result.status_code}")
                 await self.clear_persistent_tokens()
         finally:
             self._on_show_loading(False)

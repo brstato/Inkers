@@ -163,7 +163,9 @@ class MainController:
 
     async def get_connection_zap(self):
         response = await ProtectedApiCall(
-            self.page, self.instance, self.zap_model.GetConnectionZap,
+            self.page, 
+            self.instance, 
+            self.zap_model.GetConnectionZap,
             zap_instance=self.instance.zap_instance,
             token=self.instance.token
         ).call_api_refresh_token()
@@ -299,19 +301,19 @@ class MainController:
             self.instance.progressRing.visible = True
             self.page.update()
             
-            await self.get_status_caixa()
+            #await self.get_status_caixa()
 
             if self.instance.total == 0:            
                 self.instance.btn_total.visible = False
-                self.instance.btn_fechar_caixa.visible = True  
+                #self.instance.btn_fechar_caixa.visible = True  
 
-            if self.instance.status_caixa == 'F':
-                self.instance.btn_abrir_caixa.visible = True
-                self.instance.btn_fechar_caixa.visible = False
+            #if self.instance.status_caixa == 'F':
+            #    self.instance.btn_abrir_caixa.visible = True
+            #    self.instance.btn_fechar_caixa.visible = False
 
-            elif self.instance.status_caixa == 'A':   
-                self.instance.btn_fechar_caixa.visible = True
-                self.instance.btn_abrir_caixa.visible = False        
+            #elif self.instance.status_caixa == 'A':   
+            #    self.instance.btn_fechar_caixa.visible = True
+            #    self.instance.btn_abrir_caixa.visible = False        
 
             self.page.update()
 
@@ -339,7 +341,7 @@ class MainController:
                 self.instance.carregar_clientes(),
                 self.get_connection_zap(),
                 self.notify_agenda_pendentes(),
-                self.init_onesignal(),
+                #self.init_onesignal(),
                 self.meta_integracao.salvar_google_analytics()
             ]
             await asyncio.gather(*tasks)
@@ -718,8 +720,10 @@ class MainController:
         
         itens = json.dumps(await self.itens_venda())
 
-        await ProtectedApiCall(
-            self.page, self.instance, self.model.receber_venda,
+        response = await ProtectedApiCall(
+            self.page, 
+            self.instance, 
+            self.model.receber_venda,
             token=self.instance.token,
             id_loja=self.instance.id_loja,
             id_prof=self.instance.id_prof,
@@ -735,14 +739,30 @@ class MainController:
             itens=itens
         ).call_api_refresh_token()
 
-        self.page.pop_dialog()
+        #self.page.pop_dialog()
 
-        if self.instance.ident_serv == 1:
-            self.page.show_dialog(self.instance.dialog_insumo)
-        else:
+        #if self.instance.ident_serv == 1:
+            #self.page.show_dialog(self.instance.dialog_insumo)
+        #else:
+        if response.status_code == 200:
             await self.limpar_venda(e)
+        else:
+            print(response.content)
+            snackbar = ft.SnackBar(
+                open=True,
+                bgcolor=AppColors.GRAY_DARK,
+                content=ft.Text(
+                    value="Houve um erro ao registrar a venda!", 
+                    size=20,
+                    weight=ft.FontWeight.BOLD, 
+                    color=AppColors.GRAY_LIGHT,
+                ),                
+            )
+            self.page.show_dialog(snackbar)
+            self.page.update()
+                
 
-        self.page.update()
+        #self.page.update()
 
 
     async def fechar_dialogo_nota_clientes(self, e):

@@ -148,7 +148,9 @@ class AgendaView(ft.View):
             ]
         )
 
-        self.calendario_agenda = ft.DatePicker(on_change=self.controller.selected_date_calendar)
+        self.calendario_agenda = ft.DatePicker(
+            on_change=self.controller.selected_date_calendar
+        )
 
         self.edt_hora_ini = CustomTextField(
             label='Inicio'

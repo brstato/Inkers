@@ -8,6 +8,7 @@ from view.controls.custongraphics import BackgroundRod
 from view.controls.colors import AppColors
 from view.controls.custoncard import CustonCard
 from utils.formatcurr import formatar_moeda_brasileira
+from view.controls.custondialog import CustonDialog
 
 
 
@@ -82,7 +83,19 @@ class RelatorioEntradasController:
             self.instance.progress_ring.visible = False
             self.page.update()            
         except Exception as e:
-            self.page.show_alert(f'ERRO ao buscar vendas do mês: {e}', 'error')
+            self.page.show_dialog(
+                CustonDialog(
+                    self.page,
+                    'Atenção',
+                    content=ft.Text(f'ERRO ao buscar vendas do mês: {e}'),
+                    actions=[
+                        ft.TextButton(
+                            'OK',
+                            on_click=lambda e: [self.page.pop_dialog(), self.page.update()]
+                        )
+                    ]
+                )
+            )    
             self.instance.progress_ring.visible = False
             self.page.update()    
             return
@@ -105,7 +118,8 @@ class RelatorioEntradasController:
 
     async def get_data(self):
         self.instance.id_loja = self.page.session.store.get("id"   )
-        self.instance.r_token   = self.page.session.store.get("r_token")
+        self.instance.token   = self.page.session.store.get("token")
+        self.instance.r_token = self.page.session.store.get("r_token")
 
 
     async def listar_vendas_resumo(self):
@@ -115,7 +129,7 @@ class RelatorioEntradasController:
             self.page,
             self.instance,
             self.model.resume_vendas,
-            token=self.instance.r_token
+            token=self.instance.token
         ).call_api_refresh_token()
 
         res = json.loads(response.content)["response"]

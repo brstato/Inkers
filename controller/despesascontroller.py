@@ -21,6 +21,34 @@ class DespesasController:
                "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
 
+    async def create_despesa(self, payload:dict, token:str) -> bool:
+        response = await ProtectedApiCall(
+            self.page,
+            self.instance,
+            self.model.create_despesa,
+            payload=payload,
+            token=token
+        ).call_api_refresh_token()
+
+        if response.status_code != 200:
+            print(f"Error create_despesa: {response.status_code} - {response.content}")
+            return False
+        else:
+            return True 
+
+    
+
+    async def list_categorias(self):
+        response = await ProtectedApiCall(
+            self.page,
+            self.instance,
+            self.model.list_categorias,
+            token=self.instance.r_token
+        ).call_api_refresh_token()
+
+        return json.loads(response.content)
+
+
     async def baixa_despesa(self):
         response = await ProtectedApiCall(
             self.page,
@@ -84,8 +112,17 @@ class DespesasController:
             token=self.instance.token
         ).call_api_refresh_token()
 
-        message = json.loads(response.content)["message"]
-        total = json.loads(response.content)["total_periodo"]
+        if response.status_code != 200:
+            print(f"Error list_despesas_mes: {response.status_code} - {response.content}")
+            return
+
+        try:
+            data = json.loads(response.content)
+            message = data.get("message", [])
+            total = data.get("total_periodo", 0)
+        except json.JSONDecodeError:
+            print(f"JSONDecodeError in list_despesas_mes: {response.content}")
+            return
 
         self.instance.list.controls.clear()
 
@@ -135,18 +172,30 @@ class DespesasController:
     async def get_data(self):
         self.instance.id_loja = self.page.session.store.get("id"   )
         self.instance.token   = self.page.session.store.get("token")
-
+        self.instance.r_token = self.page.session.store.get("r_token")
+        print(self.instance.id_loja)
+        print(self.instance.token)
+        print(self.instance.r_token)
 
     async def listar_despesas_resumo(self):
         response = await ProtectedApiCall(
             self.page,
             self.instance,
             self.model.resume_despesas,
-            id_loja=self.instance.id_loja,
-            token=self.instance.token
+            token=self.instance.r_token
         ).call_api_refresh_token()
 
-        message = json.loads(response.content)["message"]
+        if response.status_code != 200:
+            print(f"Error listar_despesas_resumo: {response.status_code} - {response.content}")
+            return
+
+        try:
+            data = json.loads(response.content)
+            message = data.get("message", [])
+        except json.JSONDecodeError:
+            print(f"JSONDecodeError in listar_despesas_resumo: {response.content}")
+            return
+
         novas_labels = []
         valores = [float(iten["total_geral"]) for iten in message]
         maior_valor = max(valores) if valores else 100

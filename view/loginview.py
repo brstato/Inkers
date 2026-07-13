@@ -266,7 +266,7 @@ class LoginView(ft.View):
             da UI durante a requisição assíncrona.
 
         Comportamento:
-            - Se um ``r_token`` válido existir em SharedPreferences:
+            - Se um ``r_token`` válido existir:
               o usuário é autenticado silenciosamente e redirecionado.
             - Se não existir ou for inválido:
               a tela de login permanece exibida aguardando interação.

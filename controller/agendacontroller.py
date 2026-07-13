@@ -283,8 +283,17 @@ class AgendaController:
 
         for item in array:
             data_str = item["date"]
-            datetime_obj = datetime.strptime(data_str, '%d-%m-%y %H:%M:%S')
-            datas_com_agendamento.add(datetime_obj.date())
+            datetime_obj = None
+            
+            for fmt in ['%d-%m-%y %H:%M:%S', '%d-%m-%y', '%Y-%m-%d', '%Y-%m-%d %H:%M:%S', '%d/%m/%Y', '%d/%m/%Y %H:%M:%S']:
+                try:
+                    datetime_obj = datetime.strptime(data_str, fmt)
+                    break
+                except ValueError:
+                    continue
+            
+            if datetime_obj:
+                datas_com_agendamento.add(datetime_obj.date())
 
         if not datas_com_agendamento:
             return

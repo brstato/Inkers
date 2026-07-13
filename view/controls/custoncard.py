@@ -6,7 +6,7 @@ from view.controls.custondialog import CustonDialog
 class CustonCard(ft.Card):
     def __init__(self, page:ft.Page, width, id:int, icon:None, callback:None, callback2:None, tap:callable=None,  
         title:str = '', desc:str = '', detail:str = '', sub_desc = '', sub_detail = '', categoria = '',
-        telefone:str='', visible_menu:bool=False, visible_btn: bool = True, height:int=120):
+        telefone:str='', visible_menu:bool=False, visible_btn: bool = True, height:int=140):
 
         super().__init__()
         self.telefone = telefone

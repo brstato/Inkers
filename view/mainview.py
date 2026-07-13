@@ -802,8 +802,8 @@ class MainView(ft.View):
                     self.text_client,
                     self.btn_total,
                     self.btn_cancelar,
-                    self.btn_fechar_caixa,
-                    self.btn_abrir_caixa
+                    #self.btn_fechar_caixa,
+                    #self.btn_abrir_caixa
                 ],
             ),
         )         
