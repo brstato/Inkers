@@ -10,6 +10,7 @@ class despesas_model:
     upadte_desp_url:str         = Config.UPDATE_DESP_URL
     baixa_desp_url:str          = Config.BAIXAR_DESP_URL
     list_categorias_url:str     = Config.LIST_CATEGORIAS_URL
+    detail_despesa_url:str      = Config.DETAIL_DESPESA_URL
 
 
     async def _post_request(self, url:str, payload:dict, token: str) -> httpx.Response:
@@ -37,6 +38,16 @@ class despesas_model:
                 headers=header
             )
             return response        
+
+
+    async def edit_despesa(self, payload: dict, token: str) -> httpx.Response:
+        return await self._post_request(self.upadte_desp_url, payload, token)
+
+
+    async def detalhes_despesa(self, id_despesa:int, token: str) -> httpx.Response:
+        url = f"{self.detail_despesa_url}?id_despesa={id_despesa}"
+
+        return await self._get_request(url, token)    
 
 
     async def list_categorias(self, token:str):

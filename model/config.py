@@ -48,6 +48,7 @@ class Config:
     UPDATE_DESP_URL       = f"{BASE_API_URL}/despesas/update"
     BAIXAR_DESP_URL       = f"{BASE_API_URL}/despesas/baixa"
     LIST_CATEGORIAS_URL   = f"{BASE_API_URL}/despesas/categorias"
+    DETAIL_DESPESA_URL    = f"{BASE_API_URL}/despesas/detalhe"
     
     
     UPDATE_ACCOUNT_URL         = f"{BASE_API_URL}/account/update"

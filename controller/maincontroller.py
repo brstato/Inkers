@@ -381,6 +381,7 @@ class MainController:
         self.instance.area_credito.value = ''
         self.instance.list_itens.cancelar()
         self.instance.list_profissionais.cancelar()   
+        self.page.pop_dialog()
         self.page.update()
         await self.instance.carregar_itens()     
 

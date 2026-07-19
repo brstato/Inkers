@@ -5,7 +5,11 @@ from view.controls.custongraphics import BackgroundRod, CustombarChart
 from view.controls.custonlist import CustonList
 from view.controls.custonmodalview import CustonModalView
 from view.controls.custontextfield import CustomTextField
+from utils.formatcurr import formatar_moeda_brasileira
 import flet_charts as flc
+from view.controls.custonprogressring import CustonProgressRing
+from view.controls.custoncard import CustonCard
+import json
 
 
 class DespesasView(ft.View):
@@ -16,6 +20,9 @@ class DespesasView(ft.View):
             scroll = ft.ScrollMode.AUTO,
         )
 
+        self.MESES_ABREV = ["", "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", 
+               "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+
         self.id_loja:str = '' 
         self.token:str   = '' 
         self.r_token:str = ''
@@ -25,6 +32,8 @@ class DespesasView(ft.View):
         self.date:str = ''
 
         self.controller = DespesasController(page, self)
+
+        self.progressring = CustonProgressRing()
 
         self.edit_btn = ft.IconButton(
             icon=ft.Icons.EDIT,
@@ -55,7 +64,7 @@ class DespesasView(ft.View):
 
         self.grafico = CustombarChart(
             groups=self.chart_groups,
-            on_event=self.controller.on_chart_event
+            on_event=self.on_chart_event
         )
 
         self.options_categorias = []
@@ -116,8 +125,8 @@ class DespesasView(ft.View):
         )
 
         self.options_status = [
-            ft.dropdown.Option('Pendente'),
-            ft.dropdown.Option('Pago')
+            ft.dropdown.Option('ABERTO'),
+            ft.dropdown.Option('PAGO')
         ]
 
         self.status_parcelas = ft.Dropdown(
@@ -150,8 +159,8 @@ class DespesasView(ft.View):
                 self.parcelas,
                 self.status_parcelas
             ],
-            callback2=self.open_modal_create_despesa,
-            callback=lambda e: self.create_despesa(e),            
+            callback=lambda e: self.create_despesa(e) if self.id == 0 else self.edit_despesa(), 
+            callback2=lambda e: self.close_modal_despesa(e),           
         )
 
         self.hero_container = ft.Container(
@@ -183,7 +192,7 @@ class DespesasView(ft.View):
                     ),
                     ft.Container(expand=True),
                     self.btn_dar_baixa,
-                    self.text_total,
+                    #self.text_total,
                     ft.IconButton(
                         icon=ft.Icons.ADD,
                         icon_color=AppColors.ORANGE_DARK,
@@ -194,14 +203,34 @@ class DespesasView(ft.View):
             ),
         )        
 
+        self.label_total_a_pagar = ft.Text('Total a pagar: R$ 0,00', color=AppColors.ORANGE_DARK)
+        self.label_total_pago = ft.Text('Total pago: R$ 0,00', color=AppColors.GREEN_DARK)
+        self.label_total_geral = ft.Text('Total geral: R$ 0,00', color=AppColors.GRAY_LIGHT2)
+
+        self.area_resumo = ft.Row(
+            controls=[
+                self.label_total_a_pagar,
+                self.label_total_pago,
+                self.label_total_geral,
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            scroll=ft.ScrollMode.AUTO,
+        )
+
         self.controls = [
             ft.Column(
                 controls=[
                     self.hero_container,
+                    self.area_resumo,
                     self.list,
                 ]
             )
         ]
+
+
+    def close_modal_despesa(self, e):
+        self.page.pop_dialog()
+        self.page.update()
 
 
     def did_mount(self):
@@ -210,11 +239,221 @@ class DespesasView(ft.View):
 
     async def aux(self):
         await self.controller.get_data()
-        await self.controller.listar_despesas_resumo()
+        await self.listar_despesas_resumo()
         await self.carregar_categorias()
         self.grafico.update()
         self.page.update()
  
+
+    async def list_despesas_mes(self, date:str):
+        try:
+            self.progressring.visible = True
+            self.page.update()
+            self.list.controls.clear()
+
+            message, total, pago, a_pagar = await self.controller.list_despesas_mes(date)
+
+            self.label_total_a_pagar.value = f'Total a pagar: R$ {formatar_moeda_brasileira(a_pagar)}'
+            self.label_total_pago.value    = f'Total pago: R$ {   formatar_moeda_brasileira(pago   )}'
+            self.label_total_geral.value   = f'Total geral: R$ {  formatar_moeda_brasileira(total  )}'
+
+            #self.text_total.value = f'Total: R$ {formatar_moeda_brasileira(total)}'
+
+            for item in message:
+
+                date = item["data_vencimento"]
+                
+                card = CustonCard(
+                    page=self.page,
+                    width=self.page.width,
+                    icon=ft.Icons.MONETIZATION_ON,
+                    title=item["descricao"],
+                    desc=f'Valor: R$ {formatar_moeda_brasileira(item["valor"])}',
+                    sub_desc=f'Vencimento: {date.replace("-", "/")}',
+                    detail=f'{item["status"]}',
+                    sub_detail=f'Parcela: {item["parcela"]}',
+                    categoria='',#item["tipo_registro"],
+                    id=item["id"],
+                    callback=lambda id_depesa:self.delete_despesa(id_depesa),
+                    callback2=lambda id_depesa:self.open_modal_edit_despesa(id_depesa),
+                    #tap=self.list.on_card_selected
+                )
+                self.list.controls.append(card)
+
+            self.page.update()
+            self.id = 0            
+        except Exception as e:
+            print(f"Error list_despesas_mes: {e}")
+            return
+        finally:
+            self.progressring.visible = False
+            self.page.update()      
+
+
+    async def open_modal_edit_despesa(self, id_depesa: int):
+        try:
+            id_despesa, descricao, valor, date, parcela, status = await self.controller.detalhes_despesa(id_depesa)
+
+            self.dp_categoria.text    = descricao
+            self.edt_valor.value      = formatar_moeda_brasileira(valor)
+            self.edt_vencimento.value = date
+            self.parcelas.value       = parcela
+            self.status_parcelas.text = status
+
+            self.id = id_despesa
+
+            self.page.show_dialog(self.modal_create_despesa)
+        except Exception as e:
+            print(f"Error open_modal_edit_despesa: {e}")
+            message = "Erro ao editar despesa!"
+        
+            self.page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text(message, weight=ft.FontWeight.BOLD),
+                    bgcolor=AppColors.ORANGE_DARK,
+                )
+            )
+        self.page.update()              
+
+
+    async def edit_despesa(self):
+        try:
+            self.progressring.visible = True
+            self.page.update()
+
+            payload = {
+                'id_despesa': self.id,
+                'descricao': self.dp_categoria.text,
+                'valor': self.edt_valor.value,
+                'date': self.edt_vencimento.value,
+                'parcela': self.parcelas.value,
+                'status': self.status_parcelas.text
+            }
+            
+            response = await self.controller.edit_despesa(payload)
+
+            if response:
+                message = "Despesa editada com sucesso!"
+            else:
+                message = "Erro ao editar despesa!"
+
+        except Exception as e:
+            print(f"Error edit_despesa: {e}")
+            message = "Erro ao editar despesa!"
+        finally:
+            self.id = 0            
+            self.progressring.visible = False            
+            self.page.pop_dialog()
+            
+            self.page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text(message, weight=ft.FontWeight.BOLD),
+                    bgcolor=AppColors.ORANGE_DARK,
+                )
+            )
+            
+            await self.list_despesas_mes(self.date)
+            await self.listar_despesas_resumo()
+            self.page.update()    
+
+
+    async def delete_despesa(self, id_depesa: int):
+        try:
+            response = await self.controller.delete_despesa(id_depesa)
+
+            if response:
+                message = "Despesa deletada com sucesso!"
+            else:
+                message = "Erro ao deletar despesa!"
+
+            self.page.show_dialog(
+                ft.SnackBar(
+                    content=ft.Text(message, weight=ft.FontWeight.BOLD),
+                    bgcolor=AppColors.ORANGE_DARK,
+                )
+            )
+
+        except Exception as e:
+            print(f"Error delete_despesa: {e}")
+        finally:
+            await self.list_despesas_mes(self.date)
+            await self.listar_despesas_resumo()
+            self.page.update()    
+
+
+    async def on_chart_event(self, e: flc.BarChartEvent):
+        if e.type == flc.ChartEventType.TAP_DOWN and e.rod_index is not None:
+            grupo_clicado = self.chart_groups[e.group_index]
+            barra_clicada = grupo_clicado.rods[e.rod_index]
+            self.date = barra_clicada.date
+
+            for g_index, group in enumerate(self.chart_groups):
+                for r_index, rod in enumerate(group.rods):
+                    is_selected = (e.group_index == g_index and e.rod_index == r_index)
+                    rod.color = AppColors.ORANGE_DARK if is_selected else AppColors.GRAY_LIGHT2
+            
+            self.grafico.update()
+            await self.list_despesas_mes(self.date)
+
+
+    async def listar_despesas_resumo(self):
+        self.progressring.visible = True
+        self.page.update()
+
+        message, soma = await self.controller.listar_despesas_resumo()
+
+        novas_labels = []
+        valores = [float(iten["total_geral"]) for iten in message]
+        maior_valor = max(valores) if valores else 100
+        limite_grafico = maior_valor * 1.2 # Dá uma folga de 20% no topo        
+        self.chart_groups.clear()
+        novas_labels = []
+
+        soma_total = soma["s_total_geral"]
+        soma_a_pagar = soma["s_total_a_pagar"]
+        soma_pago = soma["s_total_pago"]
+
+        self.label_total_a_pagar.value = f'Total a pagar: R$ {formatar_moeda_brasileira(soma_a_pagar)}'
+        self.label_total_pago.value = f'Total pago: R$ {formatar_moeda_brasileira(soma_pago)}'
+        self.label_total_geral.value = f'Total geral: R$ {formatar_moeda_brasileira(soma_total)}'
+
+        for i, iten in enumerate(message):
+            mes:int             = int(iten["mes"])
+            ano:int             = int(iten["ano"])
+
+            total_pago:float    = float(iten["total_pago"   ])
+            total_a_pagar:float = float(iten["total_a_pagar"])
+            valor_total:float   = float(iten["total_geral"  ])
+
+            nome_mes = self.MESES_ABREV[mes]
+
+            date = f"01/{mes}/{ano}"
+
+            self.chart_groups.append(
+                flc.BarChartGroup(
+                    x=i,
+                    rods=[
+                        # Usamos nossa classe customizada aqui
+                        BackgroundRod(y=valor_total, max_y=limite_grafico, date=date)
+                    ]
+                )
+            )  
+
+            novas_labels.append(
+                flc.ChartAxisLabel(
+                    value=i, 
+                    label=ft.Text(nome_mes, size=11, color=AppColors.GRAY_LIGHT2, weight=ft.FontWeight.BOLD)
+                )
+            )
+
+        self.grafico.max_y = limite_grafico    
+        self.grafico.bottom_axis.labels = novas_labels
+        self.grafico.bottom_axis.show_labels = True
+        self.grafico.update()
+
+        self.progressring.visible = False
+        self.page.update()
+
 
     def update_actions_visibility(self):
         is_visible = self.id != 0
@@ -266,6 +505,7 @@ class DespesasView(ft.View):
         if response:
             self.page.pop_dialog()
             self.page.update()
+            await self.listar_despesas_resumo()
         else:
             self.page.snack_bar = ft.SnackBar(
                 ft.Text('Erro ao salvar despesa'),

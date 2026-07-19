@@ -18,6 +18,7 @@ class RelatorioEntradasView(ft.View):
 
         self.id_loja:str = '' 
         self.r_token:str   = '' 
+        self.token:str   = ''
 
         self.id:int = 0
         

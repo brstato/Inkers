@@ -20,6 +20,9 @@ class AppColors:
     GRAY_DARK       = "#141414"
     BACKGROUND_DARK = "#101010"
     BLACK           = "#000000"
+    RED_DARK        = "#aa0000"
+    GREEN_DARK      = "#00aa00"
+    BLUE_DARK       = "#0000aa"
 
     # Cores de Fundo
     

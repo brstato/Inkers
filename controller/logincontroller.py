@@ -476,6 +476,8 @@ class LoginController:
             acesso ou após logout), nenhuma ação é tomada e o usuário
             permanece na tela de login.
         """
+
+
         _storage = SecureStorage()
         r_token: str = await _storage.get("r_token")
         user_id: str = await ft.SharedPreferences().get("id")
@@ -488,6 +490,9 @@ class LoginController:
         self._on_show_loading(True)
 
         try:
+            #self.intance.progress_ring.visible = True
+            #self._page.update()
+
             result = await self._model.refresh_token(r_token, user_id)
 
             if result.success:
@@ -513,6 +518,7 @@ class LoginController:
                 await self.clear_persistent_tokens()
         finally:
             self._on_show_loading(False)
+            #self.instance.progress_ring.visible = False
             self._page.update()
 
 
